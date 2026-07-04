@@ -60,24 +60,76 @@ export async function POST(req: Request) {
         "Importance": "High",
       },
       text: `Hello ${user.fullName},\n\nWe received a request to reset the password for your Redlix Training account.\n\nYour OTP Code: ${otpCode}\n\nThis code is valid for 10 minutes. Do not share this code with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\n— The Redlix Training Team`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 12px; background-color: #ffffff;">
-          <h2 style="color: #4f46e5; text-align: center; margin-bottom: 20px;">Redlix Password Recovery</h2>
-          <p style="font-size: 15px; color: #334155; line-height: 1.5;">Hello <strong>${user.fullName}</strong>,</p>
-          <p style="font-size: 15px; color: #334155; line-height: 1.5;">We received a request to reset the password for your training account. Please use the following 6-digit One-Time Password (OTP) to complete your verification request:</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #1e1b4b; background-color: #f1f5f9; padding: 12px 24px; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-block;">
-              ${otpCode}
-            </span>
-          </div>
+      html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Password Reset - Redlix Training Academy</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border:1px solid #cbd5e1;max-width:600px;width:100%;">
 
-          <p style="font-size: 13px; color: #64748b; line-height: 1.5; text-align: center;">This OTP code is valid for 10 minutes. If you did not initiate this request, you can safely ignore this email.</p>
-          <div style="border-top: 1px solid #e2e8f0; margin-top: 35px; padding-top: 15px; text-align: center; font-size: 11px; color: #94a3b8;">
-            Redlix Training Academy System &bull; Secure Password Reset
-          </div>
-        </div>
-      `,
+        <!-- HEADER -->
+        <tr>
+          <td style="background-color:#1d4ed8;padding:28px 40px;text-align:center;">
+            <img src="https://ik.imagekit.io/dypkhqxip/logotraining" alt="Redlix Training Academy" height="42" style="display:block;margin:0 auto 10px auto;max-height:42px;" />
+            <p style="margin:0;color:#bfdbfe;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Training Academy</p>
+          </td>
+        </tr>
+
+        <!-- BODY -->
+        <tr>
+          <td style="padding:40px 40px 30px 40px;">
+            <p style="margin:0 0 8px 0;font-size:13px;color:#1d4ed8;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Security Notice</p>
+            <h2 style="margin:0 0 20px 0;font-size:20px;color:#0f172a;font-weight:700;">Password Reset Request</h2>
+            <p style="margin:0 0 20px 0;font-size:15px;color:#1e293b;line-height:1.7;">Dear <strong>${user.fullName}</strong>,</p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#334155;line-height:1.7;">We received a request to reset the password associated with your Redlix Training Academy account. Use the verification code below to proceed.</p>
+
+            <!-- OTP BOX -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+              <tr>
+                <td style="background-color:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #1d4ed8;padding:24px;text-align:center;">
+                  <p style="margin:0 0 8px 0;font-size:11px;color:#1d4ed8;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Your OTP Verification Code</p>
+                  <p style="margin:0;font-size:36px;font-weight:800;color:#0f172a;letter-spacing:10px;font-family:Courier New,monospace;">${otpCode}</p>
+                  <p style="margin:10px 0 0 0;font-size:12px;color:#64748b;">Valid for <strong>10 minutes</strong> only</p>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 20px 0;font-size:14px;color:#334155;line-height:1.7;">Enter this code in the password reset form to set a new password for your account.</p>
+
+            <!-- SECURITY WARNING TABLE -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;border:1px solid #e2e8f0;">
+              <tr style="background-color:#1d4ed8;">
+                <td style="padding:10px 16px;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Security Notice</td>
+              </tr>
+              <tr>
+                <td style="padding:14px 16px;font-size:13px;color:#334155;line-height:1.7;">
+                  Do not share this code with anyone. Redlix Training Academy will never ask for your OTP via phone or chat.
+                  If you did not initiate this request, please ignore this email — your account remains secure.
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:13px;color:#64748b;line-height:1.7;">This code will automatically expire after 10 minutes for your security.</p>
+          </td>
+        </tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" /></td></tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="padding:20px 40px;background-color:#f8fafc;">
+            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">This is an automated security message from <strong style="color:#64748b;">Redlix Training Academy</strong>. Please do not reply directly to this email.</p>
+            <p style="margin:6px 0 0 0;font-size:11px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Redlix Training Academy. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
     };
 
     // Send the email

@@ -61,46 +61,74 @@ export async function POST(req: Request) {
           "Importance": "Normal",
         },
         text: `Hello ${fullName},\n\nWelcome to the Redlix Training Academy!\n\nYour account has been successfully created.\n\nRegistered Email: ${email}\nRole Track: ${selectedRole === "other" ? (otherRoleText || "Other") : selectedRole}\n\nHead over to your dashboard to get started:\n${process.env.NEXT_PUBLIC_APP_URL}/login\n\n— The Redlix Training Team`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-            <div style="text-align: center; margin-bottom: 25px;">
-              <h1 style="color: #4f46e5; margin: 0; font-size: 24px; font-weight: 800;">Redlix Training Academy</h1>
-              <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Elevate Your Technical Expertise</p>
-            </div>
-            
-            <p style="font-size: 16px; color: #1e293b; line-height: 1.6; margin-bottom: 20px;">Hello <strong>${fullName}</strong>,</p>
-            
-            <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 20px;">
-              Welcome to the <strong>Redlix Training Academy</strong>! We are absolutely thrilled to have you join our learning community. Your account has been successfully created.
-            </p>
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Welcome to Redlix Training Academy</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border:1px solid #cbd5e1;max-width:600px;width:100%;">
 
-            <div style="background-color: #f8fafc; border-left: 4px solid #4f46e5; padding: 15px; border-radius: 6px; margin: 25px 0;">
-              <h3 style="margin-top: 0; margin-bottom: 10px; color: #1e293b; font-size: 14px;">Your Account Profile:</h3>
-              <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #475569; line-height: 1.6;">
-                <li><strong>Registered Email:</strong> ${email}</li>
-                <li><strong>Role Track:</strong> ${selectedRole === "other" ? (otherRoleText || "Other") : selectedRole}</li>
-              </ul>
-            </div>
+        <!-- HEADER -->
+        <tr>
+          <td style="background-color:#1d4ed8;padding:28px 40px;text-align:center;">
+            <img src="https://ik.imagekit.io/dypkhqxip/logotraining" alt="Redlix Training Academy" height="42" style="display:block;margin:0 auto 10px auto;max-height:42px;" />
+            <p style="margin:0;color:#bfdbfe;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Training Academy</p>
+          </td>
+        </tr>
 
-            <p style="font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 25px;">
-              Now that you're in, you have full access to our curated engineering resources, video academy lectures, and database training sandbox configurations. Head over to your dashboard to get started!
-            </p>
+        <!-- BODY -->
+        <tr>
+          <td style="padding:40px 40px 30px 40px;">
+            <p style="margin:0 0 20px 0;font-size:15px;color:#1e293b;line-height:1.7;">Dear <strong>${fullName}</strong>,</p>
+            <p style="margin:0 0 20px 0;font-size:15px;color:#334155;line-height:1.7;">Welcome to the <strong>Redlix Training Academy</strong>. Your account has been successfully created and you now have full access to our training platform.</p>
 
-            <div style="text-align: center; margin-bottom: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 6px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);">
-                Go to Training Dashboard
-              </a>
-            </div>
+            <!-- ACCOUNT DETAILS TABLE -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;border:1px solid #e2e8f0;">
+              <tr style="background-color:#1d4ed8;">
+                <td colspan="2" style="padding:10px 16px;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Account Details</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:12px 16px;font-size:13px;color:#64748b;font-weight:600;background-color:#f8fafc;width:40%;border-right:1px solid #e2e8f0;">Registered Email</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1e293b;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 16px;font-size:13px;color:#64748b;font-weight:600;background-color:#f8fafc;width:40%;border-right:1px solid #e2e8f0;">Role Track</td>
+                <td style="padding:12px 16px;font-size:13px;color:#1e293b;">${selectedRole === "other" ? (otherRoleText || "Other") : selectedRole}</td>
+              </tr>
+            </table>
 
-            <p style="font-size: 13px; color: #64748b; line-height: 1.6; border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 30px;">
-              Need help? Feel free to reply to this email or contact support. Happy coding!
-            </p>
-            
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 5px;">
-              &mdash; The Redlix Training Team
-            </p>
-          </div>
-        `,
+            <p style="margin:0 0 28px 0;font-size:15px;color:#334155;line-height:1.7;">You can now access your dashboard, browse curated engineering resources, watch video lectures, and explore database configurations.</p>
+
+            <!-- CTA BUTTON -->
+            <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 30px 0;">
+              <tr>
+                <td style="background-color:#1d4ed8;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">Go to Training Dashboard &rarr;</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:13px;color:#64748b;line-height:1.7;">If you did not create this account, please disregard this email.</p>
+          </td>
+        </tr>
+
+        <!-- DIVIDER -->
+        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" /></td></tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="padding:20px 40px;background-color:#f8fafc;">
+            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">This is an automated message from <strong style="color:#64748b;">Redlix Training Academy</strong>. Please do not reply directly to this email.</p>
+            <p style="margin:6px 0 0 0;font-size:11px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Redlix Training Academy. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
       };
 
       // Deliver in the background to avoid blocking user signup
