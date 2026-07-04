@@ -42,14 +42,14 @@ export async function POST(req: Request) {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "kalapalarishirohan@gmail.com",
-        pass: "taiqjujocbucpllm", // "taiq jujo cbuc pllm" without spaces
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
       },
     });
 
     // Email content options
     const mailOptions = {
-      from: '"Redlix Training Academy" <kalapalarishirohan@gmail.com>',
+      from: `"Redlix Training Academy" <${process.env.SMTP_EMAIL}>`,
       to: email,
       subject: "Your OTP Verification Code - Redlix Training",
       html: `
