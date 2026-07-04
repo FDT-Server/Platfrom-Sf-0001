@@ -50,8 +50,16 @@ export async function POST(req: Request) {
     // Email content options
     const mailOptions = {
       from: `"Redlix Training Academy" <${process.env.SMTP_EMAIL}>`,
+      replyTo: process.env.SMTP_EMAIL,
       to: email,
-      subject: "Your OTP Verification Code - Redlix Training",
+      subject: `Redlix Training - Password Reset OTP for ${user.fullName}`,
+      priority: "high" as const,
+      headers: {
+        "X-Mailer": "Redlix Training Mailer",
+        "X-Priority": "1",
+        "Importance": "High",
+      },
+      text: `Hello ${user.fullName},\n\nWe received a request to reset the password for your Redlix Training account.\n\nYour OTP Code: ${otpCode}\n\nThis code is valid for 10 minutes. Do not share this code with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\n— The Redlix Training Team`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 12px; background-color: #ffffff;">
           <h2 style="color: #4f46e5; text-align: center; margin-bottom: 20px;">Redlix Password Recovery</h2>

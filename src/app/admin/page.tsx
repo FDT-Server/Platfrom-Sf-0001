@@ -89,7 +89,7 @@ export default async function AdminPanelPage() {
             </thead>
             <tbody className="divide-y divide-slate-300">
               {allUsers.length > 0 ? (
-                allUsers.map((u) => (
+                allUsers.map((u: { id: string; fullName: string; email: string; selectedRole: string; collegeStudying: string | null; branch: string | null; year: string | null; createdAt: Date }) => (
                   <tr key={u.id} className="hover:bg-slate-50/40 transition duration-150">
                     <td className="py-4 px-4 text-sm font-bold text-slate-800">{u.fullName}</td>
                     <td className="py-4 px-4 text-sm text-slate-700">{u.email}</td>

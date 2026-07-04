@@ -51,8 +51,16 @@ export async function POST(req: Request) {
 
       const mailOptions = {
         from: `"Redlix Training Academy" <${process.env.SMTP_EMAIL}>`,
+        replyTo: process.env.SMTP_EMAIL,
         to: email,
-        subject: "Welcome to Redlix Training Academy! 🚀",
+        subject: `Welcome to Redlix Training Academy, ${fullName}!`,
+        priority: "normal" as const,
+        headers: {
+          "X-Mailer": "Redlix Training Mailer",
+          "X-Priority": "3",
+          "Importance": "Normal",
+        },
+        text: `Hello ${fullName},\n\nWelcome to the Redlix Training Academy!\n\nYour account has been successfully created.\n\nRegistered Email: ${email}\nRole Track: ${selectedRole === "other" ? (otherRoleText || "Other") : selectedRole}\n\nHead over to your dashboard to get started:\n${process.env.NEXT_PUBLIC_APP_URL}/login\n\n— The Redlix Training Team`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
