@@ -106,6 +106,9 @@ export default function AdminLoginPage() {
                 <label htmlFor="admin-password" className="text-[10px] font-bold text-slate-700 block uppercase tracking-wider">
                   Admin Password
                 </label>
+                <Link href="/admin/forgot" className="text-[11px] font-medium text-amber-600 hover:text-amber-700 transition">
+                  Forgot Password?
+                </Link>
               </div>
               <div className="relative">
                 <input
