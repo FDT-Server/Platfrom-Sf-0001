@@ -1143,28 +1143,28 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         >
           
           {/* Header tabs selector */}
-          <div className="flex border-b border-slate-200 bg-white p-2 shrink-0">
+          <div className="flex border-b border-slate-200 bg-white p-3 shrink-0 gap-2 select-none">
             <button
               onClick={() => setActiveTab("tasks")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer shadow-3xs hover:scale-101 active:scale-99 ${
                 activeTab === "tasks"
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-indigo-600 text-white shadow-md border-t border-indigo-500/30"
+                  : "bg-slate-50 text-slate-600 hover:text-slate-800 hover:bg-slate-100 border border-slate-200/50"
               }`}
             >
               <IconChecklist className="w-4 h-4" />
-              Tasks / Todos
+              Tasks Checklist
             </button>
             <button
               onClick={() => setActiveTab("ideas")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer shadow-3xs hover:scale-101 active:scale-99 ${
                 activeTab === "ideas"
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-indigo-600 text-white shadow-md border-t border-indigo-500/30"
+                  : "bg-slate-50 text-slate-600 hover:text-slate-800 hover:bg-slate-100 border border-slate-200/50"
               }`}
             >
               <IconBulb className="w-4 h-4" />
-              Idea Board
+              Ideation Board
             </button>
           </div>
 
@@ -1176,7 +1176,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               <div className="space-y-4">
                 
                 {/* Todo creation form */}
-                <form onSubmit={handleAddTodo} className="flex gap-2">
+                <form onSubmit={handleAddTodo} className="flex gap-2 p-1">
                   <input
                     type="text"
                     required
@@ -1184,12 +1184,12 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                     onChange={(e) => setTodoText(e.target.value)}
                     placeholder="Create a shared task..."
                     maxLength={100}
-                    className="flex-1 px-3.5 py-2 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none rounded-lg text-slate-800 text-xs bg-white transition"
+                    className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs bg-white transition shadow-3xs"
                   />
                   <button
                     type="submit"
                     disabled={!todoText.trim() || submittingTodo}
-                    className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-3.5 py-2 rounded-lg transition duration-150 cursor-pointer flex items-center gap-1 shrink-0 text-xs font-semibold"
+                    className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-4 py-2.5 rounded-xl transition duration-150 cursor-pointer flex items-center gap-1 shrink-0 text-xs font-semibold shadow-3xs"
                   >
                     <IconPlus className="w-4 h-4" /> Add
                   </button>
@@ -1197,16 +1197,18 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
                 {/* Todo listings */}
                 <div className="space-y-2.5">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
-                    Shared Task Checklist ({todos.length})
+                  <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider block pl-0.5 select-none">
+                    Shared task checklist ({todos.length})
                   </span>
                   {todos.length > 0 ? (
                     <div className="space-y-2">
                       {todos.map((todo) => (
                         <div
                           key={todo.id}
-                          className={`flex items-start gap-3 p-3 bg-yellow-50/60 border-2 rounded-2xl shadow-2xs transition animate-fadeIn ${
-                            todo.completed ? "border-yellow-100/50 opacity-60" : "border-yellow-200"
+                          className={`flex items-start gap-3 p-3.5 border rounded-2xl transition hover:scale-[1.01] duration-150 shadow-3xs animate-fadeIn ${
+                            todo.completed 
+                              ? "bg-slate-50/70 border-slate-200/50 opacity-65" 
+                              : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-2xs"
                           }`}
                         >
                           <input
@@ -1221,13 +1223,13 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                             }`}>
                               {todo.title}
                             </p>
-                            <span className="block text-[8px] text-slate-400 mt-1">
+                            <span className="block text-[8px] text-slate-400 mt-1 select-none">
                               By: {todo.creatorName}
                             </span>
                           </div>
                           <button
                             onClick={() => handleDeleteTodo(todo.id)}
-                            className="text-slate-400 hover:text-red-600 p-1 rounded-lg hover:bg-slate-50 transition cursor-pointer shrink-0"
+                            className="text-slate-400 hover:text-red-650 p-1 rounded-lg hover:bg-slate-50 transition cursor-pointer shrink-0"
                           >
                             <IconTrash className="w-3.5 h-3.5" />
                           </button>
@@ -1235,7 +1237,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                       ))}
                     </div>
                   ) : (
-                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center">
+                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center select-none">
                       <p className="text-[11px] text-slate-500">
                         No tasks active in this room. Add a task above to align goals.
                       </p>
@@ -1250,9 +1252,9 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               <div className="space-y-4">
                 
                 {/* Idea card creation form */}
-                <form onSubmit={handleAddIdea} className="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-3 shadow-2xs">
-                  <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider block leading-none">
-                    Post an Idea card
+                <form onSubmit={handleAddIdea} className="bg-white border border-slate-200/80 rounded-2xl p-4.5 space-y-3.5 shadow-3xs">
+                  <span className="text-[10px] text-slate-455 font-bold uppercase tracking-wider block leading-none pl-0.5 select-none">
+                    Post an idea card
                   </span>
                   <div className="space-y-2">
                     <input
@@ -1262,7 +1264,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                       onChange={(e) => setIdeaTitle(e.target.value)}
                       placeholder="Title of your idea..."
                       maxLength={80}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-indigo-500 focus:outline-none transition text-slate-800"
+                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 shadow-3xs"
                     />
                     <textarea
                       required
@@ -1270,14 +1272,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                       onChange={(e) => setIdeaDesc(e.target.value)}
                       placeholder="Describe your design or strategy..."
                       maxLength={300}
-                      rows={2.5}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-indigo-500 focus:outline-none transition text-slate-800 resize-none"
+                      rows={3}
+                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 resize-none shadow-3xs"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={!ideaTitle.trim() || !ideaDesc.trim() || submittingIdea}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-3xs"
                   >
                     <IconPlus className="w-4 h-4" /> Share Idea
                   </button>
@@ -1285,33 +1287,33 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
                 {/* Ideas stack */}
                 <div className="space-y-2.5">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
-                    Room Ideas Stack ({ideas.length})
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block pl-0.5 select-none">
+                    Room ideas stack ({ideas.length})
                   </span>
                   {ideas.length > 0 ? (
                     <div className="space-y-3">
                       {ideas.map((idea) => (
                         <div
                           key={idea.id}
-                          className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4 shadow-2xs space-y-2 relative overflow-hidden animate-fadeIn"
+                          className="bg-gradient-to-br from-amber-50/80 to-orange-50/30 border border-amber-200/70 hover:border-amber-300 rounded-2xl p-4.5 shadow-3xs hover:shadow-2xs transition hover:scale-[1.01] duration-150 space-y-2.5 relative overflow-hidden animate-fadeIn"
                         >
                           <div className="flex justify-between items-start gap-2">
-                            <h4 className="text-xs font-extrabold text-amber-900 leading-snug">
+                            <h4 className="text-xs font-bold text-amber-950 leading-snug">
                               {idea.title}
                             </h4>
                             <button
                               onClick={() => handleDeleteIdea(idea.id)}
-                              className="text-amber-600 hover:text-red-650 p-1 rounded-lg hover:bg-amber-100/40 transition cursor-pointer shrink-0"
+                              className="text-amber-700 hover:text-red-655 p-1.5 rounded-lg hover:bg-amber-100/40 transition cursor-pointer shrink-0"
                             >
                               <IconTrash className="w-3.5 h-3.5" />
                             </button>
                           </div>
                           
-                          <p className="text-xs text-amber-850 leading-relaxed break-words whitespace-pre-wrap">
+                          <p className="text-xs text-amber-900/90 leading-relaxed break-words whitespace-pre-wrap">
                             {idea.description}
                           </p>
 
-                          <div className="pt-2 border-t border-amber-200/30 flex justify-between items-center text-[8px] text-amber-700/80">
+                          <div className="pt-2 border-t border-amber-200/40 flex justify-between items-center text-[8px] text-amber-800/80 select-none">
                             <span>Author: {idea.creatorName}</span>
                             <span>
                               {new Date(idea.createdAt).toLocaleDateString("en-US", {
@@ -1324,8 +1326,8 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                       ))}
                     </div>
                   ) : (
-                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center">
-                      <p className="text-[11px] text-slate-500">
+                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center select-none">
+                      <p className="text-[11px] text-slate-550">
                         No ideas shared yet. Post your first card to start brainstorming!
                       </p>
                     </div>
