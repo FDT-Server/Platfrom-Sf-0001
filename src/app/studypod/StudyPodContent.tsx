@@ -14,6 +14,13 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
+interface Participant {
+  id: string;
+  fullName: string;
+  profileImage?: string | null;
+  selectedRole?: string | null;
+}
+
 interface StudyPod {
   id: string;
   name: string;
@@ -22,6 +29,7 @@ interface StudyPod {
   createdAt: string;
   creatorImage?: string | null;
   creatorRole?: string | null;
+  participants: Participant[];
 }
 
 interface StudyPodContentProps {
@@ -39,6 +47,42 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
   const [pods, setPods] = useState<StudyPod[]>(initialPods);
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedPodId, setCopiedPodId] = useState<string | null>(null);
+
+  const getCardHeaderTheme = (podId: string) => {
+    const themes = [
+      {
+        bg: "bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-100 text-amber-800",
+        pill: "bg-amber-100 text-amber-900 border-amber-200",
+        tagColor: "text-amber-600"
+      },
+      {
+        bg: "bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-100 text-indigo-850",
+        pill: "bg-indigo-100 text-indigo-900 border-indigo-200",
+        tagColor: "text-indigo-650"
+      },
+      {
+        bg: "bg-gradient-to-r from-emerald-50 to-teal-50 border-teal-100 text-teal-850",
+        pill: "bg-teal-100 text-teal-900 border-teal-200",
+        tagColor: "text-teal-600"
+      },
+      {
+        bg: "bg-gradient-to-r from-purple-50 to-fuchsia-50 border-fuchsia-100 text-fuchsia-850",
+        pill: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200",
+        tagColor: "text-fuchsia-600"
+      },
+      {
+        bg: "bg-gradient-to-r from-rose-50 to-pink-50 border-pink-100 text-pink-850",
+        pill: "bg-pink-100 text-pink-900 border-pink-200",
+        tagColor: "text-pink-600"
+      }
+    ];
+    let hash = 0;
+    for (let i = 0; i < podId.length; i++) {
+      hash = podId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % themes.length;
+    return themes[index];
+  };
 
   const handleCopyLink = (podId: string) => {
     const inviteUrl = `${window.location.origin}/studypod/${podId}`;
@@ -89,93 +133,144 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
         {/* Pods Grid list */}
         {filteredPods.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-2 pr-1 pb-4">
-            {filteredPods.map((pod) => (
-              <div
-                key={pod.id}
-                className="flex flex-col rounded-2xl shadow-xs border border-slate-300 overflow-hidden bg-white hover:shadow-md transition duration-150 animate-fadeIn"
-              >
-                {/* Colored top bar header: yellow theme to match study pods directory theme! */}
-                <div className="flex justify-between items-center px-6 py-4 text-[10px] font-bold font-mono tracking-wider bg-yellow-100/70 text-slate-800 border-b border-yellow-200/50">
-                  <span>POD-{pod.id.substring(0, 5).toUpperCase()}</span>
-                  <span>
-                    {new Date(pod.createdAt).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
+            {filteredPods.map((pod) => {
+              const headerTheme = getCardHeaderTheme(pod.id);
+              return (
+                <div
+                  key={pod.id}
+                  className="flex flex-col rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden bg-white hover:shadow-md transition duration-150 animate-fadeIn"
+                >
+                  {/* Dynamically Styled Header based on the card pod ID */}
+                  <div className={`flex justify-between items-center px-5 py-3 text-[9px] font-bold font-mono tracking-wider border-b border-slate-200/40 ${headerTheme.bg}`}>
+                    <span>POD-{pod.id.substring(0, 5).toUpperCase()}</span>
+                    <span className="opacity-95">
+                      {new Date(pod.createdAt).toLocaleDateString("en-US", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
 
-                {/* Main Card Body */}
-                <div className="p-5 flex flex-col justify-between flex-1">
-                  <div>
-                    {/* Host Avatar and Role Row */}
-                    <div className="flex items-center gap-2">
-                      {pod.creatorImage ? (
-                        <img
-                          src={pod.creatorImage}
-                          alt={pod.creatorName}
-                          className="w-5 h-5 rounded-full object-cover border border-slate-200 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-[9px] font-bold shrink-0">
-                          {pod.creatorName.substring(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-slate-700 font-semibold leading-none truncate">
-                          {pod.creatorName}
-                        </p>
-                        <p className="text-[8px] text-slate-400 font-medium leading-none truncate mt-0.5">
-                          {pod.creatorRole || "Academy Learner"}
-                        </p>
+                  {/* Main Card Body */}
+                  <div className="p-5 flex flex-col justify-between flex-1 space-y-4">
+                    <div>
+                      {/* Room name and active status badge */}
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <h4 className="text-sm font-extrabold text-slate-850 leading-snug line-clamp-2">
+                          {pod.name}
+                        </h4>
+                        <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded-full border shadow-3xs uppercase tracking-wider shrink-0 select-none ${headerTheme.pill}`}>
+                          Active
+                        </span>
                       </div>
+
+                      {/* Prominent Created By / Host Section */}
+                      <div className="bg-slate-50/60 rounded-xl p-3 border border-slate-200/50 flex items-center gap-3">
+                        {pod.creatorImage ? (
+                          <img
+                            src={pod.creatorImage}
+                            alt={pod.creatorName}
+                            className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-xl bg-indigo-55 text-indigo-750 border border-indigo-100 flex items-center justify-center text-xs font-bold shadow-2xs shrink-0">
+                            {pod.creatorName.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider">Host Creator</span>
+                          <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                            {pod.creatorName}
+                          </p>
+                          <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5">
+                            {pod.creatorRole || "Academy Learner"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Active Members/Joined Section */}
+                      <div className="mt-4 space-y-2">
+                        <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider pl-0.5">Collaborators Joined</span>
+                        {pod.participants && pod.participants.length > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex -space-x-1.5 overflow-hidden py-0.5 pl-0.5">
+                              {pod.participants.slice(0, 5).map((p) => {
+                                if (p.profileImage) {
+                                  return (
+                                    <img
+                                      key={p.id}
+                                      src={p.profileImage}
+                                      alt={p.fullName}
+                                      title={`${p.fullName} (${p.selectedRole || "Member"})`}
+                                      className="inline-block h-6.5 w-6.5 rounded-full ring-2 ring-white object-cover shadow-3xs"
+                                    />
+                                  );
+                                }
+                                return (
+                                  <div
+                                    key={p.id}
+                                    title={`${p.fullName} (${p.selectedRole || "Member"})`}
+                                    className="inline-block h-6.5 w-6.5 rounded-full ring-2 ring-white bg-slate-200 text-slate-700 flex items-center justify-center text-[8px] font-bold shadow-3xs"
+                                  >
+                                    {p.fullName.substring(0, 2).toUpperCase()}
+                                  </div>
+                                );
+                              })}
+                              {pod.participants.length > 5 && (
+                                <div className="inline-block h-6.5 w-6.5 rounded-full ring-2 ring-white bg-indigo-655 text-white flex items-center justify-center text-[8px] font-bold shadow-3xs">
+                                  +{pod.participants.length - 5}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-semibold">
+                              {pod.participants.length} {pod.participants.length === 1 ? "peer" : "peers"}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-slate-450 italic pl-1 flex items-center gap-1.5 font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-350 shrink-0"></span>
+                            No one joined yet
+                          </p>
+                        )}
+                      </div>
+
                     </div>
 
-                    {/* Room name and dynamic badge */}
-                    <div className="flex items-start justify-between gap-3 mt-3.5">
-                      <h4 className="text-sm font-semibold text-slate-850 leading-snug line-clamp-2">
-                        {pod.name}
-                      </h4>
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-indigo-50/50 text-indigo-700 border-indigo-100 shrink-0 select-none">
-                        Active
-                      </span>
+                    {/* Dotted horizontal line separator */}
+                    <div className="border-t border-dashed border-slate-200 pt-1" />
+
+                    {/* Action footer */}
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => handleCopyLink(pod.id)}
+                        className="text-[11px] font-bold text-slate-500 hover:text-indigo-650 transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        {copiedPodId === pod.id ? (
+                          <>
+                            <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconCopy className="w-3.5 h-3.5 shrink-0" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => router.push(`/studypod/${pod.id}`)}
+                        className="bg-slate-950 hover:bg-slate-900 text-white rounded-lg px-4.5 py-2 text-xs font-semibold transition duration-150 flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      >
+                        <span>Enter Room</span>
+                        <IconLogin className="w-3.5 h-3.5 shrink-0" />
+                      </button>
                     </div>
-                  </div>
-
-                  {/* Dotted horizontal line separator */}
-                  <div className="border-t border-dashed border-slate-200 my-4" />
-
-                  {/* Action footer */}
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => handleCopyLink(pod.id)}
-                      className="text-[11px] font-semibold text-slate-500 hover:text-indigo-650 transition cursor-pointer flex items-center gap-1.5"
-                    >
-                      {copiedPodId === pod.id ? (
-                        <>
-                          <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <IconCopy className="w-3.5 h-3.5 shrink-0" />
-                          <span>Copy Link</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => router.push(`/studypod/${pod.id}`)}
-                      className="bg-black hover:bg-slate-900 text-white rounded-lg px-5 py-2 text-xs font-medium transition duration-150 flex items-center gap-1.5 shadow-sm cursor-pointer"
-                    >
-                      <span>Enter Room</span>
-                      <IconLogin className="w-3.5 h-3.5 shrink-0" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-white border border-dashed border-slate-200 rounded-3xl p-10 text-center flex flex-col items-center justify-center">
