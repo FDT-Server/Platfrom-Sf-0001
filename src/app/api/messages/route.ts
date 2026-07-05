@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get("session")?.value;
@@ -36,6 +36,59 @@ export async function GET() {
         createdAt: "asc",
       },
     });
+
+    // Automatically update seenBy status for messages rendered in current activeChatUserId context
+    const url = new URL(req.url);
+    const activeChatId = url.searchParams.get("activeChatUserId");
+
+    // Filter messages to mark as seen: active chat context messages that do not contain user's ID
+    const messagesToMarkSeen = messages.filter((msg) => {
+      const isInActiveChat =
+        (activeChatId === "null" || !activeChatId)
+          ? msg.recipientId === null // Public group conversation
+          : (msg.userId === activeChatId && msg.recipientId === loggedInUser.id) ||
+            (msg.userId === loggedInUser.id && msg.recipientId === activeChatId); // Private conversation
+
+      if (!isInActiveChat) return false;
+
+      let seenMap: any = msg.seenBy || {};
+      if (typeof seenMap === "string") {
+        try {
+          seenMap = JSON.parse(seenMap);
+        } catch {
+          seenMap = {};
+        }
+      }
+      return !seenMap[loggedInUser.id];
+    });
+
+    if (messagesToMarkSeen.length > 0) {
+      const now = new Date().toISOString();
+      for (const msg of messagesToMarkSeen) {
+        let seenMap: any = msg.seenBy || {};
+        if (typeof seenMap === "string") {
+          try {
+            seenMap = JSON.parse(seenMap);
+          } catch {
+            seenMap = {};
+          }
+        }
+        seenMap[loggedInUser.id] = {
+          fullName: loggedInUser.fullName,
+          seenAt: now,
+        };
+
+        await prisma.message.update({
+          where: { id: msg.id },
+          data: {
+            seenBy: seenMap,
+          },
+        });
+
+        // Mutate the local response item as well
+        msg.seenBy = seenMap;
+      }
+    }
 
     return NextResponse.json({ messages });
   } catch (err: any) {

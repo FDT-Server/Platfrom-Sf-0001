@@ -38,6 +38,7 @@ interface ChatMessage {
   role: string;
   recipientId: string | null;
   reactions?: any;
+  seenBy?: any;
   createdAt: string;
 }
 
@@ -78,6 +79,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   const [activeMenuMsgId, setActiveMenuMsgId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [infoMessage, setInfoMessage] = useState<ChatMessage | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -91,11 +93,14 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     return bubbleColors[index];
   };
 
+  // State to prevent forced scroll jumps
+  const [prevMessageCount, setPrevMessageCount] = useState(0);
+
   // Fetch messages from API
   const fetchMessages = async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
-      const res = await fetch(`/api/messages?t=${Date.now()}`, {
+      const res = await fetch(`/api/messages?activeChatUserId=${activeChatUserId || "null"}&t=${Date.now()}`, {
         cache: "no-store",
         headers: {
           "Pragma": "no-cache",
@@ -113,25 +118,35 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  // Poll for messages every 3 seconds
+  // Poll for messages every 1 second
   useEffect(() => {
     fetchMessages(true);
     
     const interval = setInterval(() => {
       fetchMessages(false);
-    }, 3000);
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [activeChatUserId]);
 
   // Auto scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Reset scroll details when switching chat windows
   useEffect(() => {
     scrollToBottom();
-  }, [messages, activeChatUserId]);
+    setPrevMessageCount(messages.length);
+  }, [activeChatUserId]);
+
+  // Only scroll down when new message actually arrives
+  useEffect(() => {
+    if (messages.length > prevMessageCount) {
+      scrollToBottom();
+      setPrevMessageCount(messages.length);
+    }
+  }, [messages.length]);
 
   // Handle message sending
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -268,6 +283,23 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       }
       return part;
     });
+  };
+
+  // Count unread direct messages from a specific sender
+  const getUnreadCount = (senderId: string) => {
+    return messages.filter((msg) => {
+      const isFromSender = msg.userId === senderId && msg.recipientId === user.id;
+      if (!isFromSender) return false;
+      let seenMap: any = msg.seenBy || {};
+      if (typeof seenMap === "string") {
+        try {
+          seenMap = JSON.parse(seenMap);
+        } catch {
+          seenMap = {};
+        }
+      }
+      return !seenMap[user.id];
+    }).length;
   };
 
   // Delete message locally (Delete for me)
@@ -442,6 +474,17 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       {isUserAdmin ? "Admin" : u.selectedRole}
                     </span>
                   </div>
+
+                  {/* Unread count badge */}
+                  {(() => {
+                    const count = getUnreadCount(u.id);
+                    if (count === 0) return null;
+                    return (
+                      <span className={`ml-auto ${isSelected ? "bg-white text-indigo-650" : "bg-indigo-600 text-white"} text-[10px] font-bold h-5 px-1.5 rounded-full flex items-center justify-center min-w-5 shadow-xs shrink-0 animate-pulse`}>
+                        {count}
+                      </span>
+                    );
+                  })()}
                 </button>
               );
             })}
@@ -633,6 +676,17 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                                   Reply privately
                                 </button>
                               )}
+
+                              <button
+                                onClick={() => {
+                                  setInfoMessage(msg);
+                                  setActiveMenuMsgId(null);
+                                }}
+                                className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
+                              >
+                                <span className="material-symbols-outlined text-[13px] text-slate-400">info</span>
+                                Info
+                              </button>
 
                               <button
                                 onClick={() => handleDeleteForMe(msg.id)}
@@ -1006,6 +1060,78 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
               </div>
             </div>
           </div>
+        )}
+        {/* Seen By Message Info Modal overlay */}
+        {infoMessage && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+              onClick={() => setInfoMessage(null)}
+            >
+              {/* Modal Card body */}
+              <div 
+                className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-5 space-y-4 animate-scaleIn"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-[18px] text-indigo-600">info</span>
+                    Message Info
+                  </h3>
+                  <button 
+                    onClick={() => setInfoMessage(null)} 
+                    className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-full hover:bg-slate-100 transition shrink-0"
+                  >
+                    <IconX className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Quoted Message */}
+                <div className="bg-slate-50 border-l-4 border-slate-300 p-3 rounded-r-xl text-xs text-slate-600 break-words max-h-24 overflow-y-auto whitespace-pre-wrap italic">
+                  "{infoMessage.content.startsWith("💬 Replying to") ? infoMessage.content.split("\n\n").slice(1).join("\n\n") : infoMessage.content}"
+                </div>
+
+                {/* Reader Users List */}
+                <div className="space-y-2">
+                  <h4 className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">
+                    Read By
+                  </h4>
+                  {(() => {
+                    const seenMap = infoMessage.seenBy || {};
+                    const seenEntries = Object.entries(seenMap);
+                    
+                    // Filter out the sender from the read list as it is obvious and cluttering
+                    const readers = seenEntries.filter(([uid]) => uid !== infoMessage.userId);
+                    
+                    if (readers.length === 0) {
+                      return (
+                        <p className="text-xs text-slate-400 text-center py-3 italic">
+                          No one has read this message yet.
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        {readers.map(([uid, info]: [string, any]) => (
+                          <div key={uid} className="flex justify-between items-center text-xs py-1 border-b border-slate-50 last:border-0">
+                            <span className="font-bold text-slate-700">{info.fullName}</span>
+                            <span className="text-[10px] text-slate-400 font-medium font-mono">
+                              {new Date(info.seenAt).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true
+                              })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
       </div>

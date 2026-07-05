@@ -41,6 +41,7 @@ model Message {
   role        String
   recipientId String?
   reactions   Json?    @default("{}")
+  seenBy      Json?    @default("{}")
   createdAt   DateTime @default(now())
 }
 
