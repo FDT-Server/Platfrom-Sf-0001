@@ -207,6 +207,24 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     return colors[Math.abs(hash) % colors.length];
   };
 
+  // Dynamic soft pastel background colors for member card list items
+  const getParticipantSoftCardColor = (email: string) => {
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+      hash = email.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const softColors = [
+      "bg-blue-50/70 border-blue-150/40 text-blue-900 shadow-[0_2px_8px_rgba(219,234,254,0.35)]",
+      "bg-emerald-50/70 border-emerald-150/40 text-emerald-900 shadow-[0_2px_8px_rgba(209,250,229,0.35)]",
+      "bg-indigo-50/70 border-indigo-150/40 text-indigo-900 shadow-[0_2px_8px_rgba(224,231,255,0.35)]",
+      "bg-purple-50/70 border-purple-150/40 text-purple-900 shadow-[0_2px_8px_rgba(243,232,255,0.35)]",
+      "bg-sky-50/70 border-sky-150/40 text-sky-900 shadow-[0_2px_8px_rgba(224,242,254,0.35)]",
+      "bg-rose-50/70 border-rose-150/40 text-rose-900 shadow-[0_2px_8px_rgba(255,228,230,0.35)]",
+      "bg-amber-50/70 border-amber-150/40 text-amber-900 shadow-[0_2px_8px_rgba(254,243,199,0.35)]",
+    ];
+    return softColors[Math.abs(hash) % softColors.length];
+  };
+
   // Scroll chat to bottom
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -737,17 +755,16 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           >
           {/* Header metadata */}
           <div className="p-5 border-b border-slate-200/80 bg-white">
-            <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider mb-1 select-none">
+            <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider mb-1.5 select-none">
               Study Pod Workspace
             </span>
-            <h2 className="text-sm font-extrabold text-slate-850 truncate leading-tight flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+            <h2 className="text-base font-black text-indigo-650 tracking-tight leading-tight flex items-center gap-1.5 select-none">
+              <span className="w-2 h-2 rounded-full bg-[#CCFF00] shadow-[0_0_8px_rgba(204,255,0,0.65)] shrink-0 animate-pulse"></span>
               {studyPod.name}
             </h2>
-            <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px] text-slate-400">shield_person</span>
+            <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1 select-none">
               <span>Host:</span>
-              <span className="font-semibold text-slate-700">{studyPod.creatorName}</span>
+              <span className="font-bold text-slate-700">{studyPod.creatorName}</span>
             </p>
           </div>
 
@@ -759,43 +776,49 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </span>
               <div className="space-y-2.5 pt-1">
                 {/* Current logged in user is always in room */}
-                <div className="flex items-center gap-3 p-2 rounded-xl bg-white border border-slate-100 shadow-3xs transition hover:border-slate-200">
-                  {user.profileImage ? (
-                    <img
-                      src={user.profileImage}
-                      alt={user.fullName}
-                      className="w-7.5 h-7.5 rounded-lg object-cover border border-slate-200/80 shadow-3xs shrink-0"
-                    />
-                  ) : (
-                    <div className="w-7.5 h-7.5 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs shrink-0">
-                      Me
+                {(() => {
+                  const softColorClass = getParticipantSoftCardColor(user.email);
+                  return (
+                    <div className={`flex items-center gap-3 p-2.5 rounded-xl border transition hover:scale-[1.01] duration-150 ${softColorClass}`}>
+                      {user.profileImage ? (
+                        <img
+                          src={user.profileImage}
+                          alt={user.fullName}
+                          className="w-7.5 h-7.5 rounded-lg object-cover border border-white/20 shadow-3xs shrink-0"
+                        />
+                      ) : (
+                        <div className="w-7.5 h-7.5 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs shrink-0">
+                          Me
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-900 truncate leading-none flex items-center gap-1">
+                          {user.fullName}
+                          <span className="inline-block text-[7px] font-extrabold bg-slate-900 text-white px-1 py-0.5 rounded shrink-0">
+                            Me
+                          </span>
+                        </p>
+                        <p className="text-[9px] text-slate-550 truncate leading-none mt-1">
+                          {user.email}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-850 truncate leading-none flex items-center gap-1">
-                      {user.fullName}
-                      <span className="inline-block text-[7px] font-extrabold bg-slate-900 text-white px-1 py-0.5 rounded shrink-0">
-                        Me
-                      </span>
-                    </p>
-                    <p className="text-[9px] text-slate-450 truncate leading-none mt-1">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Other members derived from messages stream */}
                 {participants
                   .filter((p) => p.email.toLowerCase() !== user.email.toLowerCase())
                   .map((p) => {
                     const colorStyle = getParticipantColor(p.email);
+                    const softColorClass = getParticipantSoftCardColor(p.email);
                     return (
-                      <div key={p.email} className="flex items-center gap-3 p-2 rounded-xl bg-white border border-slate-100 shadow-3xs transition hover:border-slate-200 animate-fadeIn">
+                      <div key={p.email} className={`flex items-center gap-3 p-2.5 rounded-xl border transition hover:scale-[1.01] duration-150 animate-fadeIn ${softColorClass}`}>
                         {p.profileImage ? (
                           <img
                             src={p.profileImage}
                             alt={p.fullName}
-                            className="w-7.5 h-7.5 rounded-lg object-cover border border-slate-200/80 shadow-3xs shrink-0"
+                            className="w-7.5 h-7.5 rounded-lg object-cover border border-white/20 shadow-3xs shrink-0"
                           />
                         ) : (
                           <div className={`w-7.5 h-7.5 rounded-lg flex items-center justify-center text-[10px] font-bold border shadow-2xs shrink-0 ${colorStyle.bg}`}>
@@ -803,10 +826,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-slate-850 truncate leading-none">
+                          <p className="text-xs font-bold text-slate-900 truncate leading-none">
                             {p.fullName}
                           </p>
-                          <p className="text-[9px] text-slate-400 truncate leading-none mt-1">
+                          <p className="text-[9px] text-slate-550 truncate leading-none mt-1">
                             {p.email}
                           </p>
                         </div>
