@@ -84,6 +84,12 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [roomPod, setRoomPod] = useState<StudyPod>(studyPod);
   const [showParticipantsDrawer, setShowParticipantsDrawer] = useState(false);
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+  
+  // Mounted flag to fix SSR hydration mismatch on width styles
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Host Action: Approve or decline pending lobby requests
   const handleApproveUser = async (targetUserId: string, action: "accept" | "decline") => {
@@ -678,12 +684,12 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
           <button
             onClick={() => setShowParticipantsDrawer(!showParticipantsDrawer)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-750 hover:text-slate-900 font-bold transition shadow-3xs text-[10px] cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-350 hover:to-teal-350 text-slate-950 hover:text-black font-extrabold transition shadow-[0_0_12px_rgba(52,211,153,0.45)] hover:scale-102 active:scale-98 text-[10px] cursor-pointer border-t border-emerald-300/40"
           >
-            <span className="material-symbols-outlined text-[15px] text-slate-400 select-none">group</span>
+            <span className="material-symbols-outlined text-[15px] text-slate-905 select-none font-bold">group</span>
             Participants
             {isHost && waitingUserCount > 0 && (
-              <span className="h-4 min-w-4 bg-indigo-655 text-white rounded-full flex items-center justify-center text-[8px] font-extrabold px-1 animate-pulse">
+              <span className="h-4 min-w-4 bg-slate-950 text-white rounded-full flex items-center justify-center text-[8px] font-extrabold px-1">
                 {waitingUserCount}
               </span>
             )}
@@ -720,7 +726,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           
           {/* PANEL 1: Left Room Sidebar Panel */}
           <div 
-            style={{ width: typeof window !== "undefined" && window.innerWidth >= 1024 ? `${panel1Width}px` : undefined }}
+            style={mounted && typeof window !== "undefined" && window.innerWidth >= 1024 ? { width: `${panel1Width}px` } : {}}
             className={`border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex-col shrink-0 lg:max-h-full ${mobileActiveTab === "info" ? "flex flex-1 animate-fadeIn" : "hidden lg:flex"}`}
           >
           {/* Header metadata */}
@@ -929,7 +935,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
         {/* PANEL 3: Right Tabbed Workspace Board (Todos & Ideas) */}
         <div 
-          style={{ width: typeof window !== "undefined" && window.innerWidth >= 1024 ? `${panel3Width}px` : undefined }}
+          style={mounted && typeof window !== "undefined" && window.innerWidth >= 1024 ? { width: `${panel3Width}px` } : {}}
           className={`flex-col h-full bg-slate-50/30 shrink-0 ${mobileActiveTab === "tasks" || mobileActiveTab === "ideas" ? "flex flex-1" : "hidden lg:flex"}`}
         >
           
