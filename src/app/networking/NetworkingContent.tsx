@@ -74,6 +74,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   // Controls visibility of the profile inspector panel
   const [showProfilePanel, setShowProfilePanel] = useState(false);
 
+  // States for dropdown, reply, and emoji picker
+  const [activeMenuMsgId, setActiveMenuMsgId] = useState<string | null>(null);
+  const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Stable hashing function to get consistent color for a user ID
@@ -137,13 +142,17 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     setError("");
 
     try {
+      const textToSend = replyingToMessage
+        ? `💬 Replying to ${replyingToMessage.fullName}:\n> ${replyingToMessage.content.split("\n").join("\n> ")}\n\n${newMessageText.trim()}`
+        : newMessageText.trim();
+
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: newMessageText.trim(),
+          content: textToSend,
           recipientId: activeChatUserId, // Send to selected user, or null for public group
         }),
       });
@@ -152,6 +161,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
         const data = await res.json();
         setMessages((prev) => [...prev, data.message]);
         setNewMessageText("");
+        setReplyingToMessage(null); // Clear reply context state
       } else {
         const errData = await res.json();
         setError(errData.error || "Failed to send message.");
@@ -234,6 +244,57 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     });
 
     return { reactionCounts, userReacted, totalReactions };
+  };
+
+  // Convert plain text URLs to clickable anchor tags
+  const renderMessageContent = (content: string, isCurrentUser: boolean) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`underline hover:opacity-85 break-all font-semibold ${
+              isCurrentUser ? "text-indigo-100 hover:text-white" : "text-indigo-650 hover:text-indigo-800"
+            }`}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Delete message locally (Delete for me)
+  const handleDeleteForMe = (messageId: string) => {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    setActiveMenuMsgId(null);
+  };
+
+  // Delete message from database (Delete for everyone)
+  const handleDeleteForEveryone = async (messageId: string) => {
+    try {
+      // Optimistically remove from client state
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      setActiveMenuMsgId(null);
+
+      const res = await fetch(`/api/messages/${messageId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete message for everyone");
+      }
+    } catch (err) {
+      console.error("Delete message error:", err);
+      // Re-fetch messages if call fails
+      fetchMessages(false);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -474,21 +535,35 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
                     }`}
                   >
-                    {/* User Avatar Initials with custom user-specific color */}
+                    {/* User Avatar Initials or Profile Photo */}
                     <div className="shrink-0">
-                      <div 
-                        style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shadow-2xs"
-                      >
-                        {getInitials(msg.fullName)}
-                      </div>
+                      {(() => {
+                        const senderUser = allUsers.find((u) => u.id === msg.userId) || (msg.userId === user.id ? user : null);
+                        if (senderUser?.profileImage) {
+                          return (
+                            <img 
+                              src={senderUser.profileImage} 
+                              className="w-8 h-8 rounded-xl object-cover shadow-2xs border border-slate-200" 
+                              alt={msg.fullName} 
+                            />
+                          );
+                        }
+                        return (
+                          <div 
+                            style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shadow-2xs"
+                          >
+                            {getInitials(msg.fullName)}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Chat Bubble card */}
                     <div className="space-y-1 group relative">
                       
                       {/* Emoji Reaction Hover Bar */}
-                      <div className={`absolute -top-7 ${isCurrentUser ? "left-0" : "right-0"} z-30 bg-slate-950 border border-slate-800 shadow-md rounded-full px-2.5 py-1.5 flex gap-2 items-center transition-all duration-150 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto`}>
+                      <div className={`absolute -top-7 ${isCurrentUser ? "left-0" : "right-0"} z-35 bg-slate-950 border border-slate-800 shadow-md rounded-full px-2.5 py-1.5 flex gap-2 items-center transition-all duration-150 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto`}>
                         {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji) => {
                           const currentReactions = msg.reactions || {};
                           const userReact = currentReactions[user.id];
@@ -505,6 +580,80 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                             </button>
                           );
                         })}
+                      </div>
+
+                      {/* Dropdown Options Hover Chevron */}
+                      <div className={`absolute top-0.5 ${isCurrentUser ? "-left-5" : "-right-5"} z-30 opacity-0 group-hover:opacity-100 transition-all duration-150`}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuMsgId(activeMenuMsgId === msg.id ? null : msg.id);
+                          }}
+                          className="text-slate-400 hover:text-slate-700 bg-white/90 hover:bg-white rounded-full p-0.5 border border-slate-200 shadow-3xs flex items-center justify-center cursor-pointer"
+                          title="Message Options"
+                        >
+                          <span className="material-symbols-outlined text-[14px] select-none font-bold">
+                            keyboard_arrow_down
+                          </span>
+                        </button>
+
+                        {activeMenuMsgId === msg.id && (
+                          <>
+                            {/* Backdrop overlay to close when clicking outside */}
+                            <div 
+                              className="fixed inset-0 z-40 cursor-default" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuMsgId(null);
+                              }}
+                            />
+                            {/* Dropdown menu list */}
+                            <div className={`absolute top-6 ${isCurrentUser ? "left-0" : "right-0"} z-50 bg-white border border-slate-200/80 shadow-md rounded-lg py-1 w-36 animate-fadeIn`}>
+                              <button
+                                onClick={() => {
+                                  setReplyingToMessage(msg);
+                                  setActiveMenuMsgId(null);
+                                }}
+                                className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
+                              >
+                                <span className="material-symbols-outlined text-[13px] text-slate-400">reply</span>
+                                Reply
+                              </button>
+                              
+                              {activeChatUserId === null && !isCurrentUser && (
+                                <button
+                                  onClick={() => {
+                                    setActiveChatUserId(msg.userId);
+                                    setReplyingToMessage(msg);
+                                    setActiveMenuMsgId(null);
+                                  }}
+                                  className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
+                                >
+                                  <span className="material-symbols-outlined text-[13px] text-slate-400">chat_bubble</span>
+                                  Reply privately
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleDeleteForMe(msg.id)}
+                                className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
+                              >
+                                <span className="material-symbols-outlined text-[13px] text-slate-400">delete</span>
+                                Delete for me
+                              </button>
+
+                              {(isCurrentUser || user.email.trim().toLowerCase() === "webstrixx@gmail.com") && (
+                                <button
+                                  onClick={() => handleDeleteForEveryone(msg.id)}
+                                  className="w-full text-left px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 flex items-center gap-1.5 cursor-pointer font-semibold border-t border-slate-100"
+                                >
+                                  <span className="material-symbols-outlined text-[13px] text-red-500">delete_forever</span>
+                                  Delete for everyone
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Sender details header */}
@@ -529,7 +678,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                             isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
                           } font-medium`}
                         >
-                          {msg.content}
+                          {renderMessageContent(msg.content, isCurrentUser)}
                         </div>
 
                         {/* Reactions Pill Display */}
@@ -637,14 +786,82 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
           </div>
 
           {/* Form message input sender */}
-          <div className="p-4 border-t border-slate-200 bg-white z-10 shrink-0">
+          <div className="p-4 border-t border-slate-200 bg-white z-20 shrink-0">
             {error && (
               <div className="mb-3 text-xs text-red-600 font-semibold bg-red-50 border border-red-150 p-2.5 rounded-lg">
                 {error}
               </div>
             )}
+
+            {/* Replying Banner Quote */}
+            {replyingToMessage && (
+              <div className="flex items-center justify-between bg-slate-50 border-l-4 border-indigo-500 rounded-r-xl p-3 mb-3 text-xs animate-fadeIn shadow-3xs">
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-800 leading-none">
+                    Replying to {replyingToMessage.fullName}
+                  </p>
+                  <p className="text-slate-500 truncate mt-1.5 leading-snug">
+                    {replyingToMessage.content}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReplyingToMessage(null)}
+                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-1 rounded-full hover:bg-slate-100 transition shrink-0"
+                  title="Cancel Reply"
+                >
+                  <IconX className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
             
-            <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+            <form onSubmit={handleSendMessage} className="flex gap-2 items-center relative">
+              
+              {/* Emoji Picker toggle button and popover */}
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="p-3 rounded-xl border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-500 hover:text-slate-800 transition flex items-center justify-center cursor-pointer bg-white"
+                  title="Insert Emojis"
+                >
+                  <span className="material-symbols-outlined text-[20px] select-none">
+                    mood
+                  </span>
+                </button>
+
+                {showEmojiPicker && (
+                  <>
+                    {/* Backdrop to close on click outside */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setShowEmojiPicker(false)} 
+                    />
+                    {/* Popover Emoji Box (Positioned floating above input) */}
+                    <div className="absolute bottom-14 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-2xl p-3.5 w-56 animate-fadeIn">
+                      <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-2 px-1 select-none">
+                        Select Emoji
+                      </span>
+                      <div className="grid grid-cols-5 gap-1 max-h-48 overflow-y-auto pr-0.5">
+                        {["😀", "😂", "😍", "👍", "❤️", "🎉", "🔥", "🚀", "💻", "💡", "👏", "🌟", "😭", "😡", "🤔", "😮", "🍿", "🎨", "🌈", "🎓"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => {
+                              setNewMessageText((prev) => prev + emoji);
+                              setShowEmojiPicker(false);
+                            }}
+                            className="hover:bg-slate-50 active:scale-95 transition text-lg p-1.5 rounded-lg cursor-pointer flex items-center justify-center"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <input
                 type="text"
                 value={newMessageText}
@@ -664,7 +881,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                 className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-3 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shadow-xs shrink-0"
               >
                 {sending ? (
-                  <div className="w-5 h-5 border-2 border-slate-355 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-slate-300 border-t-white rounded-full animate-spin"></div>
                 ) : (
                   <IconSend className="w-5 h-5" />
                 )}
