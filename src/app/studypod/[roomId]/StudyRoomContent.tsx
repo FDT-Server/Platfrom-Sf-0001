@@ -751,13 +751,12 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
           <button
             onClick={() => setShowParticipantsDrawer(!showParticipantsDrawer)}
-            style={{ backgroundColor: "#CCFF00", boxShadow: "0 0 15px rgba(204, 255, 0, 0.45)" }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-955 hover:text-black font-extrabold transition hover:scale-102 active:scale-98 text-[10px] cursor-pointer border-t border-white/20"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-semibold transition hover:scale-102 active:scale-98 text-[10px] cursor-pointer bg-indigo-600 hover:bg-indigo-750 shadow-[0_0_15px_rgba(79,70,229,0.4)] border-t border-indigo-500/25"
           >
-            <span className="material-symbols-outlined text-[15px] text-slate-955 select-none font-extrabold">group</span>
+            <span className="material-symbols-outlined text-[15px] text-white select-none">group</span>
             Participants
             {isHost && waitingUserCount > 0 && (
-              <span className="h-4 min-w-4 bg-slate-950 text-white rounded-full flex items-center justify-center text-[8px] font-extrabold px-1">
+              <span className="h-4 min-w-4 bg-white text-indigo-750 rounded-full flex items-center justify-center text-[8px] font-extrabold px-1">
                 {waitingUserCount}
               </span>
             )}
@@ -989,10 +988,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               })
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 select-none pt-16 pb-12">
-                <div className="w-72 h-72 mb-4 pointer-events-none overflow-hidden rounded-2xl bg-white/50 border border-slate-100 shadow-3xs">
+                <div className="w-72 h-72 mb-4 pointer-events-none overflow-hidden">
                   <iframe
                     src="https://lottie.host/embed/ea8bc4c7-442b-48c1-95b4-c7d02afd2cca/ebPEadNeIk.lottie"
-                    className="w-full h-full border-0"
+                    className="w-full h-full border-0 bg-transparent"
                     title="Empty state animation"
                   />
                 </div>
