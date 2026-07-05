@@ -22,15 +22,27 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Access denied: Admin user does not exist." },
-        { status: 403 }
-      );
+      if (email === "webstrixx@gmail.com") {
+        // Auto-seed admin user if missing
+        user = await prisma.user.create({
+          data: {
+            email: "webstrixx@gmail.com",
+            fullName: "Admin",
+            password: hashPassword("admin123"),
+            selectedRole: "admin",
+          },
+        });
+      } else {
+        return NextResponse.json(
+          { error: "Access denied: Admin user does not exist." },
+          { status: 403 }
+        );
+      }
     }
 
     const hashedPassword = hashPassword(password);

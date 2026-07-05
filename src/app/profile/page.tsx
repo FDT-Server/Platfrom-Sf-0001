@@ -28,6 +28,7 @@ export default async function ProfilePage() {
       portfolioLink: true,
       linkedinLink: true,
       about: true,
+      shareWithNetworking: true,
     },
   });
 
@@ -50,6 +51,7 @@ export default async function ProfilePage() {
     portfolioLink: user.portfolioLink || "",
     linkedinLink: user.linkedinLink || "",
     about: user.about || "",
+    shareWithNetworking: user.shareWithNetworking ?? false,
   };
 
   return <ProfileContent user={serializedUser} />;

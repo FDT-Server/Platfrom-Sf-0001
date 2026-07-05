@@ -19,6 +19,7 @@ interface UserProfile {
   portfolioLink: string;
   linkedinLink: string;
   about: string;
+  shareWithNetworking: boolean;
 }
 
 interface ProfileContentProps {
@@ -249,6 +250,25 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
+                {/* Share settings block */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">Networking Sharing</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Control your profile visibility in the Networking directory.</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        user.shareWithNetworking 
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
+                          : "bg-slate-100 text-slate-600 border border-slate-200"
+                      }`}>
+                        {user.shareWithNetworking ? "Sharing Enabled" : "Sharing Disabled (Private Details)"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 4. Log out block */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
                   <div>
@@ -415,6 +435,26 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       />
                     </div>
                   </div>
+
+                  <div className="pt-4 border-t border-slate-100">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.shareWithNetworking}
+                        onChange={(e) => setFormData({ ...formData, shareWithNetworking: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <div>
+                        <span className="block text-xs font-bold text-slate-800">
+                          Share your details with networking
+                        </span>
+                        <span className="block text-[11px] text-slate-500 mt-0.5 font-normal">
+                          Allow other trainees to view your college, year of study, dob, portfolio, and linkedin links in the chat directory.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
                 </div>
               </div>
 

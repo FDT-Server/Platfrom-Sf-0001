@@ -1,0 +1,1009 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/DashboardLayout";
+import AppLayout from "@/components/AppLayout";
+import {
+  IconMessage,
+  IconChecklist,
+  IconBulb,
+  IconLock,
+  IconSend,
+  IconCopy,
+  IconCheck,
+  IconDoorExit,
+  IconTrash,
+  IconUserCircle,
+  IconPlus,
+  IconX,
+} from "@tabler/icons-react";
+
+interface StudyPod {
+  id: string;
+  name: string;
+  creatorName: string;
+}
+
+interface Message {
+  id: string;
+  content: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  createdAt: string;
+}
+
+interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+  creatorName: string;
+  createdAt: string;
+}
+
+interface Idea {
+  id: string;
+  title: string;
+  description: string;
+  creatorName: string;
+  createdAt: string;
+}
+
+interface StudyRoomContentProps {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    profileImage?: string | null;
+    selectedRole: string;
+  } | null;
+  studyPod: StudyPod;
+  roomId: string;
+}
+
+export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomContentProps) {
+  const router = useRouter();
+
+  // Authentication gate states
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupRole, setSignupRole] = useState("New / Aspiring Developer");
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Workspace states
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [activeTab, setActiveTab] = useState<"tasks" | "ideas">("tasks");
+  const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "tasks" | "ideas" | "info">("chat");
+
+  // Custom adjustable resizable panel states
+  const [panel1Width, setPanel1Width] = useState(260); // default width for Left Sidebar (px)
+  const [panel3Width, setPanel3Width] = useState(360); // default width for Right Board (px)
+  const [isDraggingP1, setIsDraggingP1] = useState(false);
+  const [isDraggingP3, setIsDraggingP3] = useState(false);
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingP1) {
+        const container = document.getElementById("workspace-container");
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          // Constrain width between 200px and 400px
+          const newWidth = Math.max(200, Math.min(400, e.clientX - rect.left));
+          setPanel1Width(newWidth);
+        }
+      } else if (isDraggingP3) {
+        const container = document.getElementById("workspace-container");
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          // Constrain width between 260px and 480px
+          const newWidth = Math.max(260, Math.min(480, rect.right - e.clientX));
+          setPanel3Width(newWidth);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingP1(false);
+      setIsDraggingP3(false);
+    };
+
+    if (isDraggingP1 || isDraggingP3) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDraggingP1, isDraggingP3]);
+
+  // Form submission states
+  const [chatText, setChatText] = useState("");
+  const [todoText, setTodoText] = useState("");
+  const [ideaTitle, setIdeaTitle] = useState("");
+  const [ideaDesc, setIdeaDesc] = useState("");
+  const [submittingChat, setSubmittingChat] = useState(false);
+  const [submittingTodo, setSubmittingTodo] = useState(false);
+  const [submittingIdea, setSubmittingIdea] = useState(false);
+
+  // Utility states
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const roles = [
+    "Experienced Software Engineer / Lead",
+    "Product / Project Manager",
+    "New / Aspiring Developer",
+    "Academic Trainer / Instructor",
+    "Other"
+  ];
+
+  // Stable hashing function for participant color tags
+  const getParticipantColor = (email: string) => {
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+      hash = email.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const colors = [
+      { bg: "bg-blue-50 text-blue-700 border-blue-100" },
+      { bg: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+      { bg: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+      { bg: "bg-purple-50 text-purple-700 border-purple-100" },
+      { bg: "bg-sky-50 text-sky-700 border-sky-100" },
+      { bg: "bg-rose-50 text-rose-700 border-rose-100" },
+      { bg: "bg-amber-50 text-amber-700 border-amber-100" },
+    ];
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Workspace Polling Loop
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchWorkspaceData = async () => {
+      try {
+        const res = await fetch(`/api/studypods/${roomId}?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            setMessages(data.messages || []);
+            setTodos(data.todos || []);
+            setIdeas(data.ideas || []);
+          }
+        }
+      } catch (err) {
+        console.error("Workspace polling error:", err);
+      } finally {
+        setWorkspaceLoading(false);
+      }
+    };
+
+    fetchWorkspaceData();
+    const interval = setInterval(fetchWorkspaceData, 3000);
+    return () => clearInterval(interval);
+  }, [user, roomId]);
+
+  // Guest Onboarding Authentication Form Handler
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+
+    try {
+      if (authMode === "login") {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          window.location.reload();
+        } else {
+          setAuthError(data.error || "Authentication failed.");
+        }
+      } else {
+        // Register account
+        const signupRes = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: signupName,
+            email: signupEmail,
+            password: signupPassword,
+            selectedRole: signupRole,
+          }),
+        });
+        const signupData = await signupRes.json();
+        if (!signupRes.ok) {
+          setAuthError(signupData.error || "Registration failed.");
+          setAuthLoading(false);
+          return;
+        }
+
+        // Auto Login after successful signup
+        const loginRes = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: signupEmail, password: signupPassword }),
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok && loginData.success) {
+          window.location.reload();
+        } else {
+          setAuthError("Registration succeeded but autologin failed. Please login manually.");
+        }
+      }
+    } catch (err) {
+      setAuthError("An unexpected system error occurred.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Chat message sending
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatText.trim() || submittingChat) return;
+
+    setSubmittingChat(true);
+    try {
+      const res = await fetch(`/api/studypods/${roomId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "message", content: chatText }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [...prev, data.message]);
+        setChatText("");
+      }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+    } finally {
+      setSubmittingChat(false);
+    }
+  };
+
+  // Todo Task adding
+  const handleAddTodo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!todoText.trim() || submittingTodo) return;
+
+    setSubmittingTodo(true);
+    try {
+      const res = await fetch(`/api/studypods/${roomId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "todo", title: todoText }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTodos((prev) => [...prev, data.todo]);
+        setTodoText("");
+      }
+    } catch (err) {
+      console.error("Failed to add todo:", err);
+    } finally {
+      setSubmittingTodo(false);
+    }
+  };
+
+  // Toggle completed status of todo
+  const handleToggleTodo = async (todoId: string, currentCompleted: boolean) => {
+    try {
+      const targetCompleted = !currentCompleted;
+      setTodos((prev) =>
+        prev.map((t) => (t.id === todoId ? { ...t, completed: targetCompleted } : t))
+      );
+
+      const res = await fetch(`/api/studypods/${roomId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ todoId, completed: targetCompleted }),
+      });
+      if (!res.ok) {
+        // Rollback state on api error
+        setTodos((prev) =>
+          prev.map((t) => (t.id === todoId ? { ...t, completed: currentCompleted } : t))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to toggle todo:", err);
+    }
+  };
+
+  // Delete todo task
+  const handleDeleteTodo = async (todoId: string) => {
+    try {
+      setTodos((prev) => prev.filter((t) => t.id !== todoId));
+      await fetch(`/api/studypods/${roomId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "todo", id: todoId }),
+      });
+    } catch (err) {
+      console.error("Failed to delete todo:", err);
+    }
+  };
+
+  // Sticky idea submission
+  const handleAddIdea = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ideaTitle.trim() || !ideaDesc.trim() || submittingIdea) return;
+
+    setSubmittingIdea(true);
+    try {
+      const res = await fetch(`/api/studypods/${roomId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "idea", title: ideaTitle, description: ideaDesc }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIdeas((prev) => [data.idea, ...prev]);
+        setIdeaTitle("");
+        setIdeaDesc("");
+      }
+    } catch (err) {
+      console.error("Failed to post idea:", err);
+    } finally {
+      setSubmittingIdea(false);
+    }
+  };
+
+  // Delete idea card
+  const handleDeleteIdea = async (ideaId: string) => {
+    try {
+      setIdeas((prev) => prev.filter((i) => i.id !== ideaId));
+      await fetch(`/api/studypods/${roomId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "idea", id: ideaId }),
+      });
+    } catch (err) {
+      console.error("Failed to delete idea:", err);
+    }
+  };
+
+  // Copy Room Link to clipboard
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  // Extract unique active participants list from existing messages
+  const getUniqueParticipants = () => {
+    const participants = new Map<string, { fullName: string; email: string }>();
+    messages.forEach((msg) => {
+      if (!participants.has(msg.email)) {
+        participants.set(msg.email, { fullName: msg.fullName, email: msg.email });
+      }
+    });
+    return Array.from(participants.values());
+  };
+
+  // --- RENDER 1: UNAUTHENTICATED ONBOARDING GATEWAY ---
+  if (!user) {
+    return (
+      <AppLayout mode="login">
+        <div className="min-h-[85vh] flex items-center justify-center p-4">
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl w-full max-w-md border border-slate-200/80 shadow-2xl p-6 md:p-8 space-y-6 animate-fadeIn">
+            
+            {/* Header info */}
+            <div className="text-center space-y-2">
+              <span className="p-3 bg-indigo-50 border border-indigo-150 text-indigo-650 rounded-2xl inline-flex">
+                <IconLock className="w-6 h-6 animate-pulse" />
+              </span>
+              <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                Authentication Required
+              </h1>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                You are entering Study Pod: <span className="font-bold text-indigo-650">{studyPod.name}</span>. Please sign in or create an account below.
+              </p>
+            </div>
+
+            {/* Selector tabs */}
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button
+                onClick={() => {
+                  setAuthMode("login");
+                  setAuthError("");
+                }}
+                className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition ${
+                  authMode === "login"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => {
+                  setAuthMode("signup");
+                  setAuthError("");
+                }}
+                className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition ${
+                  authMode === "signup"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+
+            {authError && (
+              <div className="text-xs text-red-650 bg-red-50 border border-red-100 p-3 rounded-xl font-semibold leading-relaxed">
+                {authError}
+              </div>
+            )}
+
+            {/* Auth Form */}
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              {authMode === "signup" && (
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={signupName}
+                    onChange={(e) => setSignupName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition text-slate-800"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={authMode === "login" ? loginEmail : signupEmail}
+                  onChange={(e) =>
+                    authMode === "login" ? setLoginEmail(e.target.value) : setSignupEmail(e.target.value)
+                  }
+                  placeholder="name@example.com"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition text-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={authMode === "login" ? loginPassword : signupPassword}
+                  onChange={(e) =>
+                    authMode === "login" ? setLoginPassword(e.target.value) : setSignupPassword(e.target.value)
+                  }
+                  placeholder="••••••••"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition text-slate-800"
+                />
+              </div>
+
+              {authMode === "signup" && (
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                    Role / Position
+                  </label>
+                  <select
+                    value={signupRole}
+                    onChange={(e) => setSignupRole(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white transition text-slate-850"
+                  >
+                    {roles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-xs transition duration-150 cursor-pointer flex items-center justify-center"
+              >
+                {authLoading ? "Please wait..." : authMode === "login" ? "Log In & Enter Pod" : "Register & Join Pod"}
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // --- RENDER 2: COLLABORATIVE WORKSPACE VIEW ---
+  const participants = getUniqueParticipants();
+
+  return (
+    <DashboardLayout user={user}>
+      <div className="flex-1 flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] -m-4 md:-m-8 overflow-hidden bg-slate-50">
+        
+        {/* Navigation Menu Bar */}
+        <div className="flex items-center gap-2 text-xs text-slate-500 py-3.5 px-6 bg-white border-b border-slate-200 shrink-0 select-none">
+          <a href="/studypod" className="hover:text-indigo-650 transition">
+            Study Pods
+          </a>
+          <span className="text-slate-350">/</span>
+          <span className="text-slate-800 font-semibold">{studyPod.name}</span>
+        </div>
+
+        {/* Mobile active panel switcher */}
+        <div className="flex lg:hidden border-b border-slate-200 bg-white p-2 shrink-0 gap-1.5 shadow-2xs">
+          {(["chat", "tasks", "ideas", "info"] as const).map((tab) => {
+            const labels = { chat: "Chat", tasks: "Tasks", ideas: "Ideas", info: "Room Info" };
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setMobileActiveTab(tab);
+                  if (tab === "tasks" || tab === "ideas") {
+                    setActiveTab(tab);
+                  }
+                }}
+                className={`flex-1 text-center py-2 text-[10px] font-semibold rounded-lg transition cursor-pointer ${
+                  mobileActiveTab === tab
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                {labels[tab]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dynamic 3-panel collaborative grid workspace */}
+        <div id="workspace-container" className="flex-1 flex flex-col lg:flex-row bg-white overflow-hidden animate-fadeIn">
+          
+          {/* PANEL 1: Left Room Sidebar Panel */}
+          <div 
+            style={{ width: typeof window !== "undefined" && window.innerWidth >= 1024 ? `${panel1Width}px` : undefined }}
+            className={`border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex-col shrink-0 lg:max-h-full ${mobileActiveTab === "info" ? "flex flex-1 animate-fadeIn" : "hidden lg:flex"}`}
+          >
+          {/* Header metadata */}
+          <div className="p-4 border-b border-slate-200">
+            <h2 className="text-sm font-extrabold text-slate-850 truncate leading-snug">
+              {studyPod.name}
+            </h2>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Host: <span className="font-semibold">{studyPod.creatorName}</span>
+            </p>
+          </div>
+
+          {/* Active room participants list */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+            <div className="space-y-1">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                Room Members ({participants.length || 1})
+              </span>
+              <div className="space-y-1.5 pt-1.5">
+                {/* Current logged in user is always in room */}
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6.5 h-6.5 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                    Me
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-800 truncate leading-none">
+                      {user.fullName}
+                    </p>
+                    <p className="text-[9px] text-slate-500 truncate leading-none mt-1">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Other members derived from messages stream */}
+                {participants
+                  .filter((p) => p.email.toLowerCase() !== user.email.toLowerCase())
+                  .map((p) => {
+                    const colorStyle = getParticipantColor(p.email);
+                    return (
+                      <div key={p.email} className="flex items-center gap-2.5 animate-fadeIn">
+                        <div className={`w-6.5 h-6.5 rounded-lg flex items-center justify-center text-[10px] font-bold border shadow-2xs ${colorStyle.bg}`}>
+                          {p.fullName.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-850 truncate leading-none">
+                            {p.fullName}
+                          </p>
+                          <p className="text-[9px] text-slate-400 truncate leading-none mt-1">
+                            {p.email}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+
+          {/* Room bottom actions */}
+          <div className="p-4 border-t border-slate-200 bg-white space-y-2 shrink-0">
+            <button
+              onClick={handleCopyLink}
+              className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold py-2 px-3 rounded-lg text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              {copiedLink ? (
+                <>
+                  <IconCheck className="w-4 h-4 text-emerald-600" />
+                  Copied Link!
+                </>
+              ) : (
+                <>
+                  <IconCopy className="w-4 h-4" />
+                  Share Invite Link
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => router.push("/studypod")}
+              className="w-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-100 font-bold py-2 px-3 rounded-lg text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <IconDoorExit className="w-4 h-4" />
+              Leave Room
+            </button>
+          </div>
+        </div>
+
+        {/* Custom Resizable Column Divider 1 */}
+        <div
+          onMouseDown={(e) => { e.preventDefault(); setIsDraggingP1(true); }}
+          className={`hidden lg:block w-1 hover:w-1.5 hover:bg-indigo-500 cursor-col-resize transition-all self-stretch relative z-30 shrink-0 ${
+            isDraggingP1 ? "bg-indigo-600 w-1.5 shadow-sm" : "bg-slate-200/60"
+          }`}
+          title="Drag to resize Left Panel"
+        />
+
+        {/* PANEL 2: Center Workspace Chat stream */}
+        <div className={`flex-1 flex-col h-full overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 ${mobileActiveTab === "chat" ? "flex" : "hidden lg:flex"}`}>
+          <div className="p-4 border-b border-slate-200 flex items-center gap-2 bg-white shrink-0">
+            <span className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-650">
+              <IconMessage className="w-4 h-4" />
+            </span>
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider leading-none">
+                Room Discussion
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Collaborative public chat with all study partners.
+              </p>
+            </div>
+          </div>
+
+          {/* Chat message stream container */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4">
+            {workspaceLoading ? (
+              <div className="flex flex-col items-center justify-center h-full gap-2">
+                <div className="w-6 h-6 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <p className="text-[11px] text-slate-400 font-medium">Entering Room...</p>
+              </div>
+            ) : messages.length > 0 ? (
+              messages.map((msg) => {
+                const isCurrentUser = msg.email.trim().toLowerCase() === user.email.trim().toLowerCase();
+                const colorStyle = getParticipantColor(msg.email);
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex items-start gap-2.5 max-w-[85%] md:max-w-[75%] ${
+                      isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                    }`}
+                  >
+                    {/* Participant Avatar Initials */}
+                    <div className="shrink-0">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-extrabold border shadow-2xs ${colorStyle.bg}`}>
+                        {msg.fullName.substring(0, 2).toUpperCase()}
+                      </div>
+                    </div>
+
+                    {/* Chat Bubble card */}
+                    <div className="space-y-0.5">
+                      <div className={`flex items-center gap-1.5 text-[9px] ${
+                        isCurrentUser ? "justify-end text-slate-500" : "text-slate-650"
+                      }`}>
+                        <span className="font-bold">{msg.fullName}</span>
+                      </div>
+                      <div className={`rounded-2xl px-3.5 py-2 text-xs shadow-2xs break-words whitespace-pre-wrap leading-relaxed ${
+                        isCurrentUser ? "bg-indigo-600 text-white rounded-tr-none" : "bg-white text-slate-800 border border-slate-200 rounded-tl-none"
+                      }`}>
+                        {msg.content}
+                      </div>
+                      <div className={`text-[8px] text-slate-400 font-medium ${
+                        isCurrentUser ? "text-right" : ""
+                      }`}>
+                        {new Date(msg.createdAt).toLocaleTimeString(undefined, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <span className="text-2xl">💬</span>
+                <h4 className="text-xs font-bold text-slate-700 mt-2">Workspace Chat Active</h4>
+                <p className="text-[11px] text-slate-500 max-w-xs mt-1">
+                  Send a message below to start collaborating with members in the study pod.
+                </p>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Message input sender */}
+          <div className="p-4 border-t border-slate-200 bg-white shrink-0">
+            <form onSubmit={handleSendChat} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={chatText}
+                onChange={(e) => setChatText(e.target.value)}
+                placeholder="Type a message to share..."
+                required
+                maxLength={400}
+                className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-lg text-slate-800 text-xs transition"
+              />
+              <button
+                type="submit"
+                disabled={!chatText.trim() || submittingChat}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-lg transition duration-150 cursor-pointer shrink-0 flex items-center justify-center shadow-2xs"
+              >
+                <IconSend className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Custom Resizable Column Divider 2 */}
+        <div
+          onMouseDown={(e) => { e.preventDefault(); setIsDraggingP3(true); }}
+          className={`hidden lg:block w-1 hover:w-1.5 hover:bg-indigo-500 cursor-col-resize transition-all self-stretch relative z-30 shrink-0 ${
+            isDraggingP3 ? "bg-indigo-600 w-1.5 shadow-sm" : "bg-slate-200/60"
+          }`}
+          title="Drag to resize Right Panel"
+        />
+
+        {/* PANEL 3: Right Tabbed Workspace Board (Todos & Ideas) */}
+        <div 
+          style={{ width: typeof window !== "undefined" && window.innerWidth >= 1024 ? `${panel3Width}px` : undefined }}
+          className={`flex-col h-full bg-slate-50/30 shrink-0 ${mobileActiveTab === "tasks" || mobileActiveTab === "ideas" ? "flex flex-1" : "hidden lg:flex"}`}
+        >
+          
+          {/* Header tabs selector */}
+          <div className="flex border-b border-slate-200 bg-white p-2 shrink-0">
+            <button
+              onClick={() => setActiveTab("tasks")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition cursor-pointer ${
+                activeTab === "tasks"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <IconChecklist className="w-4 h-4" />
+              Tasks / Todos
+            </button>
+            <button
+              onClick={() => setActiveTab("ideas")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition cursor-pointer ${
+                activeTab === "ideas"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <IconBulb className="w-4 h-4" />
+              Idea Board
+            </button>
+          </div>
+
+          {/* Tab contents panel */}
+          <div className="flex-1 overflow-y-auto p-4">
+            
+            {/* TAB 1: Tasks Checklist Board */}
+            {activeTab === "tasks" && (
+              <div className="space-y-4">
+                
+                {/* Todo creation form */}
+                <form onSubmit={handleAddTodo} className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={todoText}
+                    onChange={(e) => setTodoText(e.target.value)}
+                    placeholder="Create a shared task..."
+                    maxLength={100}
+                    className="flex-1 px-3.5 py-2 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none rounded-lg text-slate-800 text-xs bg-white transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!todoText.trim() || submittingTodo}
+                    className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-3.5 py-2 rounded-lg transition duration-150 cursor-pointer flex items-center gap-1 shrink-0 text-xs font-semibold"
+                  >
+                    <IconPlus className="w-4 h-4" /> Add
+                  </button>
+                </form>
+
+                {/* Todo listings */}
+                <div className="space-y-2.5">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
+                    Shared Task Checklist ({todos.length})
+                  </span>
+                  {todos.length > 0 ? (
+                    <div className="space-y-2">
+                      {todos.map((todo) => (
+                        <div
+                          key={todo.id}
+                          className={`flex items-start gap-3 p-3 bg-yellow-50/60 border-2 rounded-2xl shadow-2xs transition animate-fadeIn ${
+                            todo.completed ? "border-yellow-100/50 opacity-60" : "border-yellow-200"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={todo.completed}
+                            onChange={() => handleToggleTodo(todo.id, todo.completed)}
+                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-0.5 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-medium break-words leading-snug ${
+                              todo.completed ? "text-slate-450 line-through" : "text-slate-850"
+                            }`}>
+                              {todo.title}
+                            </p>
+                            <span className="block text-[8px] text-slate-400 mt-1">
+                              By: {todo.creatorName}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteTodo(todo.id)}
+                            className="text-slate-400 hover:text-red-600 p-1 rounded-lg hover:bg-slate-50 transition cursor-pointer shrink-0"
+                          >
+                            <IconTrash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center">
+                      <p className="text-[11px] text-slate-500">
+                        No tasks active in this room. Add a task above to align goals.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: Ideation Sticky Board */}
+            {activeTab === "ideas" && (
+              <div className="space-y-4">
+                
+                {/* Idea card creation form */}
+                <form onSubmit={handleAddIdea} className="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-3 shadow-2xs">
+                  <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider block leading-none">
+                    Post an Idea card
+                  </span>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      required
+                      value={ideaTitle}
+                      onChange={(e) => setIdeaTitle(e.target.value)}
+                      placeholder="Title of your idea..."
+                      maxLength={80}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-indigo-500 focus:outline-none transition text-slate-800"
+                    />
+                    <textarea
+                      required
+                      value={ideaDesc}
+                      onChange={(e) => setIdeaDesc(e.target.value)}
+                      placeholder="Describe your design or strategy..."
+                      maxLength={300}
+                      rows={2.5}
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-indigo-500 focus:outline-none transition text-slate-800 resize-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!ideaTitle.trim() || !ideaDesc.trim() || submittingIdea}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
+                  >
+                    <IconPlus className="w-4 h-4" /> Share Idea
+                  </button>
+                </form>
+
+                {/* Ideas stack */}
+                <div className="space-y-2.5">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
+                    Room Ideas Stack ({ideas.length})
+                  </span>
+                  {ideas.length > 0 ? (
+                    <div className="space-y-3">
+                      {ideas.map((idea) => (
+                        <div
+                          key={idea.id}
+                          className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-4 shadow-2xs space-y-2 relative overflow-hidden animate-fadeIn"
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="text-xs font-extrabold text-amber-900 leading-snug">
+                              {idea.title}
+                            </h4>
+                            <button
+                              onClick={() => handleDeleteIdea(idea.id)}
+                              className="text-amber-600 hover:text-red-650 p-1 rounded-lg hover:bg-amber-100/40 transition cursor-pointer shrink-0"
+                            >
+                              <IconTrash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          
+                          <p className="text-xs text-amber-850 leading-relaxed break-words whitespace-pre-wrap">
+                            {idea.description}
+                          </p>
+
+                          <div className="pt-2 border-t border-amber-200/30 flex justify-between items-center text-[8px] text-amber-700/80">
+                            <span>Author: {idea.creatorName}</span>
+                            <span>
+                              {new Date(idea.createdAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center">
+                      <p className="text-[11px] text-slate-500">
+                        No ideas shared yet. Post your first card to start brainstorming!
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+          </div>
+        </div>
+
+      </div>
+      </div>
+    </DashboardLayout>
+  );
+}

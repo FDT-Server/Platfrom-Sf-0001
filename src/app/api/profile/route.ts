@@ -21,6 +21,7 @@ export async function PUT(req: Request) {
       portfolioLink,
       linkedinLink,
       about,
+      shareWithNetworking,
     } = await req.json();
 
     if (!fullName || fullName.trim() === "") {
@@ -39,6 +40,7 @@ export async function PUT(req: Request) {
         portfolioLink: portfolioLink || "",
         linkedinLink: linkedinLink || "",
         about: about || "",
+        shareWithNetworking: shareWithNetworking ?? false,
       },
     });
 
@@ -55,6 +57,7 @@ export async function PUT(req: Request) {
         portfolioLink: updatedUser.portfolioLink,
         linkedinLink: updatedUser.linkedinLink,
         about: updatedUser.about,
+        shareWithNetworking: updatedUser.shareWithNetworking,
       },
     });
   } catch (err: any) {
