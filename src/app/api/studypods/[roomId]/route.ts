@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// GET room details or just metadata if unauthenticated
+
 export async function GET(
   req: Request,
   props: { params: Promise<{ roomId: string }> }
@@ -25,7 +25,7 @@ export async function GET(
       );
     }
 
-    // Check if user is logged in
+    
     if (!sessionToken) {
       return NextResponse.json({
         authenticated: false,
@@ -50,7 +50,7 @@ export async function GET(
       });
     }
 
-    // Gating check: Is the user the host?
+    
     const isHost = user.id === studyPod.creatorId;
 
     let approvedList: string[] = [];
@@ -76,7 +76,7 @@ export async function GET(
     }
 
     if (!isHost && !approvedList.includes(user.id)) {
-      // User is not approved yet - check if already waiting
+      
       const isAlreadyWaiting = waitingList.some((w) => w.id === user.id);
       if (!isAlreadyWaiting) {
         waitingList.push({
@@ -106,7 +106,7 @@ export async function GET(
       });
     }
 
-    // User is approved or host - fetch room assets
+    
     const [messages, todos, ideas] = await Promise.all([
       prisma.studyPodMessage.findMany({
         where: { studyPodId: roomId },
@@ -122,7 +122,7 @@ export async function GET(
       }),
     ]);
 
-    // Fetch user profile images to display user avatars on the client sidebar
+    
     const userIds = Array.from(new Set(messages.map((m) => m.userId)));
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
@@ -153,7 +153,7 @@ export async function GET(
   }
 }
 
-// POST: Add message, todo, or idea to workspace
+
 export async function POST(
   req: Request,
   props: { params: Promise<{ roomId: string }> }
@@ -232,7 +232,7 @@ export async function POST(
   }
 }
 
-// PATCH: Toggle todo completion
+
 export async function PATCH(
   req: Request,
   props: { params: Promise<{ roomId: string }> }
@@ -266,7 +266,7 @@ export async function PATCH(
   }
 }
 
-// DELETE: Delete a todo or idea
+
 export async function DELETE(
   req: Request,
   props: { params: Promise<{ roomId: string }> }

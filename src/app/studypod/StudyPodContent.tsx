@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import useRouter from "next/navigation"; // Wait, next/navigation uses useRouter
+import useRouter from "next/navigation"; 
 import { useRouter as useNextRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
@@ -99,7 +99,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
     <DashboardLayout user={user}>
       <div className="w-full px-4 md:px-8 py-6 space-y-6 animate-fadeIn">
         
-        {/* Header Hero Area */}
+        
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-yellow-100/80 text-slate-900 rounded-3xl p-6 md:p-8 border border-yellow-200 shadow-xs animate-fadeIn">
           <div className="space-y-1.5">
             <h1 className="text-xl md:text-2xl font-semibold tracking-tight">
@@ -118,7 +118,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
           </button>
         </div>
 
-        {/* Search / Directory Filter */}
+        
         <div className="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-xs">
           <IconSearch className="w-5 h-5 text-slate-400 shrink-0 ml-1" />
           <input
@@ -130,7 +130,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
           />
         </div>
 
-        {/* Pods Grid list */}
+        
         {filteredPods.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-2 pr-1 pb-4">
             {filteredPods.map((pod) => {
@@ -140,7 +140,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
                   key={pod.id}
                   className="flex flex-col rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden bg-white hover:shadow-md transition duration-150 animate-fadeIn"
                 >
-                  {/* Dynamically Styled Header based on the card pod ID */}
+                  
                   <div className={`flex justify-between items-center px-5 py-3 text-[10.5px] font-extrabold font-mono tracking-wider ${headerTheme.bg}`}>
                     <span>POD-{pod.id.substring(0, 5).toUpperCase()}</span>
                     <span className="opacity-95">
@@ -152,10 +152,10 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
                     </span>
                   </div>
 
-                  {/* Main Card Body */}
+                  
                   <div className="p-5 flex flex-col justify-between flex-1 space-y-4">
                     <div>
-                      {/* Room name and active status badge */}
+                      
                       <div className="flex items-start justify-between gap-3 mb-4">
                         <h4 className="text-sm font-extrabold text-slate-850 leading-snug line-clamp-2">
                           {pod.name}
@@ -165,7 +165,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
                         </span>
                       </div>
 
-                      {/* Prominent Created By / Host Section */}
+                      
                       <div className="bg-slate-50/60 rounded-xl p-3 border border-slate-200/50 flex items-center gap-3">
                         {pod.creatorImage ? (
                           <img
@@ -189,7 +189,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
                         </div>
                       </div>
 
-                      {/* Active Members/Joined Section */}
+                      
                       <div className="mt-4 space-y-2">
                         <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider pl-0.5">Collaborators Joined</span>
                         {pod.participants && pod.participants.length > 0 ? (
@@ -237,10 +237,10 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
 
                     </div>
 
-                    {/* Dotted horizontal line separator */}
+                    
                     <div className="border-t border-dashed border-slate-200 pt-1" />
 
-                    {/* Action footer */}
+                    
                     <div className="flex items-center justify-between">
                       <button
                         onClick={() => handleCopyLink(pod.id)}

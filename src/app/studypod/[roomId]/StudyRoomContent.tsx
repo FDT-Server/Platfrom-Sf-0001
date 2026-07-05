@@ -73,7 +73,7 @@ interface StudyRoomContentProps {
 export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomContentProps) {
   const router = useRouter();
 
-  // Authentication gate states
+  
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -84,19 +84,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Lobby Waiting Room and drawer states
+  
   const [lobbyStatus, setLobbyStatus] = useState<"loading" | "waiting" | "approved">("loading");
   const [roomPod, setRoomPod] = useState<StudyPod>(studyPod);
   const [showParticipantsDrawer, setShowParticipantsDrawer] = useState(false);
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
   
-  // Mounted flag to fix SSR hydration mismatch on width styles
+  
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Host Action: Approve or decline pending lobby requests
+  
   const handleApproveUser = async (targetUserId: string, action: "accept" | "decline") => {
     setApprovingUserId(targetUserId);
     try {
@@ -107,7 +107,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
       });
       if (res.ok) {
         const data = await res.json();
-        // Update local lobby lists in state
+        
         setRoomPod((prev) => ({
           ...prev,
           approvedUserIds: data.approvedUserIds,
@@ -121,16 +121,16 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Workspace states
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [activeTab, setActiveTab] = useState<"tasks" | "ideas">("tasks");
   const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "tasks" | "ideas" | "info">("chat");
 
-  // Custom adjustable resizable panel states
-  const [panel1Width, setPanel1Width] = useState(260); // default width for Left Sidebar (px)
-  const [panel3Width, setPanel3Width] = useState(360); // default width for Right Board (px)
+  
+  const [panel1Width, setPanel1Width] = useState(260); 
+  const [panel3Width, setPanel3Width] = useState(360); 
   const [isDraggingP1, setIsDraggingP1] = useState(false);
   const [isDraggingP3, setIsDraggingP3] = useState(false);
 
@@ -140,7 +140,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         const container = document.getElementById("workspace-container");
         if (container) {
           const rect = container.getBoundingClientRect();
-          // Constrain width between 200px and 400px
+          
           const newWidth = Math.max(200, Math.min(400, e.clientX - rect.left));
           setPanel1Width(newWidth);
         }
@@ -148,7 +148,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         const container = document.getElementById("workspace-container");
         if (container) {
           const rect = container.getBoundingClientRect();
-          // Constrain width between 260px and 480px
+          
           const newWidth = Math.max(260, Math.min(480, rect.right - e.clientX));
           setPanel3Width(newWidth);
         }
@@ -171,7 +171,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     };
   }, [isDraggingP1, isDraggingP3]);
 
-  // Form submission states
+  
   const [chatText, setChatText] = useState("");
   const [todoText, setTodoText] = useState("");
   const [ideaTitle, setIdeaTitle] = useState("");
@@ -180,12 +180,12 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [submittingTodo, setSubmittingTodo] = useState(false);
   const [submittingIdea, setSubmittingIdea] = useState(false);
 
-  // Utility states
+  
   const [copiedLink, setCopiedLink] = useState(false);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Message input attachments and emoji picker states
+  
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -201,7 +201,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     "Other"
   ];
 
-  // Stable hashing function for participant color tags
+  
   const getParticipantColor = (email: string) => {
     let hash = 0;
     for (let i = 0; i < email.length; i++) {
@@ -219,7 +219,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     return colors[Math.abs(hash) % colors.length];
   };
 
-  // Dynamic soft pastel background colors for member card list items
+  
   const getParticipantSoftCardColor = (email: string) => {
     let hash = 0;
     for (let i = 0; i < email.length; i++) {
@@ -237,14 +237,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     return softColors[Math.abs(hash) % softColors.length];
   };
 
-  // Scroll chat to bottom
+  
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Workspace Polling Loop (High frequency 1-second refresh)
+  
   useEffect(() => {
     if (!user) return;
 
@@ -281,7 +281,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     return () => clearInterval(interval);
   }, [user, roomId]);
 
-  // Guest Onboarding Authentication Form Handler
+  
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
@@ -301,7 +301,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           setAuthError(data.error || "Authentication failed.");
         }
       } else {
-        // Register account
+        
         const signupRes = await fetch("/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -319,7 +319,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           return;
         }
 
-        // Auto Login after successful signup
+        
         const loginRes = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -355,7 +355,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Chat message sending (Supports attachments)
+  
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     const hasAttachment = selectedFile || selectedImage;
@@ -395,7 +395,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Todo Task adding
+  
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!todoText.trim() || submittingTodo) return;
@@ -419,7 +419,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Toggle completed status of todo
+  
   const handleToggleTodo = async (todoId: string, currentCompleted: boolean) => {
     try {
       const targetCompleted = !currentCompleted;
@@ -433,7 +433,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         body: JSON.stringify({ todoId, completed: targetCompleted }),
       });
       if (!res.ok) {
-        // Rollback state on api error
+        
         setTodos((prev) =>
           prev.map((t) => (t.id === todoId ? { ...t, completed: currentCompleted } : t))
         );
@@ -443,7 +443,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Delete todo task
+  
   const handleDeleteTodo = async (todoId: string) => {
     try {
       setTodos((prev) => prev.filter((t) => t.id !== todoId));
@@ -457,7 +457,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Sticky idea submission
+  
   const handleAddIdea = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ideaTitle.trim() || !ideaDesc.trim() || submittingIdea) return;
@@ -482,7 +482,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Delete idea card
+  
   const handleDeleteIdea = async (ideaId: string) => {
     try {
       setIdeas((prev) => prev.filter((i) => i.id !== ideaId));
@@ -496,14 +496,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Copy Room Link to clipboard
+  
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // Extract unique active participants list from existing messages
+  
   const getUniqueParticipants = () => {
     const participants = new Map<string, { fullName: string; email: string; profileImage?: string | null }>();
     messages.forEach((msg) => {
@@ -518,14 +518,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     return Array.from(participants.values());
   };
 
-  // --- RENDER 1: UNAUTHENTICATED ONBOARDING GATEWAY ---
+  
   if (!user) {
     return (
       <AppLayout mode="login">
         <div className="min-h-[85vh] flex items-center justify-center p-4">
           <div className="bg-white/80 backdrop-blur-md rounded-3xl w-full max-w-md border border-slate-200/80 shadow-2xl p-6 md:p-8 space-y-6 animate-fadeIn">
             
-            {/* Header info */}
+            
             <div className="text-center space-y-2">
               <span className="p-3 bg-indigo-50 border border-indigo-150 text-indigo-650 rounded-2xl inline-flex">
                 <IconLock className="w-6 h-6 animate-pulse" />
@@ -538,7 +538,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </p>
             </div>
 
-            {/* Selector tabs */}
+            
             <div className="flex bg-slate-100 p-1 rounded-xl">
               <button
                 onClick={() => {
@@ -574,7 +574,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </div>
             )}
 
-            {/* Auth Form */}
+            
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               {authMode === "signup" && (
                 <div className="space-y-1">
@@ -658,10 +658,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     );
   }
 
-  // --- RENDER 2: COLLABORATIVE WORKSPACE VIEW ---
+  
   const participants = getUniqueParticipants();
 
-  // Parse lobby list arrays safely
+  
   let approvedList: string[] = [];
   try {
     if (roomPod.approvedUserIds) {
@@ -670,7 +670,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         : (roomPod.approvedUserIds as string[]);
     }
   } catch {
-    // Empty
+    
   }
 
   let waitingList: any[] = [];
@@ -681,19 +681,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         : (roomPod.waitingUserIds as any[]);
     }
   } catch {
-    // Empty
+    
   }
 
   const isHost = user && user.id === roomPod.creatorId;
   const waitingUserCount = waitingList.length;
 
-  // Gating Check: Show Waiting Hall Lobby screen if user has not been approved by the host yet
+  
   if (lobbyStatus === "waiting" && !isHost) {
     return (
       <DashboardLayout user={user}>
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-6 text-center animate-fadeIn">
           
-          {/* Animated Loader/Wait Lottie Animation */}
+          
           <div className="w-64 h-64 pointer-events-none overflow-hidden select-none">
             <iframe
               src="https://lottie.host/embed/029367a4-ed8a-4196-a11d-9b436b202595/DzlCazBv2F.lottie"
@@ -702,7 +702,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             />
           </div>
 
-          {/* Content */}
+          
           <div className="max-w-md space-y-2 select-none">
             <h2 className="text-lg font-bold text-slate-800 tracking-tight leading-snug">
               Waiting for the host to let you in...
@@ -712,7 +712,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </p>
           </div>
 
-          {/* Meta Card details pill */}
+          
           <div className="bg-white border border-slate-200 rounded-full pl-5 pr-8 py-2.5 text-xs text-slate-550 max-w-md flex items-center justify-between w-full shadow-3xs select-none">
             <div className="flex items-center gap-2.5 text-left">
               {user?.profileImage ? (
@@ -747,7 +747,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     <DashboardLayout user={user}>
       <div className="flex-1 flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] -m-4 md:-m-8 overflow-hidden bg-slate-50 relative">
         
-        {/* Navigation Menu Bar */}
+        
         <div className="flex items-center justify-between text-xs text-slate-500 py-3.5 px-6 bg-white border-b border-slate-200 shrink-0 select-none">
           <div className="flex items-center gap-2">
             <a href="/studypod" className="hover:text-indigo-650 transition font-medium">
@@ -771,7 +771,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           </button>
         </div>
 
-        {/* Mobile active panel switcher */}
+        
         <div className="flex lg:hidden border-b border-slate-200 bg-white p-2 shrink-0 gap-1.5 shadow-2xs">
           {(["chat", "tasks", "ideas", "info"] as const).map((tab) => {
             const labels = { chat: "Chat", tasks: "Tasks", ideas: "Ideas", info: "Room Info" };
@@ -796,15 +796,15 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           })}
         </div>
 
-        {/* Dynamic 3-panel collaborative grid workspace */}
+        
         <div id="workspace-container" className="flex-1 flex flex-col lg:flex-row bg-white overflow-hidden animate-fadeIn">
           
-          {/* PANEL 1: Left Room Sidebar Panel */}
+          
           <div 
             style={mounted && typeof window !== "undefined" && window.innerWidth >= 1024 ? { width: `${panel1Width}px` } : {}}
             className={`border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex-col shrink-0 lg:max-h-full ${mobileActiveTab === "info" ? "flex flex-1 animate-fadeIn" : "hidden lg:flex"}`}
           >
-          {/* Header metadata */}
+          
           <div className="p-5 border-b border-slate-200 bg-white space-y-2 select-none">
             <div>
               <span className="inline-block text-[9px] bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100/60 shadow-3xs">
@@ -820,14 +820,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </p>
           </div>
 
-          {/* Active room participants list */}
+          
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
             <div className="space-y-2">
               <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider select-none pl-0.5">
                 Room Members ({participants.length || 1})
               </span>
               <div className="space-y-2.5 pt-1">
-                {/* Current logged in user is always in room */}
+                
                 {(() => {
                   const softColorClass = getParticipantSoftCardColor(user.email);
                   return (
@@ -858,7 +858,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   );
                 })()}
 
-                {/* Other members derived from messages stream */}
+                
                 {participants
                   .filter((p) => p.email.toLowerCase() !== user.email.toLowerCase())
                   .map((p) => {
@@ -892,7 +892,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </div>
           </div>
 
-          {/* Room bottom actions */}
+          
           <div className="p-4 border-t border-slate-200/85 bg-white space-y-2 shrink-0">
             <button
               onClick={handleCopyLink}
@@ -919,7 +919,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </button>
           </div>          </div>
 
-        {/* Custom Resizable Column Divider 1 */}
+        
         <div
           onMouseDown={(e) => { e.preventDefault(); setIsDraggingP1(true); }}
           className={`hidden lg:block w-1 hover:w-1.5 hover:bg-indigo-500 cursor-col-resize transition-all self-stretch relative z-30 shrink-0 ${
@@ -928,7 +928,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           title="Drag to resize Left Panel"
         />
 
-        {/* PANEL 2: Center Workspace Chat stream */}
+        
         <div className={`flex-1 flex-col h-full overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 ${mobileActiveTab === "chat" ? "flex" : "hidden lg:flex"}`}>
           <div className="p-4 border-b border-slate-200 flex items-center gap-2.5 bg-white shrink-0">
             <span className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-650 shrink-0">
@@ -944,7 +944,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </div>
           </div>
 
-          {/* Chat message stream container */}
+          
           <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4">
             {workspaceLoading ? (
               <div className="flex flex-col items-center justify-center h-full gap-2">
@@ -963,14 +963,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                       isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
                     }`}
                   >
-                    {/* Participant Avatar Initials */}
+                    
                     <div className="shrink-0">
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-extrabold border shadow-2xs ${colorStyle.bg}`}>
                         {msg.fullName.substring(0, 2).toUpperCase()}
                       </div>
                     </div>
 
-                    {/* Chat Bubble card */}
+                    
                     <div className="space-y-0.5">
                       <div className={`flex items-center gap-1.5 text-[9px] ${
                         isCurrentUser ? "justify-end text-slate-500" : "text-slate-650"
@@ -1012,10 +1012,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message input sender (Supports image upload, file sharing, and emojis picker) */}
+          
           <div className="border-t border-slate-200 bg-white shrink-0 relative">
             
-            {/* Emojis selection drawer popup */}
+            
             {showEmojiPicker && (
               <div className="absolute bottom-full left-4 mb-2 z-40 bg-white border border-slate-200 shadow-xl rounded-2xl p-3 grid grid-cols-6 gap-2 w-56 animate-fadeIn select-none">
                 {["😀", "😂", "👍", "🔥", "🎉", "🙌", "💡", "📚", "🚀", "✍️", "💻", "💯"].map((emoji) => (
@@ -1034,7 +1034,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </div>
             )}
 
-            {/* Selected attachments preview panel indicator */}
+            
             {(selectedFile || selectedImage) && (
               <div className="flex items-center justify-between bg-slate-50 border-b border-slate-100 px-4 py-2 text-[10px] text-slate-650 animate-fadeIn shrink-0 select-none">
                 <div className="flex items-center gap-1.5 font-semibold truncate">
@@ -1060,7 +1060,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </div>
             )}
 
-            {/* Hidden upload inputs */}
+            
             <input
               type="file"
               ref={fileInputRef}
@@ -1077,7 +1077,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
             <form onSubmit={handleSendChat} className="flex gap-2 items-center p-4">
               
-              {/* Emojis Trigger */}
+              
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -1089,7 +1089,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                 <IconMoodSmile className="w-4.5 h-4.5" />
               </button>
 
-              {/* Image Upload Trigger */}
+              
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
@@ -1101,7 +1101,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                 <IconPhoto className="w-4.5 h-4.5" />
               </button>
 
-              {/* File Attachment Trigger */}
+              
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -1134,7 +1134,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           </div>
         </div>
 
-        {/* Custom Resizable Column Divider 2 */}
+        
         <div
           onMouseDown={(e) => { e.preventDefault(); setIsDraggingP3(true); }}
           className={`hidden lg:block w-1 hover:w-1.5 hover:bg-indigo-500 cursor-col-resize transition-all self-stretch relative z-30 shrink-0 ${
@@ -1143,13 +1143,13 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           title="Drag to resize Right Panel"
         />
 
-        {/* PANEL 3: Right Tabbed Workspace Board (Todos & Ideas) */}
+        
         <div 
           style={mounted && typeof window !== "undefined" && window.innerWidth >= 1024 ? { width: `${panel3Width}px` } : {}}
           className={`flex-col h-full bg-slate-50/30 shrink-0 ${mobileActiveTab === "tasks" || mobileActiveTab === "ideas" ? "flex flex-1" : "hidden lg:flex"}`}
         >
           
-          {/* Header tabs selector */}
+          
           <div className="flex border-b border-slate-200 bg-white p-3 shrink-0 gap-2 select-none">
             <button
               onClick={() => setActiveTab("tasks")}
@@ -1175,14 +1175,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </button>
           </div>
 
-          {/* Tab contents panel */}
+          
           <div className="flex-1 overflow-y-auto p-4">
             
-            {/* TAB 1: Tasks Checklist Board */}
+            
             {activeTab === "tasks" && (
               <div className="space-y-4">
                 
-                {/* Todo creation form */}
+                
                 <form onSubmit={handleAddTodo} className="flex gap-2 p-1">
                   <input
                     type="text"
@@ -1202,7 +1202,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   </button>
                 </form>
 
-                {/* Todo listings */}
+                
                 <div className="space-y-2.5">
                   <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider block pl-0.5 select-none">
                     Shared task checklist ({todos.length})
@@ -1254,11 +1254,11 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </div>
             )}
 
-            {/* TAB 2: Ideation Sticky Board */}
+            
             {activeTab === "ideas" && (
               <div className="space-y-4">
                 
-                {/* Idea card creation form */}
+                
                 <form onSubmit={handleAddIdea} className="bg-white border border-slate-200/80 rounded-2xl p-4.5 space-y-3.5 shadow-3xs">
                   <span className="text-[10px] text-slate-455 font-bold uppercase tracking-wider block leading-none pl-0.5 select-none">
                     Post an idea card
@@ -1292,7 +1292,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   </button>
                 </form>
 
-                {/* Ideas stack */}
+                
                 <div className="space-y-2.5">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block pl-0.5 select-none">
                     Room ideas stack ({ideas.length})
@@ -1347,19 +1347,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           </div>
         </div>
 
-        {/* Right Drawer Overlay Panel showing participants and lobby list */}
+        
         {showParticipantsDrawer && (
           <>
-            {/* Backdrop layer to close drawer on click outside */}
+            
             <div 
               className="fixed inset-0 z-40 bg-slate-900/10 lg:bg-transparent" 
               onClick={() => setShowParticipantsDrawer(false)}
             />
             
-            {/* Drawer Body container */}
+            
             <div className="absolute lg:relative top-0 right-0 h-full w-80 z-50 bg-white border-l border-slate-200 flex flex-col shrink-0 animate-slideLeft shadow-lg lg:shadow-none">
               
-              {/* Drawer Header */}
+              
               <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 select-none">
                   <span className="material-symbols-outlined text-[18px] text-slate-400">group</span>
@@ -1373,10 +1373,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                 </button>
               </div>
 
-              {/* Drawer Content */}
+              
               <div className="flex-1 overflow-y-auto p-4 space-y-5">
                 
-                {/* 1. Host Creator details */}
+                
                 <div className="space-y-1.5">
                   <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
                   <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
@@ -1394,7 +1394,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   </div>
                 </div>
 
-                {/* 2. Pending Requests List (Lobby queue) - visible to Host only */}
+                
                 {isHost && (
                   <div className="space-y-2">
                     <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
@@ -1426,7 +1426,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                               </div>
                             </div>
                             
-                            {/* Host action buttons */}
+                            
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <button
                                 disabled={approvingUserId !== null}
@@ -1450,13 +1450,13 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   </div>
                 )}
 
-                {/* 3. Joined Room Members List */}
+                
                 <div className="space-y-2">
                   <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
                     Joined Members ({participants.length})
                   </span>
                   <div className="space-y-1.5">
-                    {/* Logged in member (You) */}
+                    
                     <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
                       <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
                         Me
@@ -1467,7 +1467,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                       </div>
                     </div>
 
-                    {/* Other joined members */}
+                    
                     {participants
                       .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
                       .map((p) => {

@@ -28,14 +28,14 @@ export default async function StudyPodPage() {
     redirect("/login");
   }
 
-  // Fetch initial Study Pods list
+  
   const initialPods = await prisma.studyPod.findMany({
     orderBy: { createdAt: "desc" },
   });
 
   const podIds = initialPods.map((p) => p.id);
 
-  // Fetch all messages in these pods to extract active participant user IDs
+  
   const podMessages = await prisma.studyPodMessage.findMany({
     where: { studyPodId: { in: podIds } },
     select: {
@@ -62,11 +62,11 @@ export default async function StudyPodPage() {
 
   const userMap = new Map(dbUsers.map((u) => [u.id, u]));
 
-  // Serialize timestamps and map details for Next.js boundary
+  
   const studyPods = initialPods.map((pod) => {
     const creatorInfo = userMap.get(pod.creatorId);
     
-    // Find unique active participants who sent messages (excluding the creator)
+    
     const activeMsgSenders = podMessages.filter((m) => m.studyPodId === pod.id && m.userId !== pod.creatorId);
     const uniqueSenderIds = Array.from(new Set(activeMsgSenders.map((m) => m.userId)));
     

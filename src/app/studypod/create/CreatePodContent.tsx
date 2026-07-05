@@ -36,7 +36,7 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        // Redirect directly into the newly created room workspace
+        
         router.push(`/studypod/${data.studyPod.id}`);
       } else {
         setError(data.error || "Failed to create Study Pod");
@@ -52,7 +52,7 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
     <DashboardLayout user={user}>
       <div className="w-full px-4 md:px-8 py-6 space-y-6 animate-fadeIn">
         
-        {/* Breadcrumb Trail */}
+        
         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium select-none">
           <a href="/studypod" className="hover:text-indigo-600 transition">
             Study Pods
@@ -61,10 +61,10 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
           <span className="text-slate-800 font-semibold">Create Pod</span>
         </div>
 
-        {/* Creation Card container */}
+        
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xs max-w-2xl overflow-hidden">
           
-          {/* Accent Header */}
+          
           <div className="bg-yellow-100/80 border-b border-yellow-200/50 p-6">
             <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
               <IconUsers className="w-5 h-5 text-indigo-650" />

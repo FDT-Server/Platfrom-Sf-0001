@@ -12,7 +12,7 @@ export default async function StudyRoomPage(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
 
-  // Verify room exists in database
+  
   const studyPod = await prisma.studyPod.findUnique({
     where: { id: roomId },
   });
@@ -30,12 +30,12 @@ export default async function StudyRoomPage(
     waitingUserIds: studyPod.waitingUserIds,
   };
 
-  // If there is no session token, render the page as unauthenticated guest gateway
+  
   if (!sessionToken) {
     return <StudyRoomContent user={null} studyPod={serializedPod} roomId={roomId} />;
   }
 
-  // Verify user session
+  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -48,7 +48,7 @@ export default async function StudyRoomPage(
   });
 
   if (!user) {
-    // Session token is invalid/expired
+    
     return <StudyRoomContent user={null} studyPod={serializedPod} roomId={roomId} />;
   }
 
