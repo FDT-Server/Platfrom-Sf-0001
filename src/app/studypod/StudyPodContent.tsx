@@ -51,29 +51,29 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
   const getCardHeaderTheme = (podId: string) => {
     const themes = [
       {
-        bg: "bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-100 text-amber-800",
-        pill: "bg-amber-100 text-amber-900 border-amber-200",
-        tagColor: "text-amber-600"
+        bg: "bg-gradient-to-r from-amber-100 to-yellow-50 border-b border-amber-200/80 text-amber-950",
+        pill: "bg-amber-100 text-amber-950 border-amber-250",
+        tagColor: "text-amber-700"
       },
       {
-        bg: "bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-100 text-indigo-850",
-        pill: "bg-indigo-100 text-indigo-900 border-indigo-200",
-        tagColor: "text-indigo-650"
+        bg: "bg-gradient-to-r from-blue-100 to-sky-50 border-b border-blue-200/80 text-blue-950",
+        pill: "bg-blue-100 text-blue-950 border-blue-250",
+        tagColor: "text-blue-700"
       },
       {
-        bg: "bg-gradient-to-r from-emerald-50 to-teal-50 border-teal-100 text-teal-850",
-        pill: "bg-teal-100 text-teal-900 border-teal-200",
-        tagColor: "text-teal-600"
+        bg: "bg-gradient-to-r from-emerald-100 to-teal-50 border-b border-teal-200/80 text-teal-950",
+        pill: "bg-teal-100 text-teal-950 border-teal-250",
+        tagColor: "text-teal-700"
       },
       {
-        bg: "bg-gradient-to-r from-purple-50 to-fuchsia-50 border-fuchsia-100 text-fuchsia-850",
-        pill: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200",
-        tagColor: "text-fuchsia-600"
+        bg: "bg-gradient-to-r from-purple-100 to-fuchsia-50 border-b border-fuchsia-200/80 text-purple-950",
+        pill: "bg-fuchsia-100 text-fuchsia-950 border-fuchsia-250",
+        tagColor: "text-fuchsia-700"
       },
       {
-        bg: "bg-gradient-to-r from-rose-50 to-pink-50 border-pink-100 text-pink-850",
-        pill: "bg-pink-100 text-pink-900 border-pink-200",
-        tagColor: "text-pink-600"
+        bg: "bg-gradient-to-r from-rose-100 to-pink-50 border-b border-pink-200/80 text-rose-950",
+        pill: "bg-pink-100 text-rose-950 border-pink-250",
+        tagColor: "text-pink-700"
       }
     ];
     let hash = 0;
@@ -141,7 +141,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
                   className="flex flex-col rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden bg-white hover:shadow-md transition duration-150 animate-fadeIn"
                 >
                   {/* Dynamically Styled Header based on the card pod ID */}
-                  <div className={`flex justify-between items-center px-5 py-3 text-[9px] font-bold font-mono tracking-wider border-b border-slate-200/40 ${headerTheme.bg}`}>
+                  <div className={`flex justify-between items-center px-5 py-3 text-[10.5px] font-extrabold font-mono tracking-wider ${headerTheme.bg}`}>
                     <span>POD-{pod.id.substring(0, 5).toUpperCase()}</span>
                     <span className="opacity-95">
                       {new Date(pod.createdAt).toLocaleDateString("en-US", {
