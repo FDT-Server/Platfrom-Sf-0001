@@ -52,27 +52,27 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
     const themes = [
       {
         bg: "bg-gradient-to-r from-amber-100 to-yellow-50 border-b border-amber-200/80 text-amber-950",
-        pill: "bg-amber-100 text-amber-950 border-amber-250",
+        pill: "bg-amber-200/80 text-amber-950",
         tagColor: "text-amber-700"
       },
       {
         bg: "bg-gradient-to-r from-blue-100 to-sky-50 border-b border-blue-200/80 text-blue-950",
-        pill: "bg-blue-100 text-blue-950 border-blue-250",
+        pill: "bg-blue-200/80 text-blue-950",
         tagColor: "text-blue-700"
       },
       {
         bg: "bg-gradient-to-r from-emerald-100 to-teal-50 border-b border-teal-200/80 text-teal-950",
-        pill: "bg-teal-100 text-teal-950 border-teal-250",
+        pill: "bg-teal-200/80 text-teal-950",
         tagColor: "text-teal-700"
       },
       {
         bg: "bg-gradient-to-r from-purple-100 to-fuchsia-50 border-b border-fuchsia-200/80 text-purple-950",
-        pill: "bg-fuchsia-100 text-fuchsia-950 border-fuchsia-250",
+        pill: "bg-fuchsia-200/80 text-purple-950",
         tagColor: "text-fuchsia-700"
       },
       {
         bg: "bg-gradient-to-r from-rose-100 to-pink-50 border-b border-pink-200/80 text-rose-950",
-        pill: "bg-pink-100 text-rose-950 border-pink-250",
+        pill: "bg-pink-200/80 text-rose-950",
         tagColor: "text-pink-700"
       }
     ];
@@ -160,7 +160,7 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
                         <h4 className="text-sm font-extrabold text-slate-850 leading-snug line-clamp-2">
                           {pod.name}
                         </h4>
-                        <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded-full border shadow-3xs uppercase tracking-wider shrink-0 select-none ${headerTheme.pill}`}>
+                        <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 select-none ${headerTheme.pill}`}>
                           Active
                         </span>
                       </div>
