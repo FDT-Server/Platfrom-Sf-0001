@@ -122,11 +122,25 @@ export async function GET(
       }),
     ]);
 
+    // Fetch user profile images to display user avatars on the client sidebar
+    const userIds = Array.from(new Set(messages.map((m) => m.userId)));
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, profileImage: true },
+    });
+
+    const userProfileMap = new Map(users.map((u) => [u.id, u.profileImage]));
+
+    const messagesWithProfiles = messages.map((m) => ({
+      ...m,
+      profileImage: userProfileMap.get(m.userId) || null,
+    }));
+
     return NextResponse.json({
       authenticated: true,
       status: "approved",
       studyPod,
-      messages,
+      messages: messagesWithProfiles,
       todos,
       ideas,
     });

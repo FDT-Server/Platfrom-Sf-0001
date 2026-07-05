@@ -35,6 +35,7 @@ interface Message {
   fullName: string;
   email: string;
   createdAt: string;
+  profileImage?: string | null;
 }
 
 interface Todo {
@@ -442,10 +443,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   // Extract unique active participants list from existing messages
   const getUniqueParticipants = () => {
-    const participants = new Map<string, { fullName: string; email: string }>();
+    const participants = new Map<string, { fullName: string; email: string; profileImage?: string | null }>();
     messages.forEach((msg) => {
       if (!participants.has(msg.email)) {
-        participants.set(msg.email, { fullName: msg.fullName, email: msg.email });
+        participants.set(msg.email, {
+          fullName: msg.fullName,
+          email: msg.email,
+          profileImage: msg.profileImage || null
+        });
       }
     });
     return Array.from(participants.values());
@@ -731,32 +736,49 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             className={`border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex-col shrink-0 lg:max-h-full ${mobileActiveTab === "info" ? "flex flex-1 animate-fadeIn" : "hidden lg:flex"}`}
           >
           {/* Header metadata */}
-          <div className="p-4 border-b border-slate-200">
-            <h2 className="text-sm font-extrabold text-slate-850 truncate leading-snug">
+          <div className="p-5 border-b border-slate-200/80 bg-white">
+            <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider mb-1 select-none">
+              Study Pod Workspace
+            </span>
+            <h2 className="text-sm font-extrabold text-slate-850 truncate leading-tight flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
               {studyPod.name}
             </h2>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Host: <span className="font-semibold">{studyPod.creatorName}</span>
+            <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[12px] text-slate-400">shield_person</span>
+              <span>Host:</span>
+              <span className="font-semibold text-slate-700">{studyPod.creatorName}</span>
             </p>
           </div>
 
           {/* Active room participants list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-            <div className="space-y-1">
-              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="space-y-2">
+              <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider select-none pl-0.5">
                 Room Members ({participants.length || 1})
               </span>
-              <div className="space-y-1.5 pt-1.5">
+              <div className="space-y-2.5 pt-1">
                 {/* Current logged in user is always in room */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6.5 h-6.5 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
-                    Me
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-800 truncate leading-none">
+                <div className="flex items-center gap-3 p-2 rounded-xl bg-white border border-slate-100 shadow-3xs transition hover:border-slate-200">
+                  {user.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={user.fullName}
+                      className="w-7.5 h-7.5 rounded-lg object-cover border border-slate-200/80 shadow-3xs shrink-0"
+                    />
+                  ) : (
+                    <div className="w-7.5 h-7.5 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs shrink-0">
+                      Me
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-slate-850 truncate leading-none flex items-center gap-1">
                       {user.fullName}
+                      <span className="inline-block text-[7px] font-extrabold bg-slate-900 text-white px-1 py-0.5 rounded shrink-0">
+                        Me
+                      </span>
                     </p>
-                    <p className="text-[9px] text-slate-500 truncate leading-none mt-1">
+                    <p className="text-[9px] text-slate-450 truncate leading-none mt-1">
                       {user.email}
                     </p>
                   </div>
@@ -768,11 +790,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   .map((p) => {
                     const colorStyle = getParticipantColor(p.email);
                     return (
-                      <div key={p.email} className="flex items-center gap-2.5 animate-fadeIn">
-                        <div className={`w-6.5 h-6.5 rounded-lg flex items-center justify-center text-[10px] font-bold border shadow-2xs ${colorStyle.bg}`}>
-                          {p.fullName.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
+                      <div key={p.email} className="flex items-center gap-3 p-2 rounded-xl bg-white border border-slate-100 shadow-3xs transition hover:border-slate-200 animate-fadeIn">
+                        {p.profileImage ? (
+                          <img
+                            src={p.profileImage}
+                            alt={p.fullName}
+                            className="w-7.5 h-7.5 rounded-lg object-cover border border-slate-200/80 shadow-3xs shrink-0"
+                          />
+                        ) : (
+                          <div className={`w-7.5 h-7.5 rounded-lg flex items-center justify-center text-[10px] font-bold border shadow-2xs shrink-0 ${colorStyle.bg}`}>
+                            {p.fullName.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold text-slate-850 truncate leading-none">
                             {p.fullName}
                           </p>
@@ -788,10 +818,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           </div>
 
           {/* Room bottom actions */}
-          <div className="p-4 border-t border-slate-200 bg-white space-y-2 shrink-0">
+          <div className="p-4 border-t border-slate-200/85 bg-white space-y-2 shrink-0">
             <button
               onClick={handleCopyLink}
-              className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold py-2 px-3 rounded-lg text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold py-2.5 px-3 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-3xs"
             >
               {copiedLink ? (
                 <>
@@ -800,20 +830,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                 </>
               ) : (
                 <>
-                  <IconCopy className="w-4 h-4" />
+                  <IconCopy className="w-4 h-4 text-slate-400" />
                   Share Invite Link
                 </>
               )}
             </button>
             <button
               onClick={() => router.push("/studypod")}
-              className="w-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-100 font-bold py-2 px-3 rounded-lg text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-100/60 font-bold py-2.5 px-3 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 shadow-3xs"
             >
-              <IconDoorExit className="w-4 h-4" />
+              <IconDoorExit className="w-4 h-4 text-rose-500" />
               Leave Room
             </button>
-          </div>
-        </div>
+          </div>          </div>
 
         {/* Custom Resizable Column Divider 1 */}
         <div
