@@ -25,6 +25,9 @@ export default async function StudyRoomPage(
     id: studyPod.id,
     name: studyPod.name,
     creatorName: studyPod.creatorName,
+    creatorId: studyPod.creatorId,
+    approvedUserIds: studyPod.approvedUserIds,
+    waitingUserIds: studyPod.waitingUserIds,
   };
 
   // If there is no session token, render the page as unauthenticated guest gateway

@@ -50,7 +50,63 @@ export async function GET(
       });
     }
 
-    // User is authenticated - fetch room assets
+    // Gating check: Is the user the host?
+    const isHost = user.id === studyPod.creatorId;
+
+    let approvedList: string[] = [];
+    try {
+      if (studyPod.approvedUserIds) {
+        approvedList = typeof studyPod.approvedUserIds === "string"
+          ? JSON.parse(studyPod.approvedUserIds)
+          : (studyPod.approvedUserIds as string[]);
+      }
+    } catch {
+      approvedList = [];
+    }
+
+    let waitingList: any[] = [];
+    try {
+      if (studyPod.waitingUserIds) {
+        waitingList = typeof studyPod.waitingUserIds === "string"
+          ? JSON.parse(studyPod.waitingUserIds)
+          : (studyPod.waitingUserIds as any[]);
+      }
+    } catch {
+      waitingList = [];
+    }
+
+    if (!isHost && !approvedList.includes(user.id)) {
+      // User is not approved yet - check if already waiting
+      const isAlreadyWaiting = waitingList.some((w) => w.id === user.id);
+      if (!isAlreadyWaiting) {
+        waitingList.push({
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          profileImage: user.profileImage || null,
+          selectedRole: user.selectedRole || "Academy Learner",
+        });
+
+        await prisma.studyPod.update({
+          where: { id: roomId },
+          data: {
+            waitingUserIds: waitingList,
+          },
+        });
+      }
+
+      return NextResponse.json({
+        authenticated: true,
+        status: "waiting",
+        studyPod: {
+          id: studyPod.id,
+          name: studyPod.name,
+          creatorName: studyPod.creatorName,
+        },
+      });
+    }
+
+    // User is approved or host - fetch room assets
     const [messages, todos, ideas] = await Promise.all([
       prisma.studyPodMessage.findMany({
         where: { studyPodId: roomId },
@@ -68,6 +124,7 @@ export async function GET(
 
     return NextResponse.json({
       authenticated: true,
+      status: "approved",
       studyPod,
       messages,
       todos,

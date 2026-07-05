@@ -50,7 +50,9 @@ model StudyPod {
   name        String
   creatorId   String
   creatorName String
-  createdAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  approvedUserIds Json?    @default("[]")
+  waitingUserIds  Json?    @default("[]")
 }
 
 model StudyPodMessage {

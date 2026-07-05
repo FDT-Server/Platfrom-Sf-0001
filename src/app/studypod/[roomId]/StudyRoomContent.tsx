@@ -23,6 +23,9 @@ interface StudyPod {
   id: string;
   name: string;
   creatorName: string;
+  creatorId: string;
+  approvedUserIds?: any;
+  waitingUserIds?: any;
 }
 
 interface Message {
@@ -75,6 +78,37 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [signupRole, setSignupRole] = useState("New / Aspiring Developer");
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Lobby Waiting Room and drawer states
+  const [lobbyStatus, setLobbyStatus] = useState<"loading" | "waiting" | "approved">("loading");
+  const [roomPod, setRoomPod] = useState<StudyPod>(studyPod);
+  const [showParticipantsDrawer, setShowParticipantsDrawer] = useState(false);
+  const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+
+  // Host Action: Approve or decline pending lobby requests
+  const handleApproveUser = async (targetUserId: string, action: "accept" | "decline") => {
+    setApprovingUserId(targetUserId);
+    try {
+      const res = await fetch(`/api/studypods/${roomId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId, action }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Update local lobby lists in state
+        setRoomPod((prev) => ({
+          ...prev,
+          approvedUserIds: data.approvedUserIds,
+          waitingUserIds: data.waitingUserIds,
+        }));
+      }
+    } catch (err) {
+      console.error("Error approving member:", err);
+    } finally {
+      setApprovingUserId(null);
+    }
+  };
 
   // Workspace states
   const [messages, setMessages] = useState<Message[]>([]);
@@ -173,7 +207,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   }, [messages]);
 
-  // Workspace Polling Loop
+  // Workspace Polling Loop (High frequency 1-second refresh)
   useEffect(() => {
     if (!user) return;
 
@@ -189,9 +223,13 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated) {
-            setMessages(data.messages || []);
-            setTodos(data.todos || []);
-            setIdeas(data.ideas || []);
+            setLobbyStatus(data.status);
+            setRoomPod(data.studyPod);
+            if (data.status === "approved") {
+              setMessages(data.messages || []);
+              setTodos(data.todos || []);
+              setIdeas(data.ideas || []);
+            }
           }
         }
       } catch (err) {
@@ -202,7 +240,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     };
 
     fetchWorkspaceData();
-    const interval = setInterval(fetchWorkspaceData, 3000);
+    const interval = setInterval(fetchWorkspaceData, 1000);
     return () => clearInterval(interval);
   }, [user, roomId]);
 
@@ -550,17 +588,106 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   // --- RENDER 2: COLLABORATIVE WORKSPACE VIEW ---
   const participants = getUniqueParticipants();
 
+  // Parse lobby list arrays safely
+  let approvedList: string[] = [];
+  try {
+    if (roomPod.approvedUserIds) {
+      approvedList = typeof roomPod.approvedUserIds === "string"
+        ? JSON.parse(roomPod.approvedUserIds)
+        : (roomPod.approvedUserIds as string[]);
+    }
+  } catch {
+    // Empty
+  }
+
+  let waitingList: any[] = [];
+  try {
+    if (roomPod.waitingUserIds) {
+      waitingList = typeof roomPod.waitingUserIds === "string"
+        ? JSON.parse(roomPod.waitingUserIds)
+        : (roomPod.waitingUserIds as any[]);
+    }
+  } catch {
+    // Empty
+  }
+
+  const isHost = user && user.id === roomPod.creatorId;
+  const waitingUserCount = waitingList.length;
+
+  // Gating Check: Show Waiting Hall Lobby screen if user has not been approved by the host yet
+  if (lobbyStatus === "waiting" && !isHost) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-6 text-center animate-fadeIn">
+          
+          {/* Animated Loader/Wait Icon */}
+          <div className="relative flex items-center justify-center">
+            <span className="absolute inline-flex h-20 w-20 rounded-full bg-indigo-400 opacity-20 animate-ping"></span>
+            <span className="absolute inline-flex h-28 w-28 rounded-full bg-indigo-400 opacity-10 animate-ping duration-1000"></span>
+            <div className="relative bg-white border border-slate-200/90 shadow-md h-16 w-16 rounded-2xl flex items-center justify-center text-indigo-650 shrink-0">
+              <span className="material-symbols-outlined text-[32px] animate-spin">
+                sync
+              </span>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="max-w-md space-y-2.5">
+            <span className="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-750 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider select-none">
+              Waiting Room
+            </span>
+            <h2 className="text-xl font-extrabold text-slate-850">
+              Waiting for the host to let you in...
+            </h2>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              You are currently in the waiting hall for study room <span className="font-bold text-slate-800">"{roomPod.name}"</span>. The host <span className="font-semibold text-indigo-650">{roomPod.creatorName}</span> has been notified to accept your request.
+            </p>
+          </div>
+
+          {/* Meta Card details */}
+          <div className="bg-white border border-slate-200/60 rounded-2xl px-6 py-4 text-xs text-slate-500 max-w-sm flex items-center justify-between w-full shadow-md">
+            <div className="text-left">
+              <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider">Your Profile</span>
+              <span className="font-bold text-slate-700">{user?.fullName}</span>
+            </div>
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+            <div className="text-right">
+              <span className="block text-[8px] text-slate-400 font-extrabold uppercase tracking-wider">Status</span>
+              <span className="font-bold text-indigo-600">Waiting for Host Approval</span>
+            </div>
+          </div>
+
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout user={user}>
-      <div className="flex-1 flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] -m-4 md:-m-8 overflow-hidden bg-slate-50">
+      <div className="flex-1 flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] -m-4 md:-m-8 overflow-hidden bg-slate-50 relative">
         
         {/* Navigation Menu Bar */}
-        <div className="flex items-center gap-2 text-xs text-slate-500 py-3.5 px-6 bg-white border-b border-slate-200 shrink-0 select-none">
-          <a href="/studypod" className="hover:text-indigo-650 transition">
-            Study Pods
-          </a>
-          <span className="text-slate-350">/</span>
-          <span className="text-slate-800 font-semibold">{studyPod.name}</span>
+        <div className="flex items-center justify-between text-xs text-slate-500 py-3.5 px-6 bg-white border-b border-slate-200 shrink-0 select-none">
+          <div className="flex items-center gap-2">
+            <a href="/studypod" className="hover:text-indigo-650 transition font-medium">
+              Study Pods
+            </a>
+            <span className="text-slate-355 font-bold">/</span>
+            <span className="text-slate-800 font-semibold">{roomPod.name}</span>
+          </div>
+
+          <button
+            onClick={() => setShowParticipantsDrawer(!showParticipantsDrawer)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-750 hover:text-slate-900 font-bold transition shadow-3xs text-[10px] cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[15px] text-slate-400 select-none">group</span>
+            Participants
+            {isHost && waitingUserCount > 0 && (
+              <span className="h-4 min-w-4 bg-indigo-655 text-white rounded-full flex items-center justify-center text-[8px] font-extrabold px-1 animate-pulse">
+                {waitingUserCount}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Mobile active panel switcher */}
@@ -1001,6 +1128,151 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
           </div>
         </div>
+
+        {/* Right Drawer Overlay Panel showing participants and lobby list */}
+        {showParticipantsDrawer && (
+          <>
+            {/* Backdrop layer to close drawer on click outside */}
+            <div 
+              className="fixed inset-0 z-40 bg-slate-900/10 lg:bg-transparent" 
+              onClick={() => setShowParticipantsDrawer(false)}
+            />
+            
+            {/* Drawer Body container */}
+            <div className="absolute lg:relative top-0 right-0 h-full w-80 z-50 bg-white border-l border-slate-200 flex flex-col shrink-0 animate-slideLeft shadow-lg lg:shadow-none">
+              
+              {/* Drawer Header */}
+              <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 select-none">
+                  <span className="material-symbols-outlined text-[18px] text-slate-400">group</span>
+                  Room Members
+                </h3>
+                <button
+                  onClick={() => setShowParticipantsDrawer(false)}
+                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-full hover:bg-slate-100 transition shrink-0"
+                >
+                  <IconX className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Drawer Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                
+                {/* 1. Host Creator details */}
+                <div className="space-y-1.5">
+                  <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-650 text-white flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                      {roomPod.creatorName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate leading-none">
+                        {roomPod.creatorName}
+                      </p>
+                      <span className="inline-block text-[8px] font-extrabold bg-indigo-50 text-indigo-750 px-1.5 py-0.5 rounded mt-1.5 select-none border border-indigo-100">
+                        Host
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Pending Requests List (Lobby queue) - visible to Host only */}
+                {isHost && (
+                  <div className="space-y-2">
+                    <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
+                      Waiting Room Requests ({waitingList.length})
+                    </span>
+                    {waitingList.length === 0 ? (
+                      <p className="text-[10px] text-slate-400 italic pl-1.5 font-medium">
+                        No pending join requests
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {waitingList.map((w: any) => (
+                          <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
+                            <div className="flex items-center gap-2">
+                              {w.profileImage ? (
+                                <img
+                                  src={w.profileImage}
+                                  alt={w.fullName}
+                                  className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                                  {w.fullName.substring(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
+                                <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
+                              </div>
+                            </div>
+                            
+                            {/* Host action buttons */}
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <button
+                                disabled={approvingUserId !== null}
+                                onClick={() => handleApproveUser(w.id, "accept")}
+                                className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                              >
+                                {approvingUserId === w.id ? "..." : "Accept"}
+                              </button>
+                              <button
+                                disabled={approvingUserId !== null}
+                                onClick={() => handleApproveUser(w.id, "decline")}
+                                className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                              >
+                                Decline
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Joined Room Members List */}
+                <div className="space-y-2">
+                  <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
+                    Joined Members ({participants.length})
+                  </span>
+                  <div className="space-y-1.5">
+                    {/* Logged in member (You) */}
+                    <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
+                      <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
+                        Me
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate leading-none">{user?.fullName}</p>
+                        <p className="text-[9px] text-slate-400 truncate leading-none mt-1">{user?.selectedRole || "Academy Learner"}</p>
+                      </div>
+                    </div>
+
+                    {/* Other joined members */}
+                    {participants
+                      .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
+                      .map((p) => {
+                        const colorStyle = getParticipantColor(p.email);
+                        return (
+                          <div key={p.email} className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
+                            <div className={`w-6.5 h-6.5 rounded flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0 border ${colorStyle.bg}`}>
+                              {p.fullName.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-805 truncate leading-none">{p.fullName}</p>
+                              <p className="text-[9px] text-slate-400 truncate leading-none mt-1">Joined member</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
       </div>
