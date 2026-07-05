@@ -18,6 +18,9 @@ import {
   IconUserCircle,
   IconPlus,
   IconX,
+  IconMoodSmile,
+  IconPhoto,
+  IconPaperclip,
 } from "@tabler/icons-react";
 
 interface StudyPod {
@@ -182,6 +185,14 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Message input attachments and emoji picker states
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const roles = [
     "Experienced Software Engineer / Lead",
     "Product / Project Manager",
@@ -328,22 +339,54 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  // Chat message sending
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setSelectedImage(null);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      setSelectedFile(null);
+    }
+  };
+
+  // Chat message sending (Supports attachments)
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatText.trim() || submittingChat) return;
+    const hasAttachment = selectedFile || selectedImage;
+    if ((!chatText.trim() && !hasAttachment) || submittingChat) return;
 
     setSubmittingChat(true);
     try {
+      let finalContent = chatText;
+      if (selectedImage) {
+        finalContent = chatText.trim()
+          ? `🖼️ Shared image: ${selectedImage.name}\n\n${chatText.trim()}`
+          : `🖼️ Shared image: ${selectedImage.name}`;
+      } else if (selectedFile) {
+        finalContent = chatText.trim()
+          ? `📁 Shared file: ${selectedFile.name}\n\n${chatText.trim()}`
+          : `📁 Shared file: ${selectedFile.name}`;
+      }
+
       const res = await fetch(`/api/studypods/${roomId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "message", content: chatText }),
+        body: JSON.stringify({ type: "message", content: finalContent }),
       });
       if (res.ok) {
         const data = await res.json();
         setMessages((prev) => [...prev, data.message]);
         setChatText("");
+        setSelectedFile(null);
+        setSelectedImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        if (imageInputRef.current) imageInputRef.current.value = "";
       }
     } catch (err) {
       console.error("Failed to send message:", err);
@@ -962,24 +1005,123 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message input sender */}
-          <div className="p-4 border-t border-slate-200 bg-white shrink-0">
-            <form onSubmit={handleSendChat} className="flex gap-2 items-center">
+          {/* Message input sender (Supports image upload, file sharing, and emojis picker) */}
+          <div className="border-t border-slate-200 bg-white shrink-0 relative">
+            
+            {/* Emojis selection drawer popup */}
+            {showEmojiPicker && (
+              <div className="absolute bottom-full left-4 mb-2 z-40 bg-white border border-slate-200 shadow-xl rounded-2xl p-3 grid grid-cols-6 gap-2 w-56 animate-fadeIn select-none">
+                {["😀", "😂", "👍", "🔥", "🎉", "🙌", "💡", "📚", "🚀", "✍️", "💻", "💯"].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      setChatText((prev) => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                    className="text-lg hover:bg-slate-100 p-1.5 rounded-lg transition text-center cursor-pointer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Selected attachments preview panel indicator */}
+            {(selectedFile || selectedImage) && (
+              <div className="flex items-center justify-between bg-slate-50 border-b border-slate-100 px-4 py-2 text-[10px] text-slate-650 animate-fadeIn shrink-0 select-none">
+                <div className="flex items-center gap-1.5 font-semibold truncate">
+                  <span className="material-symbols-outlined text-[14px] text-indigo-650 shrink-0">
+                    {selectedImage ? "image" : "description"}
+                  </span>
+                  <span className="truncate max-w-[240px]">
+                    {selectedImage ? selectedImage.name : selectedFile?.name}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setSelectedImage(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    if (imageInputRef.current) imageInputRef.current.value = "";
+                  }}
+                  className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition shrink-0 cursor-pointer"
+                >
+                  <IconX className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Hidden upload inputs */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              ref={imageInputRef}
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+
+            <form onSubmit={handleSendChat} className="flex gap-2 items-center p-4">
+              
+              {/* Emojis Trigger */}
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 ${
+                  showEmojiPicker ? "bg-slate-50 border-indigo-200 text-indigo-650" : "border-slate-200"
+                }`}
+                title="Add emoji"
+              >
+                <IconMoodSmile className="w-4.5 h-4.5" />
+              </button>
+
+              {/* Image Upload Trigger */}
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 ${
+                  selectedImage ? "bg-indigo-50 border-indigo-200 text-indigo-650" : "border-slate-200"
+                }`}
+                title="Share image"
+              >
+                <IconPhoto className="w-4.5 h-4.5" />
+              </button>
+
+              {/* File Attachment Trigger */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 ${
+                  selectedFile ? "bg-indigo-50 border-indigo-200 text-indigo-650" : "border-slate-200"
+                }`}
+                title="Share file attachment"
+              >
+                <IconPaperclip className="w-4.5 h-4.5" />
+              </button>
+
               <input
                 type="text"
                 value={chatText}
                 onChange={(e) => setChatText(e.target.value)}
                 placeholder="Type a message to share..."
-                required
+                required={!selectedFile && !selectedImage}
                 maxLength={400}
-                className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-lg text-slate-800 text-xs transition"
+                className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs transition"
               />
+
               <button
                 type="submit"
-                disabled={!chatText.trim() || submittingChat}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-lg transition duration-150 cursor-pointer shrink-0 flex items-center justify-center shadow-2xs"
+                disabled={(!chatText.trim() && !selectedFile && !selectedImage) || submittingChat}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition duration-150 cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 shadow-2xs"
               >
-                <IconSend className="w-4 h-4" />
+                <IconSend className="w-4.5 h-4.5" />
               </button>
             </form>
           </div>
