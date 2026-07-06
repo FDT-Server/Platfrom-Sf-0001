@@ -62,6 +62,50 @@ const bubbleColors = [
   { bg: "#e2f952", text: "#0f172a", border: "transparent" }  // Neon Yellow/Lime
 ];
 
+interface ParsedReply {
+  replyingToName: string;
+  refId: string | null;
+  quotedText: string;
+  actualContent: string;
+}
+
+const parseReplyMessage = (content: string): ParsedReply | null => {
+  if (!content.startsWith("Replying to")) return null;
+
+  const firstDoubleNewlineIndex = content.indexOf("\n\n");
+  if (firstDoubleNewlineIndex === -1) return null;
+
+  const headerAndQuote = content.substring(0, firstDoubleNewlineIndex);
+  const actualContent = content.substring(firstDoubleNewlineIndex + 2);
+
+  const lines = headerAndQuote.split("\n");
+  if (lines.length < 2) return null;
+
+  const headerLine = lines[0];
+  
+  let replyingToName = "";
+  let refId: string | null = null;
+
+  const refMatch = headerLine.match(/^Replying to (.*?)(?:\s*\[ref:(.*?)\])?:?$/);
+  if (refMatch) {
+    replyingToName = refMatch[1].trim();
+    refId = refMatch[2] || null;
+  } else {
+    replyingToName = headerLine.replace("Replying to ", "").replace(":", "").trim();
+  }
+
+  const quotedText = lines.slice(1)
+    .map(line => line.startsWith("> ") ? line.slice(2) : (line.startsWith(">") ? line.slice(1) : line))
+    .join("\n");
+
+  return {
+    replyingToName,
+    refId,
+    quotedText,
+    actualContent
+  };
+};
+
 export default function NetworkingContent({ user, allUsers }: NetworkingContentProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessageText, setNewMessageText] = useState("");
@@ -148,6 +192,38 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   }, [messages.length]);
 
+  // Handle smooth scroll and highlight target original message
+  const handleScrollToMessage = (refId: string | null, quotedText: string, replyingToName: string) => {
+    let targetMsgId = refId;
+
+    if (!targetMsgId) {
+      // Fallback search based on name and text content
+      const cleanQuote = quotedText.trim();
+      const originalMsg = messages.find(m => {
+        if (m.fullName !== replyingToName) return false;
+        const cleanContent = m.content.startsWith("Replying to")
+          ? m.content.split("\n\n").slice(1).join("\n\n")
+          : m.content;
+        return cleanContent.trim().includes(cleanQuote) || cleanQuote.includes(cleanContent.trim());
+      });
+      if (originalMsg) {
+        targetMsgId = originalMsg.id;
+      }
+    }
+
+    if (targetMsgId) {
+      const element = document.getElementById(`msg-${targetMsgId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Visual premium feedback to highlight the message
+        element.classList.add("ring-2", "ring-indigo-500", "ring-offset-2", "transition-all", "duration-500");
+        setTimeout(() => {
+          element.classList.remove("ring-2", "ring-indigo-500", "ring-offset-2");
+        }, 2000);
+      }
+    }
+  };
+
   // Handle message sending
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,8 +233,16 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     setError("");
 
     try {
+      let cleanContent = replyingToMessage ? replyingToMessage.content : "";
+      if (replyingToMessage) {
+        const parsed = parseReplyMessage(replyingToMessage.content);
+        if (parsed) {
+          cleanContent = parsed.actualContent;
+        }
+      }
+
       const textToSend = replyingToMessage
-        ? `Replying to ${replyingToMessage.fullName}:\n> ${replyingToMessage.content.split("\n").join("\n> ")}\n\n${newMessageText.trim()}`
+        ? `Replying to ${replyingToMessage.fullName} [ref:${replyingToMessage.id}]:\n> ${cleanContent.split("\n").join("\n> ")}\n\n${newMessageText.trim()}`
         : newMessageText.trim();
 
       const res = await fetch("/api/messages", {
@@ -574,6 +658,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                 return (
                   <div
                     key={msg.id}
+                    id={`msg-${msg.id}`}
                     className={`flex items-start gap-3 max-w-[85%] md:max-w-[70%] ${
                       isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
                     }`}
@@ -726,14 +811,53 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
                       {/* Content bubble with resource-style colorful backgrounds */}
                       <div className="relative">
-                        <div 
-                          style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
-                          className={`rounded-2xl px-4 py-2.5 shadow-2xs text-sm break-words whitespace-pre-wrap leading-relaxed ${
-                            isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
-                          } font-medium`}
-                        >
-                          {renderMessageContent(msg.content, isCurrentUser)}
-                        </div>
+                        {(() => {
+                          const parsedReply = parseReplyMessage(msg.content);
+                          if (parsedReply) {
+                            return (
+                              <div 
+                                style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
+                                className={`rounded-2xl px-4 py-2.5 shadow-2xs text-sm break-words leading-relaxed ${
+                                  isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
+                                } font-medium space-y-2`}
+                              >
+                                {/* Quoted Reply Context */}
+                                <div 
+                                  onClick={() => handleScrollToMessage(parsedReply.refId, parsedReply.quotedText, parsedReply.replyingToName)}
+                                  className={`border-l-2 ${
+                                    isCurrentUser 
+                                      ? "border-white/40 bg-white/10 hover:bg-white/20" 
+                                      : "border-slate-400/40 bg-slate-100/35 hover:bg-slate-200/40"
+                                  } rounded-r-lg p-2 text-xs cursor-pointer transition select-none block max-w-full`}
+                                  title="Click to see original message"
+                                >
+                                  <div className="font-bold opacity-80 leading-none truncate">
+                                    {parsedReply.replyingToName}
+                                  </div>
+                                  <div className="opacity-70 truncate mt-1 max-w-full">
+                                    {parsedReply.quotedText}
+                                  </div>
+                                </div>
+                                
+                                {/* Actual Message Content */}
+                                <div className="whitespace-pre-wrap">
+                                  {renderMessageContent(parsedReply.actualContent, isCurrentUser)}
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <div 
+                              style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
+                              className={`rounded-2xl px-4 py-2.5 shadow-2xs text-sm break-words whitespace-pre-wrap leading-relaxed ${
+                                isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
+                              } font-medium`}
+                            >
+                              {renderMessageContent(msg.content, isCurrentUser)}
+                            </div>
+                          );
+                        })()}
 
                         {/* Reactions Pill Display */}
                         {(() => {
@@ -849,13 +973,20 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
             {/* Replying Banner Quote */}
             {replyingToMessage && (
-              <div className="flex items-center justify-between bg-slate-50 border-l-4 border-indigo-500 rounded-r-xl p-3 mb-3 text-xs animate-fadeIn shadow-3xs">
-                <div className="min-w-0">
+              <div className="flex items-center justify-between bg-slate-50/40 border-l-4 border-indigo-500/40 rounded-r-xl p-3 mb-3 text-xs animate-fadeIn shadow-3xs opacity-70">
+                <div 
+                  className="min-w-0 cursor-pointer flex-1" 
+                  title="Click to see original message"
+                  onClick={() => handleScrollToMessage(replyingToMessage.id, replyingToMessage.content, replyingToMessage.fullName)}
+                >
                   <p className="font-bold text-slate-800 leading-none">
                     Replying to {replyingToMessage.fullName}
                   </p>
                   <p className="text-slate-500 truncate mt-1.5 leading-snug">
-                    {replyingToMessage.content}
+                    {(() => {
+                      const parsed = parseReplyMessage(replyingToMessage.content);
+                      return parsed ? parsed.actualContent : replyingToMessage.content;
+                    })()}
                   </p>
                 </div>
                 <button
