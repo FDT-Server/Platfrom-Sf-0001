@@ -34,15 +34,15 @@ export const metadata: Metadata = {
   category: "education",
   classification: "Education / Online Learning",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    process.env.NEXT_PUBLIC_APP_URL || "https://platform.studentforge.in"
   ),
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    canonical: process.env.NEXT_PUBLIC_APP_URL || "https://platform.studentforge.in",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://platform.studentforge.in",
     title: "Studentforge Platform — Online Learning & Engineering Training",
     description:
       "A legitimate online educational platform for engineering students. Elevate your technical expertise with curated resources, video lectures, and hands-on database training.",
