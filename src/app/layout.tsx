@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s | Studentforge Platform",
   },
   description:
-    "Studentforge Platform — Elevate your technical expertise with curated engineering resources, video lectures, and hands-on database training.",
+    "Studentforge Platform — A legitimate educational training platform. Elevate your technical expertise with curated engineering resources, video lectures, and hands-on database training.",
   keywords: [
     "Studentforge",
     "Platform",
@@ -24,51 +24,65 @@ export const metadata: Metadata = {
     "Learning",
     "Lectures",
     "Resources",
+    "Education",
+    "Training",
+    "Online Courses",
   ],
   authors: [{ name: "Studentforge Team" }],
   creator: "Studentforge Team",
+  publisher: "Studentforge Platform",
+  category: "education",
+  classification: "Education / Online Learning",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   ),
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    title: "Studentforge Platform",
+    title: "Studentforge Platform — Online Learning & Engineering Training",
     description:
-      "Elevate your technical expertise with curated engineering resources, video lectures, and hands-on database training.",
+      "A legitimate online educational platform for engineering students. Elevate your technical expertise with curated resources, video lectures, and hands-on database training.",
     siteName: "Studentforge Platform",
     images: [
       {
         url: "https://ik.imagekit.io/dypkhqxip/urlimag",
         width: 1200,
         height: 630,
-        alt: "Studentforge Platform",
+        alt: "Studentforge Platform — Online Learning & Engineering Training",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Studentforge Platform",
+    title: "Studentforge Platform — Online Learning & Engineering Training",
     description:
-      "Elevate your technical expertise with curated engineering resources and video lectures.",
+      "A legitimate online educational platform. Elevate your technical expertise with curated engineering resources and video lectures.",
     images: ["https://ik.imagekit.io/dypkhqxip/urlimag"],
   },
   icons: {
     icon: [
-      { url: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397", type: "image/png" },
+      { url: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397", type: "image/png", sizes: "any" },
     ],
     apple: [
-      { url: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397", type: "image/png" },
+      { url: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397", type: "image/png", sizes: "180x180" },
     ],
     shortcut: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397",
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
 };
@@ -81,20 +95,25 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <head>
-        
         <link rel="icon" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" type="image/png" />
-        <link rel="apple-touch-icon" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" />
+        <link rel="apple-touch-icon" sizes="180x180" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" />
         <link rel="shortcut icon" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" />
 
-        
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         />
 
-        
         <meta name="theme-color" content="#1d4ed8" />
         <meta name="msapplication-TileColor" content="#1d4ed8" />
+
+        <meta name="rating" content="general" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="application-name" content="Studentforge Platform" />
+        <meta name="generator" content="Next.js" />
+        <meta httpEquiv="content-type" content="text/html; charset=utf-8" />
+        <meta httpEquiv="x-ua-compatible" content="IE=edge" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900">
         {children}
