@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AppLayout from "@/components/AppLayout";
 
-// Custom SVG Icons
+
 const CheckIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
@@ -35,13 +35,13 @@ export default function SignupPage() {
   const router = useRouter();
   const [signUpStep, setSignUpStep] = useState<number>(1);
   
-  // Credentials Step 1 Data
+  
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   
-  // Position Step 2 Data
+  
   const roles = [
     "Experienced Software Engineer / Lead",
     "Product / Project Manager",
@@ -52,7 +52,7 @@ export default function SignupPage() {
   const [selectedRole, setSelectedRole] = useState("New / Aspiring Developer");
   const [otherRoleText, setOtherRoleText] = useState("");
 
-  // Goals Step 3 Data
+  
   const initialGoals = [
     { id: "frontend", label: "Master Frontend Engineering (React, Next.js, CSS)", checked: true },
     { id: "backend", label: "Build Robust Backend APIs & Database Architectures", checked: false },
@@ -119,7 +119,7 @@ export default function SignupPage() {
     }
   };
 
-  // Password Validation
+  
   const isPasswordValid = password.trim().length >= 6;
   const isStep1Valid = fullName.trim() !== "" && email.includes("@") && isPasswordValid;
 
@@ -127,7 +127,7 @@ export default function SignupPage() {
     <AppLayout mode="signup">
       <div className="flex flex-col justify-between h-full w-full max-w-md">
         
-        {/* Top: Progress Indicator */}
+        
         <div className="flex items-center gap-1.5 mb-6">
           <button 
             onClick={() => setSignUpStep(1)} 
@@ -154,7 +154,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* STEP 1: Basic Credentials */}
+        
         {signUpStep === 1 && (
           <div className="flex-grow flex flex-col justify-between animate-fadeIn">
             <div className="space-y-5">
@@ -243,7 +243,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* STEP 2: Position/Role Selection */}
+        
         {signUpStep === 2 && (
           <div className="flex-grow flex flex-col justify-between animate-fadeIn">
             <div>
@@ -306,7 +306,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* STEP 3: Goals Selection */}
+        
         {signUpStep === 3 && (
           <div className="flex-grow flex flex-col justify-between animate-fadeIn">
             <div>

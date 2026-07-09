@@ -11,7 +11,8 @@ import {
   IconBrandReact, 
   IconBrandTypescript, 
   IconDatabase, 
-  IconBrandCss3 
+  IconBrandCss3,
+  IconBook
 } from "@tabler/icons-react";
 
 export default async function ResourcesPage() {
@@ -22,7 +23,7 @@ export default async function ResourcesPage() {
     redirect("/login");
   }
 
-  // Fetch verified user details
+  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -36,7 +37,11 @@ export default async function ResourcesPage() {
     redirect("/login");
   }
 
-  const resourceCards = [
+  const dbResources = await prisma.resource.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  const fallbackResources = [
     {
       id: "PRISMA7",
       date: "04/07/2026",
@@ -55,7 +60,7 @@ export default async function ResourcesPage() {
       title: "Tailwind CSS v4.0 Docs",
       category: "Styling",
       badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100",
-      headerBg: "bg-emerald-400 text-emerald-950",
+      headerBg: "bg-emerald-450 text-emerald-950",
       link: "https://tailwindcss.com/docs",
       icon: IconBrandTailwind,
     },
@@ -149,10 +154,36 @@ export default async function ResourcesPage() {
     },
   ];
 
+  const resourceCards = dbResources.length > 0
+    ? dbResources.map((r, index) => {
+        let icon = IconBook;
+        const catLower = r.category.toLowerCase();
+        if (catLower === "database") icon = IconDatabase;
+        else if (catLower === "styling") icon = IconBrandCss3;
+        else if (catLower === "next.js") icon = IconBrandNextjs;
+        else if (catLower === "components") icon = IconComponents;
+        else if (catLower === "library") icon = IconBrandReact;
+        else if (catLower === "language") icon = IconBrandTypescript;
+
+        return {
+          id: `RES-${String(index + 1).padStart(3, "0")}`,
+          date: r.date,
+          publisher: r.publisher,
+          title: r.title,
+          category: r.category,
+          badgeColor: r.badgeColor,
+          headerBg: r.headerBg,
+          link: r.link,
+          imageUrl: r.imageUrl || "",
+          icon,
+        };
+      })
+    : fallbackResources.map((r) => ({ ...r, imageUrl: "" }));
+
   return (
     <DashboardLayout user={user}>
-      <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-300 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
-        <div className="pb-6 border-b border-slate-300">
+      <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
+        <div className="pb-6 border-b border-slate-100">
           <span className="text-xs font-bold text-blue-600 bg-blue-50/60 px-2.5 py-1 rounded-md">
             Learning Hub
           </span>
@@ -170,45 +201,56 @@ export default async function ResourcesPage() {
             return (
               <div
                 key={idx}
-                className="flex flex-col rounded-2xl shadow-sm border border-slate-300 overflow-hidden bg-white hover:shadow-md transition duration-150"
+                className="flex flex-col rounded-2xl shadow-sm border border-slate-200 bg-white hover:shadow-md transition duration-150 overflow-hidden"
               >
-                {/* Colored top bar header */}
-                <div className={`flex justify-between items-center px-6 py-4 text-sm font-bold font-mono tracking-wider ${card.headerBg}`}>
-                  <span>{card.id}</span>
-                  <span>{card.date}</span>
-                </div>
+                
+                {card.imageUrl ? (
+                  <div className="h-32 w-full overflow-hidden relative">
+                    <img src={card.imageUrl} className="w-full h-full object-cover" alt={card.title} />
+                    <span className={`absolute top-3 right-3 text-[9px] font-bold px-2 py-0.5 rounded border border-slate-200/50 shadow-xs ${card.badgeColor}`}>
+                      {card.category}
+                    </span>
+                  </div>
+                ) : (
+                  <div className={`flex justify-between items-center px-6 py-4 text-xs font-bold font-mono tracking-wider ${card.headerBg}`}>
+                    <span>{card.id}</span>
+                    <span>{card.date}</span>
+                  </div>
+                )}
 
-                {/* Main Card Body */}
+                
                 <div className="p-5 flex flex-col justify-between flex-1">
                   <div>
-                    {/* Brand Stack Icon and Publisher Row */}
+                    
                     <div className="flex items-center gap-1.5">
-                      <TechIcon className="w-4 h-4 text-slate-500 shrink-0" />
+                      <TechIcon className="w-4 h-4 text-slate-450 shrink-0" />
                       <p className="text-[11px] text-slate-500 font-semibold">{card.publisher}</p>
                     </div>
                     <div className="flex items-start justify-between gap-3 mt-2">
                       <h4 className="text-base font-extrabold text-slate-800 leading-tight">
                         {card.title}
                       </h4>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${card.badgeColor}`}>
-                        {card.category}
-                      </span>
+                      {!card.imageUrl && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${card.badgeColor}`}>
+                          {card.category}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Dotted horizontal line separator */}
-                  <div className="border-t border-dashed border-slate-300 my-5" />
+                  
+                  <div className="border-t border-dashed border-slate-200 my-5" />
 
-                  {/* Action footer */}
+                  
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-black text-slate-800 font-sans">
+                    <span className="text-sm font-extrabold text-slate-400 uppercase tracking-widest font-sans">
                       Docs
                     </span>
                     <a
                       href={card.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-black hover:bg-slate-900 text-white rounded-full px-5 py-2 text-xs font-bold transition duration-150 flex items-center gap-1 shadow-sm"
+                      className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-4 py-2 text-xs font-bold transition duration-150 flex items-center gap-1 shadow-xs border-0 cursor-pointer"
                     >
                       Open Link
                       <IconExternalLink className="w-3.5 h-3.5 shrink-0" />

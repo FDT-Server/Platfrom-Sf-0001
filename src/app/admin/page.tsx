@@ -11,7 +11,7 @@ export default async function AdminPanelPage() {
     redirect("/admin/login");
   }
 
-  // Fetch full details of the current logged-in user
+  
   const adminUser = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -21,12 +21,12 @@ export default async function AdminPanelPage() {
     },
   });
 
-  // Strict Server-Side Access Control: Check if logged-in user is adminUser and email is webstrixx@gmail.com
+  
   if (!adminUser || adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com") {
     redirect("/dashboard");
   }
 
-  // Retrieve all registered users to show in the table with all profile columns
+  
   const allUsers = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -50,12 +50,12 @@ export default async function AdminPanelPage() {
     },
   });
 
-  // Retrieve all payment requests
+  
   const paymentRequests = await prisma.paymentRequest.findMany({
     orderBy: { createdAt: "desc" },
   });
 
-  // Convert Date objects to strings/JSON compatible dates for client component serialization
+  
   const serializedUsers = allUsers.map((u) => ({
     ...u,
     createdAt: u.createdAt.toISOString(),

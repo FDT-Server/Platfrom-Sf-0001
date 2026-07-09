@@ -11,7 +11,7 @@ interface LecturesContentProps {
 }
 
 export default function LecturesContent({ user }: LecturesContentProps) {
-  // Store language state (English 'en' or Telugu 'te') for each card by its index or ID
+  
   const [activeLang, setActiveLang] = useState<Record<string, "en" | "te">>({});
 
   const toggleLanguage = (cardId: string, lang: "en" | "te") => {
@@ -128,7 +128,7 @@ export default function LecturesContent({ user }: LecturesContentProps) {
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-300 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
         
-        {/* Header Details */}
+        
         <div className="pb-6 border-b border-slate-300">
           <span className="text-xs font-bold text-blue-600 bg-blue-50/60 px-2.5 py-1 rounded-md flex items-center gap-1.5 w-fit">
             <span className="material-symbols-outlined text-[14px] select-none">
@@ -144,7 +144,7 @@ export default function LecturesContent({ user }: LecturesContentProps) {
           </p>
         </div>
 
-        {/* Video Catalog Grid */}
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8 pr-1 pb-4">
           {lecturesList.map((card) => {
             const currentLang = activeLang[card.id] || "en";
@@ -155,7 +155,7 @@ export default function LecturesContent({ user }: LecturesContentProps) {
                 key={card.id}
                 className="flex flex-col rounded-2xl shadow-sm border border-slate-300 overflow-hidden bg-white hover:shadow-md transition duration-150 group"
               >
-                {/* Embed YouTube player in Iframe */}
+                
                 <div className="relative h-48 w-full bg-slate-900">
                   <iframe
                     className="w-full h-full"
@@ -166,10 +166,10 @@ export default function LecturesContent({ user }: LecturesContentProps) {
                   />
                 </div>
 
-                {/* Main Card Body */}
+                
                 <div className="p-5 flex flex-col justify-between flex-1">
                   <div>
-                    {/* Language Switch Tabs Row */}
+                    
                     <div className="flex bg-slate-100 p-1 rounded-lg gap-1.5 mb-4">
                       <button
                         onClick={() => toggleLanguage(card.id, "en")}
@@ -210,10 +210,10 @@ export default function LecturesContent({ user }: LecturesContentProps) {
                     </p>
                   </div>
 
-                  {/* Divider line */}
+                  
                   <div className="border-t border-dashed border-slate-300 my-4" />
 
-                  {/* Footer actions */}
+                  
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px] text-red-600 select-none">

@@ -11,7 +11,7 @@ export default async function NetworkingPage() {
     redirect("/login");
   }
 
-  // Fetch logged-in user profile details
+  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -27,7 +27,7 @@ export default async function NetworkingPage() {
     redirect("/login");
   }
 
-  // Fetch all registered users to display in the networking active list
+  
   const allUsers = await prisma.user.findMany({
     orderBy: { fullName: "asc" },
     select: {

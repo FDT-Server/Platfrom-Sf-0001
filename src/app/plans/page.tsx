@@ -12,7 +12,7 @@ export default async function PlansPage() {
     redirect("/login");
   }
 
-  // Fetch verified user details
+  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -40,7 +40,7 @@ export default async function PlansPage() {
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-300 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
         
-        {/* Header */}
+        
         <div className="pb-6 border-b border-slate-300">
           <span className="text-xs font-bold text-blue-600 bg-blue-50/60 px-2.5 py-1 rounded-md">
             Premium Subscription
@@ -53,10 +53,10 @@ export default async function PlansPage() {
           </p>
         </div>
 
-        {/* Pricing Cards Grid */}
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           
-          {/* Card 1: Free */}
+          
           <div className="flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs hover:border-slate-300 transition duration-150 p-6 justify-between min-h-[350px]">
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
@@ -91,7 +91,7 @@ export default async function PlansPage() {
             </button>
           </div>
 
-          {/* Card 2: Monthly Premium */}
+          
           <div className="flex flex-col rounded-2xl border border-blue-200 bg-white overflow-hidden shadow-xs hover:border-blue-300 transition duration-150 p-6 justify-between min-h-[350px] relative">
             <div className="absolute top-4 right-4 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[9px] font-bold px-2 py-0.5 uppercase tracking-wide">
               Popular
@@ -129,7 +129,7 @@ export default async function PlansPage() {
             </Link>
           </div>
 
-          {/* Card 3: Yearly Premium */}
+          
           <div className="flex flex-col rounded-2xl border border-amber-300 bg-linear-to-b from-amber-50/30 to-white overflow-hidden shadow-2xs hover:border-amber-400 transition duration-150 p-6 justify-between min-h-[350px] relative">
             <div className="absolute top-4 right-4 bg-amber-100 text-amber-800 border border-amber-250 rounded-md text-[9px] font-bold px-2 py-0.5 uppercase tracking-wide">
               Best Value
@@ -169,7 +169,7 @@ export default async function PlansPage() {
 
         </div>
 
-        {/* Comparison Table */}
+        
         <div className="mt-12 border-t border-slate-200 pt-10">
           <h4 className="text-base font-extrabold text-slate-800 mb-6">Compare Plans Features</h4>
           <div className="w-full overflow-x-auto border border-slate-200 rounded-xl">

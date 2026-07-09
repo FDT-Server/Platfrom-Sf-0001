@@ -13,7 +13,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify session user exists
+    
     const loggedInUser = await prisma.user.findUnique({
       where: { id: sessionToken },
     });
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Retrieve latest 200 messages that are public OR involve the logged-in user
+    
     const messages = await prisma.message.findMany({
       take: 200,
       where: {
@@ -37,17 +37,17 @@ export async function GET(req: Request) {
       },
     });
 
-    // Automatically update seenBy status for messages rendered in current activeChatUserId context
+    
     const url = new URL(req.url);
     const activeChatId = url.searchParams.get("activeChatUserId");
 
-    // Filter messages to mark as seen: active chat context messages that do not contain user's ID
+    
     const messagesToMarkSeen = messages.filter((msg) => {
       const isInActiveChat =
         (activeChatId === "null" || !activeChatId)
-          ? msg.recipientId === null // Public group conversation
+          ? msg.recipientId === null 
           : (msg.userId === activeChatId && msg.recipientId === loggedInUser.id) ||
-            (msg.userId === loggedInUser.id && msg.recipientId === activeChatId); // Private conversation
+            (msg.userId === loggedInUser.id && msg.recipientId === activeChatId); 
 
       if (!isInActiveChat) return false;
 
@@ -85,7 +85,7 @@ export async function GET(req: Request) {
           },
         });
 
-        // Mutate the local response item as well
+        
         msg.seenBy = seenMap;
       }
     }
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Retrieve sender user details
+    
     const sender = await prisma.user.findUnique({
       where: { id: sessionToken },
     });
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message content cannot be empty" }, { status: 400 });
     }
 
-    // Save message to database, optional recipientId
+    
     const newMessage = await prisma.message.create({
       data: {
         content: content.trim(),

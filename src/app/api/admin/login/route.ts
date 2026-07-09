@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // STRICT Access Control: Block any email except webstrixx@gmail.com
+    
     if (email.trim().toLowerCase() !== "webstrixx@gmail.com") {
       return NextResponse.json(
         { error: "Access denied: Unauthorized admin email." },
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       if (email === "webstrixx@gmail.com") {
-        // Auto-seed admin user if missing
+        
         user = await prisma.user.create({
           data: {
             email: "webstrixx@gmail.com",
@@ -53,14 +53,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Set secure HTTP-only session cookie
+    
     const cookieStore = await cookies();
     cookieStore.set({
       name: "session",
       value: user.id,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 24 * 7, 
       path: "/",
       sameSite: "lax",
     });

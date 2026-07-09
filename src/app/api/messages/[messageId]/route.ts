@@ -31,7 +31,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
 
-    // Only sender or admin (webstrixx@gmail.com) can delete for everyone
+    
     const isAdmin = user.email.trim().toLowerCase() === "webstrixx@gmail.com";
     if (message.userId !== user.id && !isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

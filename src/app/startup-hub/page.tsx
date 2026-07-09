@@ -27,7 +27,7 @@ export default async function StartupHubPage() {
     redirect("/login");
   }
 
-  // Fetch verified user details
+  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -112,7 +112,7 @@ export default async function StartupHubPage() {
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-300 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
         
-        {/* Header */}
+        
         <div className="pb-6 border-b border-slate-300 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-blue-600 bg-blue-50/60 px-2.5 py-1 rounded-md">
@@ -133,7 +133,7 @@ export default async function StartupHubPage() {
 
         {!user.isPremium ? (
           <div className="relative mt-8 p-8 md:p-12 rounded-3xl border border-slate-300 bg-linear-to-b from-slate-50/50 to-slate-100/50 backdrop-blur-md flex flex-col items-center text-center max-w-2xl mx-auto shadow-xs overflow-hidden animate-fadeIn">
-            {/* Background elements */}
+            
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -169,7 +169,7 @@ export default async function StartupHubPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             
-            {/* Left Columns (Startups Showcase - Col Span 2) */}
+            
             <div className="lg:col-span-2 flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <h4 className="text-base font-extrabold text-slate-800">Trainee Startups</h4>
@@ -237,11 +237,11 @@ export default async function StartupHubPage() {
               </div>
             </div>
 
-            {/* Right Column (Incubator Resources & Tools - Col Span 1) */}
+            
             <div className="flex flex-col gap-6">
               <h4 className="text-base font-extrabold text-slate-800">Academy Resources</h4>
               
-              {/* Resources List */}
+              
               <div className="flex flex-col gap-3">
                 {incubatorResources.map((res, i) => (
                   <div 
@@ -263,13 +263,13 @@ export default async function StartupHubPage() {
                 ))}
               </div>
 
-              {/* Quick Box: Apply for incubator */}
+              
               <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 text-white border border-slate-950 shadow-md">
                 <span className="text-[9px] font-bold tracking-widest bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded-full uppercase border border-blue-500/20">
                   Cohort Autumn 2026
                 </span>
                 <h5 className="text-base font-extrabold mt-3 leading-snug">
-                  Pitch to the Redlix VC network
+                  Pitch to the Studentforge VC network
                 </h5>
                 <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
                   Trainees with validated prototypes gain direct access to our VC partners and seed angel networks. Submission deadline is September 1st.

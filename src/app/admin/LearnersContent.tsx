@@ -69,13 +69,13 @@ export default function LearnersContent({ adminUser, allUsers, paymentRequests }
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          // Update the specific request status to APPROVED
+          
           setRequests((prev) =>
             prev.map((req) =>
               req.id === requestId ? { ...req, status: "APPROVED" } : req
             )
           );
-          // Upgrade the corresponding user's isPremium status locally
+          
           setUsers((prev) =>
             prev.map((user) =>
               user.id === userId ? { ...user, isPremium: true } : user
@@ -130,7 +130,7 @@ export default function LearnersContent({ adminUser, allUsers, paymentRequests }
     <DashboardLayout user={adminUser}>
       <div className="flex h-fit w-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn relative">
         <div>
-          {/* Header Block (Styled matching the user dashboard) */}
+          
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-100 gap-4">
             <div>
               <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit">
@@ -153,7 +153,7 @@ export default function LearnersContent({ adminUser, allUsers, paymentRequests }
             </div>
           </div>
 
-          {/* Database Table Section */}
+          
           <div className="mt-8">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
@@ -229,7 +229,7 @@ export default function LearnersContent({ adminUser, allUsers, paymentRequests }
             </div>
           </div>
 
-          {/* Section: Premium Upgrade Requests */}
+          
           <div className="bg-white border border-slate-300 rounded-2xl p-6 mt-10">
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>

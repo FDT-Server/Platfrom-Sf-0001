@@ -47,19 +47,19 @@ interface NetworkingContentProps {
   allUsers: UserCompact[];
 }
 
-// Visual premium colors matching the resources page card header gradients/themes
+
 const bubbleColors = [
-  { bg: "#4f46e5", text: "#ffffff", border: "transparent" }, // Indigo
-  { bg: "#059669", text: "#ffffff", border: "transparent" }, // Emerald
-  { bg: "#db2777", text: "#ffffff", border: "transparent" }, // Pink
-  { bg: "#e11d48", text: "#ffffff", border: "transparent" }, // Rose
-  { bg: "#0284c7", text: "#ffffff", border: "transparent" }, // Sky
-  { bg: "#0891b2", text: "#ffffff", border: "transparent" }, // Cyan
-  { bg: "#f97316", text: "#ffffff", border: "transparent" }, // Orange
-  { bg: "#0d9488", text: "#ffffff", border: "transparent" }, // Teal
-  { bg: "#d97706", text: "#ffffff", border: "transparent" }, // Amber
-  { bg: "#7c3aed", text: "#ffffff", border: "transparent" }, // Violet
-  { bg: "#e2f952", text: "#0f172a", border: "transparent" }  // Neon Yellow/Lime
+  { bg: "#4f46e5", text: "#ffffff", border: "transparent" }, 
+  { bg: "#059669", text: "#ffffff", border: "transparent" }, 
+  { bg: "#db2777", text: "#ffffff", border: "transparent" }, 
+  { bg: "#e11d48", text: "#ffffff", border: "transparent" }, 
+  { bg: "#0284c7", text: "#ffffff", border: "transparent" }, 
+  { bg: "#0891b2", text: "#ffffff", border: "transparent" }, 
+  { bg: "#f97316", text: "#ffffff", border: "transparent" }, 
+  { bg: "#0d9488", text: "#ffffff", border: "transparent" }, 
+  { bg: "#d97706", text: "#ffffff", border: "transparent" }, 
+  { bg: "#7c3aed", text: "#ffffff", border: "transparent" }, 
+  { bg: "#e2f952", text: "#0f172a", border: "transparent" }  
 ];
 
 interface ParsedReply {
@@ -113,13 +113,13 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   
-  // Direct Messaging Selected User ID. If null, it is public group chat.
+  
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
 
-  // Controls visibility of the profile inspector panel
+  
   const [showProfilePanel, setShowProfilePanel] = useState(false);
 
-  // States for dropdown, reply, and emoji picker
+  
   const [activeMenuMsgId, setActiveMenuMsgId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -127,7 +127,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Stable hashing function to get consistent color for a user ID
+  
   const getUserColor = (userId: string) => {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
@@ -137,10 +137,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     return bubbleColors[index];
   };
 
-  // State to prevent forced scroll jumps
+  
   const [prevMessageCount, setPrevMessageCount] = useState(0);
 
-  // Fetch messages from API
+  
   const fetchMessages = async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
@@ -162,7 +162,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  // Poll for messages every 1 second
+  
   useEffect(() => {
     fetchMessages(true);
     
@@ -173,18 +173,18 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     return () => clearInterval(interval);
   }, [activeChatUserId]);
 
-  // Auto scroll to bottom
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Reset scroll details when switching chat windows
+  
   useEffect(() => {
     scrollToBottom();
     setPrevMessageCount(messages.length);
   }, [activeChatUserId]);
 
-  // Only scroll down when new message actually arrives
+  
   useEffect(() => {
     if (messages.length > prevMessageCount) {
       scrollToBottom();
@@ -192,12 +192,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   }, [messages.length]);
 
-  // Handle smooth scroll and highlight target original message
+  
   const handleScrollToMessage = (refId: string | null, quotedText: string, replyingToName: string) => {
     let targetMsgId = refId;
 
     if (!targetMsgId) {
-      // Fallback search based on name and text content
+      
       const cleanQuote = quotedText.trim();
       const originalMsg = messages.find(m => {
         if (m.fullName !== replyingToName) return false;
@@ -215,7 +215,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       const element = document.getElementById(`msg-${targetMsgId}`);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
-        // Visual premium feedback to highlight the message
+        
         element.classList.add("ring-2", "ring-indigo-500", "ring-offset-2", "transition-all", "duration-500");
         setTimeout(() => {
           element.classList.remove("ring-2", "ring-indigo-500", "ring-offset-2");
@@ -224,7 +224,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  // Handle message sending
+  
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessageText.trim() || sending) return;
@@ -252,7 +252,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
         },
         body: JSON.stringify({
           content: textToSend,
-          recipientId: activeChatUserId, // Send to selected user, or null for public group
+          recipientId: activeChatUserId, 
         }),
       });
 
@@ -260,7 +260,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
         const data = await res.json();
         setMessages((prev) => [...prev, data.message]);
         setNewMessageText("");
-        setReplyingToMessage(null); // Clear reply context state
+        setReplyingToMessage(null); 
       } else {
         const errData = await res.json();
         setError(errData.error || "Failed to send message.");
@@ -273,7 +273,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  // Handle message reaction (add, update, or toggle/delete)
+  
   const handleReactMessage = async (messageId: string, emoji: string) => {
     try {
       const msg = messages.find((m) => m.id === messageId);
@@ -286,10 +286,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
         }
       }
       const existingReaction = currentReactions[user.id];
-      // If clicking same emoji, remove reaction. Else toggle/replace reaction.
+      
       const targetEmoji = existingReaction?.emoji === emoji ? null : emoji;
 
-      // Optimistically update reactions on local state
+      
       setMessages((prev) =>
         prev.map((m) => {
           if (m.id === messageId) {
@@ -305,7 +305,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
         })
       );
 
-      // Save reaction to database
+      
       const res = await fetch(`/api/messages/${messageId}/react`, {
         method: "POST",
         headers: {
@@ -319,7 +319,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       }
 
       const data = await res.json();
-      // Sync client state with database snapshot response
+      
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? data.message : m))
       );
@@ -345,7 +345,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     return { reactionCounts, userReacted, totalReactions };
   };
 
-  // Convert plain text URLs to clickable anchor tags
+  
   const renderMessageContent = (content: string, isCurrentUser: boolean) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = content.split(urlRegex);
@@ -369,7 +369,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     });
   };
 
-  // Count unread direct messages from a specific sender
+  
   const getUnreadCount = (senderId: string) => {
     return messages.filter((msg) => {
       const isFromSender = msg.userId === senderId && msg.recipientId === user.id;
@@ -386,16 +386,16 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }).length;
   };
 
-  // Delete message locally (Delete for me)
+  
   const handleDeleteForMe = (messageId: string) => {
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
     setActiveMenuMsgId(null);
   };
 
-  // Delete message from database (Delete for everyone)
+  
   const handleDeleteForEveryone = async (messageId: string) => {
     try {
-      // Optimistically remove from client state
+      
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
       setActiveMenuMsgId(null);
 
@@ -408,7 +408,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       }
     } catch (err) {
       console.error("Delete message error:", err);
-      // Re-fetch messages if call fails
+      
       fetchMessages(false);
     }
   };
@@ -435,16 +435,16 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  // Filter other users for private chat list (excluding current user)
+  
   const directoryUsers = allUsers.filter((u) => u.id !== user.id);
 
-  // Filter messages based on active conversation selection
+  
   const filteredMessages = messages.filter((msg) => {
     if (activeChatUserId === null) {
-      // Group chat stream (no recipient)
+      
       return msg.recipientId === null;
     } else {
-      // Private direct message between current user and activeChatUserId
+      
       return (
         (msg.userId === user.id && msg.recipientId === activeChatUserId) ||
         (msg.userId === activeChatUserId && msg.recipientId === user.id)
@@ -462,10 +462,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
   return (
     <DashboardLayout user={user}>
-      {/* Taller right side container (h-[88vh] lg:h-[92vh]) */}
+      
       <div className="flex h-[88vh] lg:h-[92vh] w-full flex-col lg:flex-row rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden animate-fadeIn">
         
-        {/* Left Side: Users Directory & Channel List */}
+        
         <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 max-h-[35%] lg:max-h-full">
           
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
@@ -481,7 +481,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-            {/* 1. Public Chat Group Selection Button */}
+            
             <button
               onClick={() => setActiveChatUserId(null)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border transition text-left cursor-pointer ${
@@ -503,14 +503,14 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
               </div>
             </button>
 
-            {/* Divider line */}
+            
             <div className="py-1 flex items-center gap-2">
               <span className="h-[1px] bg-slate-200 flex-1"></span>
               <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Direct Messages</span>
               <span className="h-[1px] bg-slate-200 flex-1"></span>
             </div>
 
-            {/* 2. Registered trainees and admins private conversations */}
+            
             {directoryUsers.map((u) => {
               const isSelected = activeChatUserId === u.id;
               const isUserAdmin = isAdminEmail(u.email);
@@ -559,7 +559,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     </span>
                   </div>
 
-                  {/* Unread count badge */}
+                  
                   {(() => {
                     const count = getUnreadCount(u.id);
                     if (count === 0) return null;
@@ -575,10 +575,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
           </div>
         </div>
 
-        {/* Right Side: Dynamic Chat Window */}
+        
         <div className="flex-1 flex flex-col h-full overflow-hidden">
           
-          {/* Chat Header Block */}
+          
           <div 
             onClick={() => {
               if (activeChatUserId !== null) {
@@ -595,7 +595,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   <IconBrandTelegram className="w-5 h-5" />
                 </span>
               ) : (
-                // Display profile photo or initials
+                
                 activeUserObj?.profileImage ? (
                   <img
                     src={activeUserObj.profileImage}
@@ -642,7 +642,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
             )}
           </div>
 
-          {/* Messages stream view */}
+          
           <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full gap-2">
@@ -663,7 +663,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
                     }`}
                   >
-                    {/* User Avatar Initials or Profile Photo */}
+                    
                     <div className="shrink-0">
                       {(() => {
                         const senderUser = allUsers.find((u) => u.id === msg.userId) || (msg.userId === user.id ? user : null);
@@ -687,10 +687,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       })()}
                     </div>
 
-                    {/* Chat Bubble card */}
+                    
                     <div className="space-y-1 group relative min-w-0">
                       
-                      {/* Emoji Reaction Hover Bar */}
+                      
                       <div className={`absolute -top-7 ${isCurrentUser ? "left-0" : "right-0"} z-35 bg-slate-950 border border-slate-800 shadow-md rounded-full px-2.5 py-1.5 flex gap-2 items-center transition-all duration-150 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto`}>
                         {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji) => {
                           const currentReactions = msg.reactions || {};
@@ -710,7 +710,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                         })}
                       </div>
 
-                      {/* Dropdown Options Hover Chevron */}
+                      
                       <div className={`absolute top-0.5 ${isCurrentUser ? "-left-5" : "-right-5"} z-30 opacity-0 group-hover:opacity-100 transition-all duration-150`}>
                         <button
                           onClick={(e) => {
@@ -727,7 +727,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
                         {activeMenuMsgId === msg.id && (
                           <>
-                            {/* Backdrop overlay to close when clicking outside */}
+                            
                             <div 
                               className="fixed inset-0 z-40 cursor-default" 
                               onClick={(e) => {
@@ -735,7 +735,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                                 setActiveMenuMsgId(null);
                               }}
                             />
-                            {/* Dropdown menu list */}
+                            
                             <div className={`absolute top-6 ${isCurrentUser ? "left-0" : "right-0"} z-50 bg-white border border-slate-200/80 shadow-md rounded-lg py-1 w-36 animate-fadeIn`}>
                               <button
                                 onClick={() => {
@@ -795,7 +795,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                         )}
                       </div>
 
-                      {/* Sender details header */}
+                      
                       <div className={`flex items-center gap-1.5 text-[10px] ${
                         isCurrentUser ? "justify-end text-slate-500" : "text-slate-600"
                       }`}>
@@ -809,7 +809,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                         </span>
                       </div>
 
-                      {/* Content bubble with resource-style colorful backgrounds */}
+                      
                       <div className="relative min-w-0">
                         {(() => {
                           const parsedReply = parseReplyMessage(msg.content);
@@ -821,7 +821,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                                   isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
                                 } font-medium space-y-2 max-w-full overflow-hidden`}
                               >
-                                {/* Quoted Reply Context */}
+                                
                                 <div 
                                   onClick={() => handleScrollToMessage(parsedReply.refId, parsedReply.quotedText, parsedReply.replyingToName)}
                                   className={`border-l-2 ${
@@ -839,7 +839,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                                   </div>
                                 </div>
                                 
-                                {/* Actual Message Content */}
+                                
                                 <div className="whitespace-pre-wrap">
                                   {renderMessageContent(parsedReply.actualContent, isCurrentUser)}
                                 </div>
@@ -859,7 +859,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                           );
                         })()}
 
-                        {/* Reactions Pill Display */}
+                        
                         {(() => {
                           const reactionsObj = msg.reactions || {};
                           const { reactionCounts, userReacted, totalReactions } = getGroupedReactions(reactionsObj);
@@ -890,7 +890,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                         })()}
                       </div>
 
-                      {/* Timestamp */}
+                      
                       <div className={`text-[9px] text-slate-400 font-medium ${
                         isCurrentUser ? "text-right" : ""
                       }`}>
@@ -963,7 +963,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Form message input sender */}
+          
           <div className="p-4 border-t border-slate-200 bg-white z-20 shrink-0">
             {error && (
               <div className="mb-3 text-xs text-red-600 font-semibold bg-red-50 border border-red-150 p-2.5 rounded-lg">
@@ -971,7 +971,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
               </div>
             )}
 
-            {/* Replying Banner Quote */}
+            
             {replyingToMessage && (
               <div className="flex items-center justify-between bg-slate-50/40 border-l-4 border-indigo-500/40 rounded-r-xl p-3 mb-3 text-xs animate-fadeIn shadow-3xs opacity-70">
                 <div 
@@ -1003,7 +1003,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
             
             <form onSubmit={handleSendMessage} className="flex gap-2 items-center relative">
               
-              {/* Emoji Picker toggle button and popover */}
+              
               <div className="relative shrink-0">
                 <button
                   type="button"
@@ -1018,12 +1018,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
                 {showEmojiPicker && (
                   <>
-                    {/* Backdrop to close on click outside */}
+                    
                     <div 
                       className="fixed inset-0 z-40" 
                       onClick={() => setShowEmojiPicker(false)} 
                     />
-                    {/* Popover Emoji Box (Positioned floating above input) */}
+                    
                     <div className="absolute bottom-14 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-2xl p-3.5 w-56 animate-fadeIn">
                       <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-2 px-1 select-none">
                         Select Emoji
@@ -1077,10 +1077,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
         </div>
 
-        {/* Rightmost Side Panel: Profile Inspector */}
+        
         {showProfilePanel && activeUserObj && (
           <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col shrink-0 h-[45%] lg:h-full overflow-hidden animate-fadeIn">
-            {/* Header banner area */}
+            
             <div className="relative w-full h-20 bg-gradient-to-r from-blue-100 via-sky-100 to-indigo-100 shrink-0">
               <button
                 onClick={() => setShowProfilePanel(false)}
@@ -1090,9 +1090,9 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
               </button>
             </div>
 
-            {/* Profile Content */}
+            
             <div className="p-5 flex flex-col flex-1 overflow-y-auto">
-              {/* Avatar block with initials and text side-by-side */}
+              
               <div className="flex items-center gap-3.5 mb-5 shrink-0">
                 <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-blue-150 shrink-0">
                   {activeUserObj.profileImage ? (
@@ -1123,10 +1123,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                 </div>
               </div>
 
-              {/* Inspector Details block */}
+              
               <div className="flex-1">
                 {activeUserObj.shareWithNetworking ? (
-                  /* Public details display */
+                  
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/50">
                       <div>
@@ -1180,7 +1180,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     </div>
                   </div>
                 ) : (
-                  /* Private details alert */
+                  
                   <div className="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50 text-center">
                     <IconLock className="w-8 h-8 text-slate-400 mb-2 shrink-0" />
                     <h4 className="text-xs font-bold text-slate-700">Private Details</h4>
@@ -1193,15 +1193,15 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
             </div>
           </div>
         )}
-        {/* Seen By Message Info Modal overlay */}
+        
         {infoMessage && (
           <>
-            {/* Backdrop */}
+            
             <div 
               className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
               onClick={() => setInfoMessage(null)}
             >
-              {/* Modal Card body */}
+              
               <div 
                 className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-5 space-y-4 animate-scaleIn"
                 onClick={(e) => e.stopPropagation()}
@@ -1219,12 +1219,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   </button>
                 </div>
 
-                {/* Quoted Message */}
+                
                 <div className="bg-slate-50 border-l-4 border-slate-300 p-3 rounded-r-xl text-xs text-slate-600 break-words max-h-24 overflow-y-auto whitespace-pre-wrap italic">
                   "{infoMessage.content.startsWith("Replying to") ? infoMessage.content.split("\n\n").slice(1).join("\n\n") : infoMessage.content}"
                 </div>
 
-                {/* Reader Users List */}
+                
                 <div className="space-y-2">
                   <h4 className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">
                     Read By
@@ -1233,7 +1233,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     const seenMap = infoMessage.seenBy || {};
                     const seenEntries = Object.entries(seenMap);
                     
-                    // Filter out the sender from the read list as it is obvious and cluttering
+                    
                     const readers = seenEntries.filter(([uid]) => uid !== infoMessage.userId);
                     
                     if (readers.length === 0) {

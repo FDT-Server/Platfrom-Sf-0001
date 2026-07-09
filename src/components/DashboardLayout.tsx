@@ -1,17 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-// Logo Components
+
 export const Logo = () => (
-  <a href="/dashboard" className="relative z-20 flex items-center py-1">
+  <a href="/dashboard" className="relative z-20 flex items-center gap-2 py-1">
+    <span className="text-lg font-bold tracking-tight text-white select-none">Platform</span>
+    <div className="h-4 w-[1px] bg-white/20"></div>
     <img
-      src="https://ik.imagekit.io/dypkhqxip/logotraining"
+      src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858"
       className="h-8 w-auto object-contain"
-      alt="Full Logo"
+      alt="Studentforge Logo"
     />
   </a>
 );
@@ -19,9 +23,9 @@ export const Logo = () => (
 export const LogoIcon = () => (
   <a href="/dashboard" className="relative z-20 flex items-center py-1">
     <img
-      src="https://ik.imagekit.io/dypkhqxip/dashside"
+      src="https://ik.imagekit.io/dypkhqxip/temp_logo.png"
       className="h-8 w-auto object-contain"
-      alt="Logo Icon"
+      alt="Studentforge Logo Icon"
     />
   </a>
 );
@@ -37,11 +41,27 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      if (user.email.trim().toLowerCase() === "hrstudentforge@gmail.com") {
+        router.push("/sfadmin");
+      } else {
+        router.push("/login");
+      }
+      router.refresh();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
   const [unreadCount, setUnreadCount] = useState(0);
   const [premium, setPremium] = useState<boolean>(user.isPremium || false);
 
-  const isAdmin = user.email.trim().toLowerCase() === "webstrixx@gmail.com";
+  const isAdmin = user.email.trim().toLowerCase() === "webstrixx@gmail.com" || user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
 
   useEffect(() => {
     if (user.isPremium !== undefined) {
@@ -67,7 +87,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
     fetchPremiumStatus();
   }, [isAdmin]);
 
-  // Sidebar notifications calculation
+  
   useEffect(() => {
     const isNetworkingPage = typeof window !== "undefined" && window.location.pathname === "/networking";
 
@@ -85,7 +105,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           const messages = data.messages || [];
 
           if (isNetworkingPage) {
-            // Update last seen to the latest message time
+            
             if (messages.length > 0) {
               const latestTime = messages[messages.length - 1].createdAt;
               localStorage.setItem("lastSeenMessageTime", latestTime);
@@ -96,7 +116,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           } else {
             const lastSeen = localStorage.getItem("lastSeenMessageTime") || new Date(0).toISOString();
             const unread = messages.filter((msg: any) => {
-              // Only count messages sent by OTHER users
+              
               return (
                 msg.email.trim().toLowerCase() !== user.email.trim().toLowerCase() &&
                 msg.createdAt > lastSeen
@@ -111,14 +131,64 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
     };
 
     fetchUnreadCount();
-    // Poll every 8 seconds for notifications
+    
     const interval = setInterval(fetchUnreadCount, 8000);
 
     return () => clearInterval(interval);
   }, [user.email]);
 
+  const isSfAdmin = user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
+
   const links = isAdmin
-    ? [
+    ? (isSfAdmin
+      ? [
+        {
+          label: "Payments",
+          href: "/sfadmin/dashboard",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              payments
+            </span>
+          ),
+        },
+        {
+          label: "Events",
+          href: "/sfadmin/dashboard/events",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              calendar_month
+            </span>
+          ),
+        },
+        {
+          label: "Resources",
+          href: "/sfadmin/dashboard/resources",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              folder_special
+            </span>
+          ),
+        },
+        {
+          label: "Courses",
+          href: "/sfadmin/dashboard/courses",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              local_library
+            </span>
+          ),
+        },
+        {
+          label: "Certificates",
+          href: "/sfadmin/dashboard/certificates",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              workspace_premium
+            </span>
+          ),
+        }
+      ]
+      : [
         {
           label: "Learners",
           href: "/admin",
@@ -154,96 +224,97 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           ),
         },
       ]
+    )
     : [
-        {
-          label: "Dashboard",
-          href: "/dashboard",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              team_dashboard
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            team_dashboard
+          </span>
+        ),
+      },
+      {
+        label: "Networking",
+        href: "/networking",
+        icon: (
+          <div className="relative flex items-center shrink-0">
+            <span className="material-symbols-outlined text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+              forum
             </span>
-          ),
-        },
-        {
-          label: "Networking",
-          href: "/networking",
-          icon: (
-            <div className="relative flex items-center shrink-0">
-              <span className="material-symbols-outlined text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-                forum
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-xs">
+                {unreadCount}
               </span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-xs">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
-          ),
-        },
-        {
-          label: "Study Pods",
-          href: "/studypod",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              groups
-            </span>
-          ),
-        },
-        {
-          label: "Video Lectures",
-          href: "/lectures",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              books_movies_and_music
-            </span>
-          ),
-        },
-        {
-          label: "Resources",
-          href: "/resources",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              library_books
-            </span>
-          ),
-        },
-        {
-          label: "Courses",
-          href: "/courses",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              school
-            </span>
-          ),
-        },
-        {
-          label: "Certificates",
-          href: "/certificates",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              workspace_premium
-            </span>
-          ),
-        },
-        {
-          label: "Opportunities",
-          href: "/opportunities",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              work
-            </span>
-          ),
-        },
-        {
-          label: "Events",
-          href: "/events",
-          icon: (
-            <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-              calendar_month
-            </span>
-          ),
-        },
-      ];
+            )}
+          </div>
+        ),
+      },
+      {
+        label: "Study Pods",
+        href: "/studypod",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            groups
+          </span>
+        ),
+      },
+      {
+        label: "Video Lectures",
+        href: "/lectures",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            books_movies_and_music
+          </span>
+        ),
+      },
+      {
+        label: "Resources",
+        href: "/resources",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            library_books
+          </span>
+        ),
+      },
+      {
+        label: "Courses",
+        href: "/courses",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            school
+          </span>
+        ),
+      },
+      {
+        label: "Certificates",
+        href: "/certificates",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            workspace_premium
+          </span>
+        ),
+      },
+      {
+        label: "Opportunities",
+        href: "/opportunities",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            work
+          </span>
+        ),
+      },
+      {
+        label: "Events",
+        href: "/events",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            calendar_month
+          </span>
+        ),
+      },
+    ];
 
   if (!isAdmin && premium) {
     links.push(
@@ -268,7 +339,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
     );
   }
 
-  // Profile link appended at the very end to ensure it is always last
+  
   links.push({
     label: "Profile",
     href: "/profile",
@@ -301,11 +372,11 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           </div>
           <div className="flex flex-col gap-4">
             {open && !isAdmin && !premium && (
-              <div 
+              <div
                 className="mx-2 p-4 rounded-2xl text-slate-950 shadow-sm border border-amber-400/80 flex flex-col gap-3 relative overflow-hidden animate-fadeIn"
                 style={{ backgroundImage: "url('/gold-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}
               >
-                {/* Micro-sparkle glow */}
+                
                 <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-xl pointer-events-none" />
                 <div className="flex items-center gap-1.5 font-sans font-black text-xs uppercase tracking-wider">
                   <span className="material-symbols-outlined text-[16px] text-slate-950 font-bold">workspace_premium</span>
@@ -334,7 +405,30 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                 </Link>
               </div>
             )}
+
             
+            <a
+              href="#"
+              onClick={handleLogout}
+              className={cn(
+                "flex items-center gap-2 group/sidebar py-2 transition-all duration-150 cursor-pointer",
+                open ? "justify-start px-2" : "justify-center w-full"
+              )}
+            >
+              <span className="material-symbols-outlined shrink-0 text-[20px] text-red-300 group-hover/sidebar:text-red-100 transition-colors duration-150 select-none">
+                logout
+              </span>
+              <motion.span
+                animate={{
+                  display: open ? "inline-block" : "none",
+                  opacity: open ? 1 : 0,
+                }}
+                className="text-red-300 text-sm font-semibold group-hover/sidebar:text-red-100 group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+              >
+                Logout
+              </motion.span>
+            </a>
+
             <SidebarLink
               link={{
                 label: user.fullName,
@@ -356,7 +450,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
         </SidebarBody>
       </Sidebar>
 
-      {/* Main Dashboard Panel Content */}
+      
       <div className="flex flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8">
         {children}
       </div>

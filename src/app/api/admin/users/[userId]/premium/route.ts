@@ -19,7 +19,7 @@ export async function POST(
       );
     }
 
-    // Authenticate the current user
+    
     const adminUser = await prisma.user.findUnique({
       where: { id: sessionToken },
     });
@@ -31,8 +31,11 @@ export async function POST(
       );
     }
 
-    // Strict Admin Authorization
-    if (adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com") {
+    
+    if (
+      adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com" &&
+      adminUser.email.trim().toLowerCase() !== "hrstudentforge@gmail.com"
+    ) {
       return NextResponse.json(
         { error: "Forbidden. Admin access required." },
         { status: 403 }
@@ -41,7 +44,7 @@ export async function POST(
 
     const { userId } = await params;
 
-    // Find the target user
+    
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -53,7 +56,7 @@ export async function POST(
       );
     }
 
-    // Toggle premium status
+    
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {

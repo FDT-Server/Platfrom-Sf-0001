@@ -11,7 +11,7 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  // Fetch full user details including profile fields
+  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -37,7 +37,7 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  // Ensure default values for null fields to prevent client-side render crash
+  
   const serializedUser = {
     fullName: user.fullName,
     email: user.email,

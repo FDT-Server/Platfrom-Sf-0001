@@ -33,7 +33,7 @@ export async function POST(
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
 
-    // reactions is parsed as a JSON object: { [userId]: { emoji, fullName } }
+    
     let currentReactions: any = message.reactions || {};
     if (typeof currentReactions === "string") {
       try {
@@ -44,10 +44,10 @@ export async function POST(
     }
 
     if (!emoji) {
-      // Remove user reaction if no emoji is provided
+      
       delete currentReactions[user.id];
     } else {
-      // Add or update user reaction
+      
       currentReactions[user.id] = {
         emoji,
         fullName: user.fullName,

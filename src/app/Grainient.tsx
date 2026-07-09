@@ -105,9 +105,9 @@ void main(){
 }
 `;
 
-// Keep renderer/program alive across re-renders so Effect 2 can update
-// uniforms without ever rebuilding the WebGL context.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+
+
 const ctxMap = new WeakMap<HTMLDivElement, any>();
 
 interface GrainientProps {
@@ -163,7 +163,7 @@ const Grainient: React.FC<GrainientProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Effect 1: build WebGL context once, pause when offscreen / tab hidden
+  
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -269,11 +269,11 @@ const Grainient: React.FC<GrainientProps> = ({
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       ctxMap.delete(container);
-      try { container.removeChild(canvas); } catch { /* ignore */ }
+      try { container.removeChild(canvas); } catch {  }
     };
-  }, []); // renderer created once
+  }, []); 
 
-  // Effect 2: sync props to uniforms — zero GPU cost, no teardown
+  
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;

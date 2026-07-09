@@ -10,14 +10,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Redlix Training Academy",
-    template: "%s | Redlix Training Academy",
+    default: "Studentforge Platform",
+    template: "%s | Studentforge Platform",
   },
   description:
-    "Redlix Training Academy — Elevate your technical expertise with curated engineering resources, video lectures, and hands-on database training.",
+    "Studentforge Platform — Elevate your technical expertise with curated engineering resources, video lectures, and hands-on database training.",
   keywords: [
-    "Redlix",
-    "Training Academy",
+    "Studentforge",
+    "Platform",
     "Engineering",
     "Full Stack",
     "Database",
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     "Lectures",
     "Resources",
   ],
-  authors: [{ name: "Redlix Pro Wing" }],
-  creator: "Redlix Pro Wing",
+  authors: [{ name: "Studentforge Team" }],
+  creator: "Studentforge Team",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   ),
@@ -34,34 +34,34 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-    title: "Redlix Training Academy",
+    title: "Studentforge Platform",
     description:
       "Elevate your technical expertise with curated engineering resources, video lectures, and hands-on database training.",
-    siteName: "Redlix Training Academy",
+    siteName: "Studentforge Platform",
     images: [
       {
         url: "https://ik.imagekit.io/dypkhqxip/urlimag",
         width: 1200,
         height: 630,
-        alt: "Redlix Training Academy",
+        alt: "Studentforge Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Redlix Training Academy",
+    title: "Studentforge Platform",
     description:
       "Elevate your technical expertise with curated engineering resources and video lectures.",
     images: ["https://ik.imagekit.io/dypkhqxip/urlimag"],
   },
   icons: {
     icon: [
-      { url: "https://ik.imagekit.io/dypkhqxip/faviconn", type: "image/png" },
+      { url: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397", type: "image/png" },
     ],
     apple: [
-      { url: "https://ik.imagekit.io/dypkhqxip/faviconn", type: "image/png" },
+      { url: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397", type: "image/png" },
     ],
-    shortcut: "https://ik.imagekit.io/dypkhqxip/faviconn",
+    shortcut: "https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397",
   },
   robots: {
     index: true,
@@ -81,18 +81,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <head>
-        {/* Favicon */}
-        <link rel="icon" href="https://ik.imagekit.io/dypkhqxip/faviconn" type="image/png" />
-        <link rel="apple-touch-icon" href="https://ik.imagekit.io/dypkhqxip/faviconn" />
-        <link rel="shortcut icon" href="https://ik.imagekit.io/dypkhqxip/faviconn" />
+        
+        <link rel="icon" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" type="image/png" />
+        <link rel="apple-touch-icon" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" />
+        <link rel="shortcut icon" href="https://ik.imagekit.io/dypkhqxip/temp_logo.png?updatedAt=1783580957397" />
 
-        {/* Material Symbols Outlined — full icon set */}
+        
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         />
 
-        {/* Theme colour for browser chrome */}
+        
         <meta name="theme-color" content="#1d4ed8" />
         <meta name="msapplication-TileColor" content="#1d4ed8" />
       </head>

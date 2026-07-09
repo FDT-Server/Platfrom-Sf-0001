@@ -26,7 +26,7 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
   return (
     <div className="min-h-screen lg:h-screen w-full bg-[#0c0e17] flex flex-col lg:flex-row p-3 gap-3 font-sans selection:bg-indigo-500 selection:text-white overflow-hidden relative">
       
-      {/* Background WebGL Grainient */}
+      
       <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
         <Grainient
           color1="#4e91ff"
@@ -54,21 +54,21 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
         />
       </div>
         
-      {/* LEFT PANEL: Branding & Testimonial Sidebar */}
+      
       <div className="w-full lg:w-[35%] flex flex-col justify-between items-start p-8 lg:p-10 text-white h-full relative z-10 select-none text-left">
         
-        {/* Logo Section */}
+        
         <div className="flex items-center gap-3 w-full">
+          <span className="text-xl font-bold tracking-tight text-white">Platform</span>
+          <div className="h-6 w-[1px] bg-white/20"></div>
           <img 
-            src="https://ik.imagekit.io/dypkhqxip/logotraining" 
-            alt="Training Logo" 
-            className="h-10 w-auto object-contain"
+            src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858" 
+            alt="Studentforge Logo" 
+            className="h-8 w-auto object-contain"
           />
-          <div className="h-6 w-[1px] bg-white"></div>
-          <span className="text-xl font-bold tracking-tight text-white">Training</span>
         </div>
 
-        {/* Welcome / Promo Text */}
+        
         <div className="my-10 lg:my-0 space-y-4 w-full">
           <h1 className="text-3xl font-bold tracking-tight text-white leading-none">
             {mode === "signup" ? "Get Started" : "Welcome Back"}
@@ -82,9 +82,9 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
           </p>
         </div>
 
-        {/* Footer links */}
+        
         <div className="space-y-8 w-full">
-          {/* Sidebar Footer Links */}
+          
           <div className="pt-2 border-t border-white/20 w-full">
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-white">
               <a href="#terms" className="hover:text-white/80 transition duration-200">Terms</a>
@@ -113,13 +113,13 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
               )}
             </div>
             <p className="text-[10px] text-white mt-3 font-mono">
-              © 2026 Redlix
+              © 2026 Studentforge
             </p>
           </div>
         </div>
       </div>
 
-      {/* RIGHT PANEL: Content Area (White Rounded Container) */}
+      
       <div className="flex-1 bg-white rounded-[24px] lg:rounded-[28px] p-6 sm:p-10 lg:p-12 flex flex-col justify-between shadow-2xl h-full min-h-[520px] lg:min-h-0 relative z-10 overflow-y-auto">
         {children}
       </div>

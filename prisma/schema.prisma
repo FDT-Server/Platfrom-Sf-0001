@@ -29,6 +29,7 @@ model User {
   isPremium           Boolean  @default(false)
   otpCode             String?
   otpExpiry           DateTime?
+  courseEnrollments CourseEnrollment[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
@@ -96,5 +97,110 @@ model PaymentRequest {
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id             String   @id @default(uuid())
+  title          String
+  description    String
+  day            String
+  month          String
+  time           String
+  duration       String
+  speakerName    String
+  speakerTitle   String
+  speakerCompany String
+  speakerImage   String   @default("https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120&h=120")
+  category       String
+  badgeBg        String   @default("bg-indigo-50 text-indigo-700 border-indigo-150")
+  badgeText      String
+  joinLink       String
+  imageUrl       String?  @default("")
+  createdAt      DateTime @default(now())
+}
+
+model Resource {
+  id         String   @id @default(uuid())
+  date       String
+  publisher  String
+  title      String
+  category   String
+  badgeColor String   @default("bg-indigo-50 text-indigo-700 border-indigo-100")
+  headerBg   String   @default("bg-indigo-500 text-white")
+  link       String
+  imageUrl   String?  @default("")
+  createdAt  DateTime @default(now())
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  duration    String?      @default("")
+  instructor  String?      @default("")
+  link        String?      @default("")
+  imageUrl    String?      @default("")
+  skillsGain  String?            @default("")
+  outcomes    String?            @default("")
+  price       Float?             @default(0.0)
+  weeks       CourseWeek[]
+  enrollments CourseEnrollment[]
+  createdAt   DateTime           @default(now())
+}
+
+model CourseWeek {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  weekNumber  Int
+  title       String
+  description String
+  videoLink   String   @default("")
+  createdAt   DateTime @default(now())
+}
+
+model Certificate {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  issuedBy    String?  @default("")
+  link        String?  @default("")
+  imageUrl    String?  @default("")
+  createdAt   DateTime @default(now())
+}
+
+model CourseEnrollment {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String
+  email       String
+  classLevel  String
+  utrNo       String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([courseId, userId])
+}
+
+model Opportunity {
+  id           String   @id @default(uuid())
+  title        String
+  company      String
+  location     String
+  type         String   // e.g. Full-Time, Internship, Contract
+  compensation String
+  category     String
+  description  String
+  tags         String   // comma-separated
+  link         String
+  logoLetter   String   @default("")
+  logoBg       String   @default("bg-slate-600 text-white")
+  imageUrl     String?  @default("")
+  createdAt    DateTime @default(now())
 }
 

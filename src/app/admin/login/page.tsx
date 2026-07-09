@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Strict Client-Side Email Lock
+    
     if (normalizedEmail !== "webstrixx@gmail.com") {
       setError("Access denied: Unauthorized admin email.");
       return;

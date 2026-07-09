@@ -33,7 +33,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   
-  // Local form state
+  
   const [formData, setFormData] = useState<UserProfile>({ ...user });
 
   const handleLogout = async () => {
@@ -107,22 +107,22 @@ export default function ProfileContent({ user }: ProfileContentProps) {
     <DashboardLayout user={user}>
       <div className="flex h-full w-full flex-col justify-between rounded-2xl border border-slate-300 bg-white shadow-sm overflow-hidden animate-fadeIn">
         
-        {/* Error message */}
+        
         {errorMessage && (
           <div className="m-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium">
             {errorMessage}
           </div>
         )}
 
-        {/* Content body */}
+        
         <div className="flex-1 overflow-y-auto">
           {!isEditing ? (
-            /* View State: Matching user mockup reference */
+            
             <div>
-              {/* Top Banner Wave Hero area */}
+              
               <div className="relative w-full h-36 bg-gradient-to-r from-blue-100 via-sky-100 to-indigo-100 rounded-t-2xl" />
 
-              {/* Avatar overlapping section */}
+              
               <div className="relative px-6 md:px-10 pb-6">
                 <div className="flex justify-between items-end -mt-16 mb-4">
                   <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-blue-150">
@@ -146,11 +146,11 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </button>
                 </div>
 
-                {/* User Header Details */}
+                
                 <div className="mt-4">
                   <div className="flex items-center gap-1.5">
                     <h3 className="text-2xl font-bold text-slate-900">{user.fullName}</h3>
-                    {/* Instagram-style verified tick mark - adjusted alignment */}
+                    
                     <svg className="w-5 h-5 shrink-0 self-center mt-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
                         d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.16-.43.25-.9.25-1.4 0-2.13-1.73-3.86-3.86-3.86-.5 0-.97.1-1.4.25-.67-1.3-1.91-2.19-3.34-2.19s-2.67.89-3.34 2.19c-.43-.15-.9-.25-1.4-.25C4.83 3.4 3.1 5.13 3.1 7.26c0 .5.1.97.25 1.4C2.04 9.33 1.15 10.57 1.15 12c0 1.43.89 2.67 2.2 3.34-.15.43-.25.9-.25 1.4 0 2.13 1.73 3.86 3.86 3.86.5 0 .97-.1 1.4-.25.67 1.3 1.91 2.19 3.34 2.19s2.67-.89 3.34-2.19c.43.15.9.25 1.4.25 2.13 0 3.86-1.73 3.86-3.86 0-.5-.1-.97-.25-1.4 1.31-.67 2.2-1.91 2.2-3.34z"
@@ -171,7 +171,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   <p className="text-sm text-slate-500">{user.email}</p>
                 </div>
 
-                {/* Grid Metadata highlight block (Mockup 4 items row) */}
+                
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-b border-slate-300 mt-6">
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-600 font-bold">College Studying</span>
@@ -191,8 +191,8 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
-                {/* Detailed Settings blocks below */}
-                {/* 1. Public Profile info block */}
+                
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">Public profile</h4>
@@ -231,7 +231,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
-                {/* 2. About Me biography block */}
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">About Me</h4>
@@ -244,7 +244,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
-                {/* 3. Preferred track block */}
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">Preferred Track</h4>
@@ -257,7 +257,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
-                {/* Share settings block */}
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">Networking Sharing</h4>
@@ -276,7 +276,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
-                {/* 4. Log out block */}
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">Log out of all devices</h4>
@@ -295,13 +295,13 @@ export default function ProfileContent({ user }: ProfileContentProps) {
               </div>
             </div>
           ) : (
-            /* Edit State Form */
+            
             <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-slate-150">
                 <h3 className="text-xl font-bold text-slate-800">Edit Your Profile</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Photo Upload Column */}
+                
                 <div className="flex flex-col items-center p-6 border border-slate-100 rounded-2xl bg-slate-50/50">
                   <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-blue-150 mb-4">
                     {formData.profileImage ? (
@@ -330,7 +330,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </p>
                 </div>
 
-                {/* Edit Form Fields Grid */}
+                
                 <div className="md:col-span-2 space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -465,7 +465,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                 </div>
               </div>
 
-              {/* Form Controls */}
+              
               <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
                 <button
                   type="button"

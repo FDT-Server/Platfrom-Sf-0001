@@ -31,7 +31,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
     redirect("/admin/login");
   }
 
-  // Fetch administrator details to check session
+  
   const adminUser = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -41,12 +41,12 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
     },
   });
 
-  // Strict Server-Side Access Control: Check if logged-in user is adminUser and email is webstrixx@gmail.com
+  
   if (!adminUser || adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com") {
     redirect("/dashboard");
   }
 
-  // Fetch full details of the target learner
+  
   const learner = await prisma.user.findUnique({
     where: { id },
   });
@@ -68,7 +68,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
     <DashboardLayout user={adminUser}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn gap-6">
         
-        {/* Breadcrumb Navigation */}
+        
         <nav className="flex items-center gap-2 text-xs font-semibold text-slate-500 pb-4 border-b border-slate-100">
           <Link
             href="/admin"
@@ -80,7 +80,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           <span className="text-slate-800 font-bold">{learner.fullName}</span>
         </nav>
 
-        {/* Core Header Card - Aligned, uncluttered profile summary */}
+        
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 border-b border-slate-100 pb-6">
           <div className="relative">
             {learner.profileImage ? (
@@ -117,7 +117,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Bio / Description Card */}
+        
         <div className="space-y-2">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <IconBook className="w-4 h-4 text-indigo-500" />
@@ -130,10 +130,10 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Details Grid (Aligned, clean, non-cluttered columns) */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Academic Qualifications Card */}
+          
           <div className="border border-slate-200 rounded-xl p-5 bg-white space-y-4">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
               <IconSchool className="w-4 h-4 text-indigo-500" />
@@ -173,7 +173,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Contact Details & Links Card */}
+          
           <div className="border border-slate-200 rounded-xl p-5 bg-white space-y-4">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
               <IconLink className="w-4 h-4 text-indigo-500" />
@@ -237,7 +237,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
 
         </div>
 
-        {/* Path Goals Section */}
+        
         <div className="space-y-3">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <IconTarget className="w-4 h-4 text-indigo-500" />
@@ -259,7 +259,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Timestamps footer */}
+        
         <div className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-center justify-between text-slate-400 text-[10px] gap-2 font-mono">
           <span className="flex items-center gap-1">
             <IconClock className="w-3.5 h-3.5" />

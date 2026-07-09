@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user already exists
+    
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // Send Welcome Email in the background to avoid blocking signup response
+    
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -50,20 +50,20 @@ export async function POST(req: Request) {
       });
 
       const mailOptions = {
-        from: `"Redlix Training Academy" <${process.env.SMTP_EMAIL}>`,
+        from: `"Studentforge Platform" <${process.env.SMTP_EMAIL}>`,
         replyTo: process.env.SMTP_EMAIL,
         to: email,
-        subject: `Welcome to Redlix Training Academy, ${fullName}!`,
+        subject: `Welcome to Studentforge Platform, ${fullName}!`,
         priority: "normal" as const,
         headers: {
-          "X-Mailer": "Redlix Training Mailer",
+          "X-Mailer": "Studentforge Mailer",
           "X-Priority": "3",
           "Importance": "Normal",
         },
-        text: `Hello ${fullName},\n\nWelcome to the Redlix Training Academy!\n\nYour account has been successfully created.\n\nRegistered Email: ${email}\nRole Track: ${selectedRole === "other" ? (otherRoleText || "Other") : selectedRole}\n\nHead over to your dashboard to get started:\n${process.env.NEXT_PUBLIC_APP_URL}/login\n\n— The Redlix Training Team`,
+        text: `Hello ${fullName},\n\nWelcome to the Studentforge Platform!\n\nYour account has been successfully created.\n\nRegistered Email: ${email}\nRole Track: ${selectedRole === "other" ? (otherRoleText || "Other") : selectedRole}\n\nHead over to your dashboard to get started:\n${process.env.NEXT_PUBLIC_APP_URL}/login\n\n— The Studentforge Team`,
         html: `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Welcome to Redlix Training Academy</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Welcome to Studentforge Platform</title></head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:40px 0;">
     <tr><td align="center">
@@ -72,16 +72,16 @@ export async function POST(req: Request) {
         <!-- HEADER -->
         <tr>
           <td style="background-color:#1d4ed8;padding:28px 40px;text-align:center;">
-            <img src="https://ik.imagekit.io/dypkhqxip/logotraining" alt="Redlix Training Academy" height="42" style="display:block;margin:0 auto 10px auto;max-height:42px;" />
-            <p style="margin:0;color:#bfdbfe;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Training Academy</p>
+            <img src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858" alt="Studentforge Platform" height="42" style="display:block;margin:0 auto 10px auto;max-height:42px;" />
+            <p style="margin:0;color:#bfdbfe;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Studentforge Platform</p>
           </td>
         </tr>
 
         <!-- BODY -->
         <tr>
           <td style="padding:40px 40px 30px 40px;">
-            <p style="margin:0 0 20px 0;font-size:15px;color:#1e293b;line-height:1.7;">Dear <strong>${fullName}</strong>,</p>
-            <p style="margin:0 0 20px 0;font-size:15px;color:#334155;line-height:1.7;">Welcome to the <strong>Redlix Training Academy</strong>. Your account has been successfully created and you now have full access to our training platform.</p>
+            <p style="margin:0;font-size:15px;color:#1e293b;line-height:1.7;">Dear <strong>${fullName}</strong>,</p>
+            <p style="margin:10px 0 20px 0;font-size:15px;color:#334155;line-height:1.7;">Welcome to the <strong>Studentforge Platform</strong>. Your account has been successfully created and you now have full access to our learning resources.</p>
 
             <!-- ACCOUNT DETAILS TABLE -->
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;border:1px solid #e2e8f0;">
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
             <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 30px 0;">
               <tr>
                 <td style="background-color:#1d4ed8;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">Go to Training Dashboard &rarr;</a>
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="display:inline-block;padding:13px 28px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">Go to Dashboard &rarr;</a>
                 </td>
               </tr>
             </table>
@@ -119,8 +119,8 @@ export async function POST(req: Request) {
         <!-- FOOTER -->
         <tr>
           <td style="padding:20px 40px;background-color:#f8fafc;">
-            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">This is an automated message from <strong style="color:#64748b;">Redlix Training Academy</strong>. Please do not reply directly to this email.</p>
-            <p style="margin:6px 0 0 0;font-size:11px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Redlix Training Academy. All rights reserved.</p>
+            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">This is an automated message from <strong style="color:#64748b;">Studentforge Platform</strong>. Please do not reply directly to this email.</p>
+            <p style="margin:6px 0 0 0;font-size:11px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Studentforge Platform. All rights reserved.</p>
           </td>
         </tr>
 
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
 </html>`,
       };
 
-      // Deliver in the background to avoid blocking user signup
+      
       transporter.sendMail(mailOptions).catch(err => {
         console.error("Failed to send welcome email in background:", err);
       });

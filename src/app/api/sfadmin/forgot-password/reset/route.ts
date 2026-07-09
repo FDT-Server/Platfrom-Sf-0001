@@ -1,0 +1,75 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/db";
+import { hashPassword } from "@/lib/crypto";
+
+export async function POST(req: Request) {
+  try {
+    const { email, otp, password } = await req.json();
+
+    if (!email || !otp || !password) {
+      return NextResponse.json(
+        { error: "Missing required fields (email, OTP, new password)" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    
+    if (normalizedEmail !== "hrstudentforge@gmail.com") {
+      return NextResponse.json(
+        { error: "Access denied: Unauthorized admin email." },
+        { status: 403 }
+      );
+    }
+
+    
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "No user found with this email address" },
+        { status: 404 }
+      );
+    }
+
+    
+    if (!user.otpCode || user.otpCode !== otp.trim()) {
+      return NextResponse.json(
+        { error: "Invalid OTP verification code. Please check and try again." },
+        { status: 400 }
+      );
+    }
+
+    
+    if (!user.otpExpiry || new Date() > user.otpExpiry) {
+      return NextResponse.json(
+        { error: "OTP code has expired. Please request a new verification code." },
+        { status: 400 }
+      );
+    }
+
+    
+    const hashedPassword = hashPassword(password);
+
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        otpCode: null,
+        otpExpiry: null,
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("SF Admin forgot password reset error:", err);
+    return NextResponse.json(
+      { error: "Failed to reset password. Please try again." },
+      { status: 500 }
+    );
+  }
+}

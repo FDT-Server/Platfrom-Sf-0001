@@ -16,14 +16,14 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if user exists
+    
     let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (!user) {
       if (normalizedEmail === "webstrixx@gmail.com") {
-        // Auto-seed admin user if missing
+        
         user = await prisma.user.create({
           data: {
             email: "webstrixx@gmail.com",
@@ -40,11 +40,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // Generate 6-digit OTP code
+    
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); 
 
-    // Save to user record
+    
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create SMTP nodemailer transporter
+    
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -62,22 +62,22 @@ export async function POST(req: Request) {
       },
     });
 
-    // Email content options
+    
     const mailOptions = {
-      from: `"Redlix Training Academy" <${process.env.SMTP_EMAIL}>`,
+      from: `"Studentforge Platform" <${process.env.SMTP_EMAIL}>`,
       replyTo: process.env.SMTP_EMAIL,
       to: email,
-      subject: `Redlix Training - Password Reset OTP for ${user.fullName}`,
+      subject: `Studentforge Platform - Password Reset OTP for ${user.fullName}`,
       priority: "high" as const,
       headers: {
-        "X-Mailer": "Redlix Training Mailer",
+        "X-Mailer": "Studentforge Mailer",
         "X-Priority": "1",
         "Importance": "High",
       },
-      text: `Hello ${user.fullName},\n\nWe received a request to reset the password for your Redlix Training account.\n\nYour OTP Code: ${otpCode}\n\nThis code is valid for 10 minutes. Do not share this code with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\n— The Redlix Training Team`,
+      text: `Hello ${user.fullName},\n\nWe received a request to reset the password for your Studentforge Platform account.\n\nYour OTP Code: ${otpCode}\n\nThis code is valid for 10 minutes. Do not share this code with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\n— The Studentforge Team`,
       html: `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Password Reset - Redlix Training Academy</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Password Reset - Studentforge Platform</title></head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:40px 0;">
     <tr><td align="center">
@@ -86,8 +86,8 @@ export async function POST(req: Request) {
         <!-- HEADER -->
         <tr>
           <td style="background-color:#1d4ed8;padding:28px 40px;text-align:center;">
-            <img src="https://ik.imagekit.io/dypkhqxip/logotraining" alt="Redlix Training Academy" height="42" style="display:block;margin:0 auto 10px auto;max-height:42px;" />
-            <p style="margin:0;color:#bfdbfe;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Training Academy</p>
+            <img src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858" alt="Studentforge Platform" height="42" style="display:block;margin:0 auto 10px auto;max-height:42px;" />
+            <p style="margin:0;color:#bfdbfe;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Studentforge Platform</p>
           </td>
         </tr>
 
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
             <p style="margin:0 0 8px 0;font-size:13px;color:#1d4ed8;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Security Notice</p>
             <h2 style="margin:0 0 20px 0;font-size:20px;color:#0f172a;font-weight:700;">Password Reset Request</h2>
             <p style="margin:0 0 20px 0;font-size:15px;color:#1e293b;line-height:1.7;">Dear <strong>${user.fullName}</strong>,</p>
-            <p style="margin:0 0 24px 0;font-size:15px;color:#334155;line-height:1.7;">We received a request to reset the password associated with your Redlix Training Academy account. Use the verification code below to proceed.</p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#334155;line-height:1.7;">We received a request to reset the password associated with your Studentforge Platform account. Use the verification code below to proceed.</p>
 
             <!-- OTP BOX -->
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
               </tr>
               <tr>
                 <td style="padding:14px 16px;font-size:13px;color:#334155;line-height:1.7;">
-                  Do not share this code with anyone. Redlix Training Academy will never ask for your OTP via phone or chat.
+                  Do not share this code with anyone. Studentforge Platform will never ask for your OTP via phone or chat.
                   If you did not initiate this request, please ignore this email — your account remains secure.
                 </td>
               </tr>
@@ -135,8 +135,8 @@ export async function POST(req: Request) {
         <!-- FOOTER -->
         <tr>
           <td style="padding:20px 40px;background-color:#f8fafc;">
-            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">This is an automated security message from <strong style="color:#64748b;">Redlix Training Academy</strong>. Please do not reply directly to this email.</p>
-            <p style="margin:6px 0 0 0;font-size:11px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Redlix Training Academy. All rights reserved.</p>
+            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">This is an automated security message from <strong style="color:#64748b;">Studentforge Platform</strong>. Please do not reply directly to this email.</p>
+            <p style="margin:6px 0 0 0;font-size:11px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Studentforge Platform. All rights reserved.</p>
           </td>
         </tr>
 
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
 </html>`,
     };
 
-    // Send the email
+    
     await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true });

@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Limit free users to exactly 1 Study Pod creation
+    
     if (!user.isPremium) {
       const existingPodsCount = await prisma.studyPod.count({
         where: { creatorId: user.id },

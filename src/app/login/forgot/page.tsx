@@ -155,7 +155,7 @@ export default function ForgotPasswordPage() {
             )}
 
             <form onSubmit={handleResetPassword} className="space-y-4">
-              {/* OTP code input */}
+              
               <div>
                 <label htmlFor="otp-code" className="text-[10px] font-bold text-slate-600 mb-1.5 block uppercase tracking-wider">
                   6-Digit OTP Code
@@ -172,7 +172,7 @@ export default function ForgotPasswordPage() {
                 />
               </div>
 
-              {/* Password input */}
+              
               <div>
                 <label htmlFor="new-password" className="text-[10px] font-bold text-slate-600 mb-1.5 block uppercase tracking-wider">
                   New Password
@@ -197,7 +197,7 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
 
-              {/* Confirm Password input */}
+              
               <div>
                 <label htmlFor="confirm-password" className="text-[10px] font-bold text-slate-600 mb-1.5 block uppercase tracking-wider">
                   Confirm Password
@@ -230,7 +230,7 @@ export default function ForgotPasswordPage() {
           </div>
         )}
 
-        {/* Footer controls */}
+        
         <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-8">
           <Link 
             href="/login" 

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Retrieve user by email
+    
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify OTP code exists and matches
+    
     if (!user.otpCode || user.otpCode !== otp.trim()) {
       return NextResponse.json(
         { error: "Invalid OTP verification code. Please check and try again." },
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify OTP code has not expired
+    
     if (!user.otpExpiry || new Date() > user.otpExpiry) {
       return NextResponse.json(
         { error: "OTP code has expired. Please request a new verification code." },
@@ -41,10 +41,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash the new password
+    
     const hashedPassword = hashPassword(password);
 
-    // Update password and clear OTP fields in a single operation
+    
     await prisma.user.update({
       where: { id: user.id },
       data: {

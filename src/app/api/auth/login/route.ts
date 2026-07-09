@@ -33,14 +33,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Set secure HTTP-only session cookie (cookies() is asynchronous in Next.js 15/16)
+    
     const cookieStore = await cookies();
     cookieStore.set({
       name: "session",
       value: user.id,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 24 * 7, 
       path: "/",
       sameSite: "lax",
     });
