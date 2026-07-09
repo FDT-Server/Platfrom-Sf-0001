@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     siteName: "Studentforge Platform",
     images: [
       {
-        url: "https://ik.imagekit.io/dypkhqxip/urlimag",
+        url: "https://ik.imagekit.io/dypkhqxip/sf%20bannerwhne",
         width: 1200,
         height: 630,
         alt: "Studentforge Platform — Online Learning & Engineering Training",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     title: "Studentforge Platform — Online Learning & Engineering Training",
     description:
       "A legitimate online educational platform. Elevate your technical expertise with curated engineering resources and video lectures.",
-    images: ["https://ik.imagekit.io/dypkhqxip/urlimag"],
+    images: ["https://ik.imagekit.io/dypkhqxip/sf%20bannerwhne"],
   },
   icons: {
     icon: [
