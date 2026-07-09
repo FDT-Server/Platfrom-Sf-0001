@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     "Training",
     "Online Courses",
   ],
-  authors: [{ name: "Studentforge Team" }],
-  creator: "Studentforge Team",
-  publisher: "Studentforge Platform",
+  authors: [{ name: "Redlix Pro Wing", url: "https://www.redlix.co.in" }],
+  creator: "Redlix Pro Wing",
+  publisher: "Student Forge",
   category: "education",
   classification: "Education / Online Learning",
   metadataBase: new URL(
