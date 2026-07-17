@@ -24,8 +24,19 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
   };
 
   return (
-    <div className={`min-h-screen lg:h-screen w-full bg-[#0c0e17] flex flex-col lg:flex-row font-sans selection:bg-indigo-500 selection:text-white overflow-hidden relative ${mode === "dashboard" ? "p-3 gap-3" : "p-0 gap-0"}`}>
+    <div className={`min-h-screen lg:h-screen w-full bg-[#0c0e17] flex flex-col lg:flex-row font-sans selection:bg-indigo-500 selection:text-white overflow-hidden relative ${mode === "dashboard" ? "p-3 gap-3" : "p-0"}`}>
       
+      {(mode === "login" || mode === "signup") && (
+        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
+          <img 
+            src="/new-auth-bg.jpg" 
+            alt="Authentication Background" 
+            className="w-full h-full object-cover animate-kenburns brightness-110 will-change-transform"
+          />
+          <div className="absolute inset-0 bg-black/10"></div>
+        </div>
+      )}
+
       {mode === "dashboard" && (
         <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
           <Grainient
@@ -57,43 +68,21 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
         
       
       <div className={`w-full flex flex-col justify-between items-start text-white h-full relative z-10 select-none text-left overflow-hidden ${
-        mode === "dashboard" ? "lg:w-[35%] p-8 lg:p-10 rounded-[24px] lg:rounded-[28px]" : "lg:w-1/2 p-10 lg:p-16 rounded-none bg-black/20 backdrop-blur-sm"
+        mode === "dashboard" ? "lg:w-[35%] p-8 lg:p-10" : "lg:w-1/2 p-10 lg:p-16"
       }`}>
         
-        {(mode === "login" || mode === "signup") && (
-          <div className="absolute inset-0 w-full h-full z-0 pointer-events-none overflow-hidden">
-            <img 
-              src="/new-auth-bg.jpg" 
-              alt="Authentication Background" 
-              className="w-full h-full object-cover opacity-60 animate-kenburns mix-blend-screen"
-            />
-            <div className="absolute inset-0 bg-black/20"></div>
-          </div>
-        )}
-
         <div className="relative z-10 flex flex-col h-full w-full">
-          <div className="flex items-center gap-3 w-full">
-            <span className="text-xl font-bold tracking-tight text-white drop-shadow-md">Platform</span>
-            <div className="h-6 w-[1px] bg-white/40"></div>
-            <img 
-              src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858" 
-              alt="Studentforge Logo" 
-              className="h-8 w-auto object-contain drop-shadow-md"
-            />
-          </div>
-
-          <div className="mt-auto space-y-4 w-full">
-            <h1 className="text-4xl font-bold tracking-tight text-white leading-none drop-shadow-lg">
-              {mode === "signup" ? "Get Started" : "Welcome Back"}
-            </h1>
-            <p className="text-white/90 text-sm leading-relaxed max-w-sm drop-shadow-md font-medium">
-              {mode === "signup" 
-                ? "Explore our intuitive dashboard and set up your account in just a few clicks."
-                : mode === "login"
-                ? "Log in to resume your training paths, build real-world projects, and track your progress."
-                : "Access your dashboard to check recommended learning paths and manage your progress."}
-            </p>
-          </div>
+          {mode === "dashboard" && (
+            <div className="flex items-center gap-3 w-full">
+              <span className="text-xl font-bold tracking-tight text-white drop-shadow-md">Platform</span>
+              <div className="h-6 w-[1px] bg-white/40"></div>
+              <img 
+                src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858" 
+                alt="Studentforge Logo" 
+                className="h-8 w-auto object-contain drop-shadow-md"
+              />
+            </div>
+          )}
 
           <div className="space-y-8 w-full mt-10">
             {mode === "dashboard" && (
@@ -118,8 +107,10 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
       </div>
 
       
-      <div className={`flex-1 bg-white flex flex-col justify-between shadow-2xl h-full min-h-[520px] lg:min-h-0 relative z-10 overflow-y-auto ${
-        mode === "dashboard" ? "rounded-[24px] lg:rounded-[28px] p-6 sm:p-10 lg:p-12" : "rounded-none p-10 lg:p-16"
+      <div className={`flex-1 bg-white flex flex-col justify-between shadow-2xl relative z-10 overflow-y-auto ${
+        mode === "dashboard" 
+          ? "rounded-[24px] lg:rounded-[28px] p-6 sm:p-10 lg:p-12 h-full" 
+          : "rounded-[24px] lg:rounded-[36px] p-8 sm:p-10 lg:p-16 m-4 lg:my-6 lg:mr-6 h-[calc(100%-2rem)] lg:h-[calc(100%-3rem)] min-h-[520px]"
       }`}>
         {children}
       </div>

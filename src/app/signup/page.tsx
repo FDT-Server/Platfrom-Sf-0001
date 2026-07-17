@@ -64,12 +64,26 @@ export default function SignupPage() {
   };
 
 
-  const isPasswordValid = password.trim().length >= 6;
+  const isPasswordValid = 
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
   const isStep1Valid = fullName.trim() !== "" && email.includes("@") && isPasswordValid;
 
   return (
     <AppLayout mode="signup">
-      <div className="flex flex-col justify-between h-full w-full max-w-md">
+      <div className="absolute top-10 right-10 lg:top-12 lg:right-16 flex items-center gap-3 z-20">
+        <span className="text-xl font-bold tracking-tight text-slate-900">Platform</span>
+        <div className="h-6 w-[1px] bg-slate-200"></div>
+        <img 
+          src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858" 
+          alt="Studentforge Logo" 
+          className="h-8 w-auto object-contain"
+        />
+      </div>
+      <div className="flex flex-col justify-between h-full w-full max-w-md mt-10">
 
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl p-3">
@@ -82,6 +96,41 @@ export default function SignupPage() {
             <div>
               <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h3>
               <p className="text-slate-500 text-sm mt-1">Fill out your profile credentials to get started.</p>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                type="button"
+                className="w-full flex items-center justify-center gap-2 bg-white border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                Continue with Google
+              </button>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-[10px]">
+                  <span className="bg-white px-3 text-slate-500 uppercase tracking-wider font-bold">Or continue with email</span>
+                </div>
+              </div>
             </div>
 
             <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (isStep1Valid) handleSignupSubmit(); }}>
@@ -131,7 +180,7 @@ export default function SignupPage() {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password (min. 6 characters)"
+                    placeholder="Min 8 chars, 1 caps, 1 num, 1 special"
                     className="w-full px-4 py-2.5 pr-10 rounded-none border border-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-400"
                   />
                   <button
@@ -158,7 +207,7 @@ export default function SignupPage() {
             </form>
           </div>
 
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-6">
+          <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-3">
             <Link
               href="/login"
               className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition"

@@ -42,7 +42,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -339,22 +339,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
     );
   }
 
-  
-  links.push({
-    label: "Profile",
-    href: "/profile",
-    icon: user.profileImage ? (
-      <img
-        src={user.profileImage}
-        alt="Profile"
-        className="h-5 w-5 rounded-full object-cover border border-blue-200/50 shrink-0"
-      />
-    ) : (
-      <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-        recent_patient
-      </span>
-    ),
-  });
+  // Removed Profile link from here as per user request
 
   return (
     <div className="flex h-screen w-screen bg-slate-50 overflow-hidden md:flex-row flex-col">
