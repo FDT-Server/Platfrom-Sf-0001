@@ -88,16 +88,22 @@ export const DesktopSidebar = ({
     <>
       <motion.div
         className={cn(
-          "h-full px-4 py-4 hidden  md:flex md:flex-col bg-blue-600 dark:bg-blue-600 w-[300px] shrink-0 border-r border-blue-700/50",
+          "h-full px-4 py-4 hidden  md:flex md:flex-col bg-blue-600 dark:bg-blue-600 w-[300px] shrink-0 border-r border-blue-700/50 relative",
           className
         )}
         animate={{
           width: animate ? (open ? "300px" : "85px") : "300px",
         }}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
         {...props}
       >
+        <div 
+           onClick={() => setOpen(!open)}
+           className="absolute -right-3 top-6 bg-blue-700 text-white w-6 h-6 rounded-full cursor-pointer z-50 border border-blue-500 shadow-md flex items-center justify-center hover:bg-blue-600 transition"
+        >
+           <span className="material-symbols-outlined text-[14px]">
+              {open ? "chevron_left" : "chevron_right"}
+           </span>
+        </div>
         {children}
       </motion.div>
     </>
