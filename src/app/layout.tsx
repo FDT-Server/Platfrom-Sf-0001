@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
+import { Toaster } from "sonner";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -116,6 +116,7 @@ export default function RootLayout({
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900">
+        <Toaster position="top-center" richColors />
         {children}
       </body>
     </html>
