@@ -124,7 +124,7 @@ export default async function PlansPage() {
               </ul>
             </div>
             
-            <Link href="/checkout?plan=monthly" className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-center text-xs font-bold transition shadow-2xs hover:shadow-xs block select-none">
+            <Link href="/payment?plan=monthly" className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-center text-xs font-bold transition shadow-2xs hover:shadow-xs block select-none">
               Choose Monthly
             </Link>
           </div>
@@ -162,7 +162,7 @@ export default async function PlansPage() {
               </ul>
             </div>
             
-            <Link href="/checkout?plan=yearly" className="mt-8 w-full bg-slate-900 hover:bg-black text-white border border-slate-950 rounded-xl py-2.5 text-center text-xs font-bold transition shadow-xs block select-none">
+            <Link href="/payment?plan=yearly" className="mt-8 w-full bg-slate-900 hover:bg-black text-white border border-slate-950 rounded-xl py-2.5 text-center text-xs font-bold transition shadow-xs block select-none">
               Choose Yearly
             </Link>
           </div>
