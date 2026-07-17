@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
 
 const EyeIcon = () => (
@@ -43,6 +44,7 @@ export default function LoginPage() {
       if (!res.ok) {
         setError(data.error || "Login failed. Please try again.");
       } else {
+        toast.success("Signed in successfully!");
         router.push("/dashboard");
         router.refresh();
       }
@@ -124,6 +126,18 @@ export default function LoginPage() {
               />
               <label htmlFor="remember-me" className="ml-2 text-xs text-slate-600 select-none cursor-pointer">
                 Remember this device for 30 days
+              </label>
+            </div>
+            
+            <div className="flex items-start pt-2">
+              <input
+                type="checkbox"
+                id="terms"
+                required
+                className="mt-0.5 w-3 h-3 text-indigo-600 border-slate-300 rounded-none focus:ring-indigo-500 cursor-pointer shrink-0"
+              />
+              <label htmlFor="terms" className="ml-2 text-[10px] text-slate-500 cursor-pointer">
+                * By Continuing you agree to the <Link href="/terms" className="text-indigo-600 hover:underline">Terms of Services</Link> and <Link href="/privacy" className="text-indigo-600 hover:underline">Privacy policy</Link>.
               </label>
             </div>
           </form>

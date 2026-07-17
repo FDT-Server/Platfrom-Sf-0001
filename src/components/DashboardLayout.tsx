@@ -373,33 +373,17 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           <div className="flex flex-col gap-4">
             {open && !isAdmin && !premium && (
               <div
-                className="mx-2 p-4 rounded-2xl text-slate-950 shadow-sm border border-amber-400/80 flex flex-col gap-3 relative overflow-hidden animate-fadeIn"
+                className="mx-2 p-3 rounded-xl text-slate-950 shadow-sm border border-amber-400/80 flex flex-col gap-2 relative overflow-hidden animate-fadeIn"
                 style={{ backgroundImage: "url('/gold-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}
               >
-                
                 <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-xl pointer-events-none" />
-                <div className="flex items-center gap-1.5 font-sans font-black text-xs uppercase tracking-wider">
-                  <span className="material-symbols-outlined text-[16px] text-slate-950 font-bold">workspace_premium</span>
+                <div className="flex items-center gap-1.5 font-sans font-black text-[10px] uppercase tracking-wider">
+                  <span className="material-symbols-outlined text-[14px] text-slate-950 font-bold">workspace_premium</span>
                   <span>Go Premium</span>
-                </div>
-                <div className="flex flex-col gap-1.5 text-[10px] leading-snug font-semibold text-slate-900">
-                  <p className="font-extrabold mb-1">Upgrade to unlock details:</p>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px] text-slate-950 font-bold">check_circle</span>
-                    <span>1-on-1 Mentorship Booking</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px] text-slate-950 font-bold">check_circle</span>
-                    <span>Startup Hub Showcase</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px] text-slate-950 font-bold">check_circle</span>
-                    <span>Unlimited Study Pod Rooms</span>
-                  </div>
                 </div>
                 <Link
                   href="/plans"
-                  className="w-full bg-slate-950 hover:bg-slate-900 text-white rounded-xl py-2 text-xs font-bold transition shadow-md hover:shadow-lg cursor-pointer text-center select-none mt-1 block font-sans"
+                  className="w-full bg-slate-950 hover:bg-slate-900 text-white rounded-lg py-1.5 text-[10px] font-bold transition shadow-md hover:shadow-lg cursor-pointer text-center select-none block font-sans"
                 >
                   Upgrade Now
                 </Link>
