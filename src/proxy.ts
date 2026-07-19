@@ -27,7 +27,7 @@ const ADMIN_EMAILS_SFADMIN = ["hrstudentforge@gmail.com"];
 const ADMIN_EMAILS_ADMIN = ["webstrixx@gmail.com"];
 const ALL_ADMIN_EMAILS = [...ADMIN_EMAILS_SFADMIN, ...ADMIN_EMAILS_ADMIN];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const response = NextResponse.next();
 

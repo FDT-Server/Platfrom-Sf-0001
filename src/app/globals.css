@@ -12,6 +12,15 @@
   --font-sans: var(--font-inter);
 }
 
+@theme {
+  --color-indigo-650: #493ecd;
+  --color-indigo-750: #3730a3;
+  --color-indigo-850: #2a228f;
+  --color-red-650: #dc2626;
+  --color-red-655: #b91c1c;
+  --color-red-750: #991b1b;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -74,3 +83,33 @@ body {
 .animate-kenburns {
   animation: kenburns 15s ease-out infinite alternate;
 }
+
+/* Custom Utility Fallbacks for Tailwind compiler cache/resolution issues */
+.bg-indigo-650 {
+  background-color: #493ecd !important;
+}
+.text-indigo-650 {
+  color: #493ecd !important;
+}
+.hover\:bg-indigo-750:hover {
+  background-color: #3730a3 !important;
+}
+.hover\:text-indigo-850:hover {
+  color: #2a228f !important;
+}
+.hover\:text-indigo-800:hover {
+  color: #3730a3 !important;
+}
+.accent-indigo-650 {
+  accent-color: #493ecd !important;
+}
+.hover\:text-red-655:hover {
+  color: #b91c1c !important;
+}
+.hover\:text-red-650:hover {
+  color: #dc2626 !important;
+}
+.hover\:text-red-750:hover {
+  color: #991b1b !important;
+}
+

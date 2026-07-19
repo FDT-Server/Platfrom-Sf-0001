@@ -17,12 +17,20 @@ export default async function DashboardPage() {
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
+      id: true,
       fullName: true,
       email: true,
       selectedRole: true,
       otherRoleText: true,
       goals: true,
       profileImage: true,
+      collegeStudying: true,
+      branch: true,
+      year: true,
+      linkedinLink: true,
+      portfolioLink: true,
+      about: true,
+      shareWithNetworking: true,
     },
   });
 
@@ -63,5 +71,23 @@ export default async function DashboardPage() {
     },
   });
 
-  return <DashboardContent user={user} events={events} />;
+  // Fetch suggested users (limit to 5)
+  const suggestedUsers = await prisma.user.findMany({
+    where: {
+      id: { not: sessionToken },
+      email: {
+        notIn: ["webstrixx@gmail.com", "hrstudentforge@gmail.com"]
+      }
+    },
+    take: 5,
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      selectedRole: true,
+      profileImage: true,
+    },
+  });
+
+  return <DashboardContent user={user} events={events} suggestedUsers={suggestedUsers} />;
 }

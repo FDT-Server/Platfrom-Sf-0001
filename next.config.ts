@@ -79,6 +79,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   compress: true,
+
+  experimental: {
+    optimizePackageImports: ["@tabler/icons-react"],
+  },
 };
 
 export default nextConfig;
