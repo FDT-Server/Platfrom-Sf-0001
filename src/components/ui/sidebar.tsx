@@ -1,6 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import React, { useState, createContext, useContext } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 
@@ -173,24 +174,37 @@ export const SidebarLink = ({
   className?: string;
 } & React.ComponentPropsWithoutRef<"a">) => {
   const { open, animate } = useSidebar();
+  const pathname = usePathname();
+  // Check if link is active
+  const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
+
   return (
     <a
       href={link.href}
       className={cn(
-        "flex items-center gap-2 group/sidebar py-2 transition-all duration-150",
+        "flex items-center gap-2 group/sidebar py-2 px-3 rounded-xl transition-all duration-150 hover:bg-white/5",
+        isActive ? "bg-white/10 text-white font-medium" : "text-blue-100",
         open ? "justify-start" : "justify-center w-full",
         className
       )}
       {...props}
     >
-      {link.icon}
+      <span className={cn(
+        "transition-colors duration-150 shrink-0 flex items-center justify-center",
+        isActive ? "text-white [&>span]:text-white [&>svg]:text-white [&>img]:border-white" : "text-blue-100 group-hover/sidebar:text-white [&>span]:text-blue-100 [&>span]:group-hover/sidebar:text-white [&>svg]:text-blue-100 [&>svg]:group-hover/sidebar:text-white"
+      )}>
+        {link.icon}
+      </span>
 
       <motion.span
         animate={{
           display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
-        className="text-blue-100 dark:text-blue-100 text-sm group-hover/sidebar:text-white group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className={cn(
+          "text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0",
+          isActive ? "text-white font-medium" : "text-blue-100 group-hover/sidebar:text-white"
+        )}
       >
         {link.label}
       </motion.span>

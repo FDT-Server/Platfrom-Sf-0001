@@ -7,7 +7,6 @@ import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-
 export const Logo = () => (
   <a href="/dashboard" className="relative z-20 flex items-center gap-2 py-1">
     <span className="text-lg font-bold tracking-tight text-white select-none">Platform</span>
@@ -40,54 +39,11 @@ interface DashboardLayoutProps {
   };
 }
 
-export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(true);
-
-  const handleLogout = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      if (user.email.trim().toLowerCase() === "hrstudentforge@gmail.com") {
-        router.push("/sfadmin");
-      } else {
-        router.push("/login");
-      }
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+  const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [premium, setPremium] = useState<boolean>(user.isPremium || false);
 
-  const isAdmin = user.email.trim().toLowerCase() === "webstrixx@gmail.com" || user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
-
-  useEffect(() => {
-    if (user.isPremium !== undefined) {
-      setPremium(user.isPremium);
-    }
-  }, [user.isPremium]);
-
-  useEffect(() => {
-    if (isAdmin) return;
-    const fetchPremiumStatus = async () => {
-      try {
-        const res = await fetch("/api/profile");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.user) {
-            setPremium(data.user.isPremium);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch premium status:", err);
-      }
-    };
-    fetchPremiumStatus();
-  }, [isAdmin]);
-
-  
   useEffect(() => {
     const isNetworkingPage = typeof window !== "undefined" && window.location.pathname === "/networking";
 
@@ -105,7 +61,6 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           const messages = data.messages || [];
 
           if (isNetworkingPage) {
-            
             if (messages.length > 0) {
               const latestTime = messages[messages.length - 1].createdAt;
               localStorage.setItem("lastSeenMessageTime", latestTime);
@@ -116,7 +71,6 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
           } else {
             const lastSeen = localStorage.getItem("lastSeenMessageTime") || new Date(0).toISOString();
             const unread = messages.filter((msg: any) => {
-              
               return (
                 msg.email.trim().toLowerCase() !== user.email.trim().toLowerCase() &&
                 msg.createdAt > lastSeen
@@ -136,6 +90,48 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
 
     return () => clearInterval(interval);
   }, [user.email]);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      if (user.email.trim().toLowerCase() === "hrstudentforge@gmail.com") {
+        router.push("/sfadmin");
+      } else {
+        router.push("/login");
+      }
+      router.refresh();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  const [premium, setPremium] = useState<boolean>(user.isPremium || false);
+  const [prevIsPremium, setPrevIsPremium] = useState(user.isPremium);
+  if (user.isPremium !== prevIsPremium) {
+    setPrevIsPremium(user.isPremium);
+    setPremium(user.isPremium || false);
+  }
+
+  const isAdmin = user.email.trim().toLowerCase() === "webstrixx@gmail.com" || user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
+
+  useEffect(() => {
+    if (isAdmin) return;
+    const fetchPremiumStatus = async () => {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            setPremium(data.user.isPremium);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch premium status:", err);
+      }
+    };
+    fetchPremiumStatus();
+  }, [isAdmin]);
 
   const isSfAdmin = user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
 
@@ -339,7 +335,33 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
     );
   }
 
-  // Removed Profile link from here as per user request
+  if (!isAdmin) {
+    links.push({
+      label: "Tools",
+      href: "/tools",
+      icon: (
+        <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+          construction
+        </span>
+      ),
+    });
+  }
+
+  links.push({
+    label: "Profile",
+    href: "/profile",
+    icon: user.profileImage ? (
+      <img
+        src={user.profileImage}
+        alt="Profile"
+        className="h-5 w-5 rounded-full object-cover border border-blue-200/50 shrink-0"
+      />
+    ) : (
+      <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+        recent_patient
+      </span>
+    ),
+  });
 
   return (
     <div className="flex h-screen w-screen bg-slate-50 overflow-hidden md:flex-row flex-col">
@@ -375,7 +397,6 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               </div>
             )}
 
-            
             <a
               href="#"
               onClick={handleLogout}
@@ -397,32 +418,21 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                 Logout
               </motion.span>
             </a>
-
-            <SidebarLink
-              link={{
-                label: user.fullName,
-                href: "/profile",
-                icon: user.profileImage ? (
-                  <img
-                    src={user.profileImage}
-                    alt={user.fullName}
-                    className="h-6 w-6 rounded-full object-cover border border-blue-200/50 shrink-0"
-                  />
-                ) : (
-                  <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-                    recent_patient
-                  </span>
-                ),
-              }}
-            />
           </div>
         </SidebarBody>
       </Sidebar>
 
-      
-      <div className="flex flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8">
+      <div className="flex flex-1 w-full overflow-y-auto bg-slate-50 p-4 md:p-6">
         {children}
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+  return (
+    <DashboardLayoutContent user={user}>
+      {children}
+    </DashboardLayoutContent>
   );
 }
