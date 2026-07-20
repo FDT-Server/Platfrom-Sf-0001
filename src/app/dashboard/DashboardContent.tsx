@@ -12,15 +12,7 @@ import OpportunitiesSection from "./components/OpportunitiesSection";
 import SuggestedConnectionsCard, { SuggestedUser } from "./components/SuggestedConnectionsCard";
 import { toast } from "sonner";
 
-interface EventInfo {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  speakers?: string;
-  link?: string;
-}
+import { EventInfo } from "./components/UpcomingEventsSection";
 
 interface DashboardContentProps {
   user: {
