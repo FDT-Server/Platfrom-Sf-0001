@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import CountdownTimer from "@/components/CountdownTimer";
 
 export default function Home() {
-  redirect("/login");
+  return <CountdownTimer />;
 }
