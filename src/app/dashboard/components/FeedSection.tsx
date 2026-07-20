@@ -26,7 +26,7 @@ const defaultMockPosts: FeedPost[] = [
     authorImage: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=120&h=120",
     timeAgo: "1 hour ago",
     category: "Achievement",
-    content: "Super excited to share that I just passed the AWS Certified Solutions Architect Associate exam! ☁️ Big thanks to Student Forge resources and cloud study group for the guidance. Onward to building serverless apps!",
+    content: "Super excited to share that I just passed the AWS Certified Solutions Architect Associate exam! Big thanks to Student Forge resources and cloud study group for the guidance. Onward to building serverless apps!",
     imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600&h=300",
     likes: 38,
     comments: [
@@ -47,7 +47,7 @@ const defaultMockPosts: FeedPost[] = [
     authorImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=120&h=120",
     timeAgo: "3 hours ago",
     category: "Achievement",
-    content: "We took 1st Place at National Smart Campus Hackathon 2026! 🏆 Built an AI-powered automated attendance & resource management system using Next.js 15, TailwindCSS, and Python OpenCV. Thanks to everyone who tested our demo!",
+    content: "We took 1st Place at National Smart Campus Hackathon 2026! Built an AI-powered automated attendance & resource management system using Next.js 15, TailwindCSS, and Python OpenCV. Thanks to everyone who tested our demo!",
     imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=600&h=300",
     likes: 54,
     comments: [
@@ -68,7 +68,7 @@ const defaultMockPosts: FeedPost[] = [
     authorImage: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=120&h=120",
     timeAgo: "5 hours ago",
     category: "Opportunity",
-    content: "📢 NEW INTERNSHIP OPENING: Front-End Engineering Intern at TechForge Solutions (Stipend: ₹40,000/mo). Open for 3rd and 4th year CSE/IT students. Applications close this Friday!",
+    content: "NEW INTERNSHIP OPENING: Front-End Engineering Intern at TechForge Solutions (Stipend: ₹40,000/mo). Open for 3rd and 4th year CSE/IT students. Applications close this Friday!",
     likes: 42,
     comments: [],
     liked: false,
@@ -81,7 +81,7 @@ const defaultMockPosts: FeedPost[] = [
     authorImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120&h=120",
     timeAgo: "8 hours ago",
     category: "General",
-    content: "⚡ Upcoming Weekly Speed Coding Contest #42 is going live tomorrow at 7:00 PM IST! Test your Data Structures & Algorithms speed with top leaderboard prizes.",
+    content: "Upcoming Weekly Speed Coding Contest #42 is going live tomorrow at 7:00 PM IST! Test your Data Structures & Algorithms speed with top leaderboard prizes.",
     imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600&h=300",
     likes: 29,
     comments: [],
@@ -95,7 +95,7 @@ const defaultMockPosts: FeedPost[] = [
     authorImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=120&h=120",
     timeAgo: "1 day ago",
     category: "Question",
-    content: "🧠 Hands-on AI Workshop: 'Building Production LLM Agents with Next.js & Python'. Session starts on Saturday morning. What specific agent architectures would you like us to cover?",
+    content: "Hands-on AI Workshop: 'Building Production LLM Agents with Next.js & Python'. Session starts on Saturday morning. What specific agent architectures would you like us to cover?",
     likes: 61,
     comments: [
       {
@@ -129,6 +129,32 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
       localStorage.setItem("sf_timeline_posts", JSON.stringify(defaultMockPosts));
     }
   }, []);
+
+  useEffect(() => {
+    if (newPostSignal) {
+      const created: FeedPost = {
+        id: `post-${Date.now()}`,
+        authorName: user.fullName,
+        authorRole: "Student Developer",
+        authorImage: user.profileImage || undefined,
+        timeAgo: "Just now",
+        category: newPostSignal.category,
+        content: newPostSignal.content,
+        imageUrl: newPostSignal.imageUrl,
+        likes: 0,
+        comments: [],
+        liked: false,
+        bookmarked: false,
+      };
+      setPosts((prev) => {
+        const nextList = [created, ...prev];
+        if (typeof window !== "undefined") {
+          localStorage.setItem("sf_timeline_posts", JSON.stringify(nextList));
+        }
+        return nextList;
+      });
+    }
+  }, [newPostSignal, user]);
 
   const savePosts = (newPostsList: FeedPost[]) => {
     setPosts(newPostsList);
@@ -177,7 +203,6 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
         />
       ))}
 
-      {/* Bonus Feature: Quick Slide-Over Comment Drawer */}
       <FeedCommentDrawer
         post={activeDrawerPost}
         currentUser={user}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Language, ResumeData } from "../types";
 import { IconTrash } from "@tabler/icons-react";
-import IconPlus from "@tabler/icons-react/dist/esm/icons/IconPlus.mjs";
+import { IconPlus } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 interface LanguagesFormProps {

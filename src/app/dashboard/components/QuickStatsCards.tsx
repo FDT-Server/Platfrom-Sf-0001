@@ -45,7 +45,7 @@ export default function QuickStatsCards() {
             className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3.5 flex flex-col justify-between transition duration-200 hover:shadow-md"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 line-clamp-1">
+              <span className="text-[11px] font-semibold text-slate-500 line-clamp-1">
                 {stat.title}
               </span>
               <div className={`p-1.5 rounded-xl border ${stat.color}`}>
@@ -54,8 +54,8 @@ export default function QuickStatsCards() {
             </div>
 
             <div className="mt-2">
-              <div className="text-xl font-black text-slate-800">{stat.value}</div>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{stat.subtitle}</p>
+              <div className="text-xl font-bold text-slate-800">{stat.value}</div>
+              <p className="text-[10px] text-slate-400 font-medium mt-0.5">{stat.subtitle}</p>
             </div>
           </div>
         );

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Education, ResumeData } from "../types";
 import { IconArrowUp, IconArrowDown, IconTrash, IconCopy, IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-import IconPlus from "@tabler/icons-react/dist/esm/icons/IconPlus.mjs";
+import { IconPlus } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 interface EducationFormProps {

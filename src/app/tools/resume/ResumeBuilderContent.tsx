@@ -22,7 +22,7 @@ import {
   IconUsers,
   IconClipboardCheck,
 } from "@tabler/icons-react";
-import IconPlus from "@tabler/icons-react/dist/esm/icons/IconPlus.mjs";
+import { IconPlus } from "@tabler/icons-react";
 import { ResumeData } from "./types";
 import { initialResumeData } from "./templates";
 import {

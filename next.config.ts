@@ -39,11 +39,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://ik.imagekit.io",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://ik.imagekit.io https://unpkg.com https://cdn.jsdelivr.net https://lottie.host",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: blob: https://ik.imagekit.io https://images.unsplash.com https://lh3.googleusercontent.com",
+              "img-src 'self' data: blob: https://ik.imagekit.io https://images.unsplash.com https://lh3.googleusercontent.com https://lottie.host",
               "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
-              "connect-src 'self' https://ik.imagekit.io",
+              "connect-src 'self' https://ik.imagekit.io https://lottie.host https://unpkg.com https://cdn.jsdelivr.net",
+              "frame-src 'self' https://lottie.host",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -61,15 +62,6 @@ const nextConfig: NextConfig = {
           {
             key: "Cross-Origin-Resource-Policy",
             value: "same-site",
-          },
-        ],
-      },
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
           },
         ],
       },
