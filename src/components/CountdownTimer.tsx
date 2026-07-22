@@ -147,36 +147,43 @@ export default function CountdownTimer() {
 
         </div>
 
-        {/* Right Column: 3D CDN Graphic & Status Visualizer */}
-        <div className="flex-1 hidden md:flex items-center justify-center w-full max-w-md lg:max-w-lg relative">
+        {/* Right Column: 3D Illustration & Status Visualizer (Visible on all screens) */}
+        <div className="flex-1 flex items-center justify-center w-full max-w-sm lg:max-w-md relative my-2 lg:my-0">
           
-          {/* Subtle Background Glow Circle */}
-          <div className="absolute w-72 h-72 bg-indigo-100 rounded-full filter blur-3xl opacity-70 -z-10 animate-pulse"></div>
+          {/* Background Glow Circle */}
+          <div className="absolute w-56 h-56 sm:w-72 sm:h-72 bg-gradient-to-tr from-indigo-200 to-blue-100 rounded-full filter blur-2xl opacity-60 -z-10 animate-pulse"></div>
 
-          {/* 3D CDN Illustration Container */}
-          <div className="bg-gradient-to-b from-slate-50 to-indigo-50/50 border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xl text-center flex flex-col items-center gap-4 relative overflow-hidden">
+          {/* 3D Illustration Container */}
+          <div className="bg-gradient-to-b from-slate-50/90 to-indigo-50/40 border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xl text-center flex flex-col items-center gap-3 relative overflow-hidden w-full">
             
-            {/* 3D CDN Image */}
-            <div className="w-44 h-44 sm:w-56 sm:h-56 relative flex items-center justify-center">
+            {/* 3D Graphic */}
+            <div className="w-36 h-36 sm:w-48 sm:h-48 relative flex items-center justify-center">
               <img
-                src="https://illustrations.pouch.app/cdn/illustrations/3d-space-rocket-launch.png"
+                src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858"
                 onError={(e) => {
-                  // Fallback 3D tech CDN image if needed
-                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80";
+                  (e.target as HTMLImageElement).style.display = 'none';
                 }}
-                alt="3D Platform Upgrade Illustration"
-                className="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                alt="Studentforge 3D Icon"
+                className="w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-xl animate-bounce"
+                style={{ animationDuration: '3s' }}
               />
+              {/* 3D Floating Badges around Graphic */}
+              <div className="absolute -top-1 -right-1 bg-white border border-slate-200 text-indigo-600 font-extrabold text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+                🚀 v3.0 Release
+              </div>
+              <div className="absolute -bottom-1 -left-1 bg-indigo-600 text-white font-bold text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+                ⚡ 99.9% Migration
+              </div>
             </div>
 
             {/* Status Card Footer */}
-            <div className="w-full bg-white border border-slate-200/60 rounded-2xl p-3 shadow-xs flex items-center justify-between text-xs">
+            <div className="w-full bg-white border border-slate-200/80 rounded-2xl p-3 shadow-xs flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
                 <span className="font-semibold text-slate-700">System Deploy Active</span>
               </div>
-              <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                v3.0 Release
+              <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
+                Aug 06 Launch
               </span>
             </div>
 
