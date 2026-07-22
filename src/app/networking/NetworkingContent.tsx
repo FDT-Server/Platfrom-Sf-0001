@@ -704,9 +704,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-6 select-none">
                       <img
-                        src="https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png"
+                        src="/images/no-messages.png"
                         alt="No messages illustration"
                         className="w-44 h-auto object-contain mb-2 max-h-36"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
+                        }}
                       />
                       <h4 className="text-sm font-extrabold text-slate-800">No messages in this chat yet</h4>
                       <p className="text-xs text-slate-500 max-w-xs mt-1 font-medium">
@@ -793,9 +796,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center select-none">
                   <img
-                    src="https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png"
+                    src="/images/no-messages.png"
                     alt="No pending requests illustration"
                     className="w-48 h-auto object-contain mb-2 max-h-40"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
+                    }}
                   />
                   <h4 className="text-sm font-extrabold text-slate-800">No pending invitations</h4>
                   <p className="text-xs text-slate-500 mt-1 max-w-xs font-medium">
@@ -851,9 +857,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center select-none">
                   <img
-                    src="https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png"
+                    src="/images/no-messages.png"
                     alt="No connected friends illustration"
                     className="w-48 h-auto object-contain mb-2 max-h-40"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
+                    }}
                   />
                   <h4 className="text-sm font-extrabold text-slate-800">No connected friends yet</h4>
                   <p className="text-xs text-slate-500 mt-1 max-w-xs font-medium">
