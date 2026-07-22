@@ -245,21 +245,17 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       if (stored) {
         try {
           const parsed: ConnectionRequestItem[] = JSON.parse(stored);
-          setRequests((prev) => {
-            const combined = [...prev];
-            parsed.forEach((item) => {
-              if (!combined.some((c) => c.id === item.id)) {
-                combined.unshift(item);
-              }
-            });
-            return combined;
-          });
+          const validRealRequests = parsed.filter((item) => allUsers.some((u) => u.id === item.id));
+          setRequests(validRealRequests);
+          localStorage.setItem("sf_connection_requests", JSON.stringify(validRealRequests));
         } catch (e) {
           console.error(e);
         }
+      } else {
+        setRequests([]);
       }
     }
-  }, []);
+  }, [allUsers]);
 
   const saveRequests = (updatedList: ConnectionRequestItem[]) => {
     setRequests(updatedList);
@@ -706,12 +702,14 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       );
                     })
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mb-2">
-                        <IconMessage className="w-6 h-6" />
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-700">No messages in this chat yet</h4>
-                      <p className="text-[11px] text-slate-500 max-w-xs mt-0.5">
+                    <div className="flex flex-col items-center justify-center h-full text-center p-6 select-none">
+                      <img
+                        src="https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png"
+                        alt="No messages illustration"
+                        className="w-44 h-auto object-contain mb-2 max-h-36"
+                      />
+                      <h4 className="text-sm font-extrabold text-slate-800">No messages in this chat yet</h4>
+                      <p className="text-xs text-slate-500 max-w-xs mt-1 font-medium">
                         Type a message below to start the conversation!
                       </p>
                     </div>
@@ -793,12 +791,14 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mb-3">
-                    <IconClock className="w-7 h-7" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-800">No pending invitations</h4>
-                  <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                <div className="flex flex-col items-center justify-center py-12 text-center select-none">
+                  <img
+                    src="https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png"
+                    alt="No pending requests illustration"
+                    className="w-48 h-auto object-contain mb-2 max-h-40"
+                  />
+                  <h4 className="text-sm font-extrabold text-slate-800">No pending invitations</h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs font-medium">
                     When other members send you connection requests, they will appear here for your approval.
                   </p>
                 </div>
@@ -849,17 +849,19 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mb-3">
-                    <IconUserCheck className="w-7 h-7" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-800">No connected friends yet</h4>
-                  <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                <div className="flex flex-col items-center justify-center py-12 text-center select-none">
+                  <img
+                    src="https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png"
+                    alt="No connected friends illustration"
+                    className="w-48 h-auto object-contain mb-2 max-h-40"
+                  />
+                  <h4 className="text-sm font-extrabold text-slate-800">No connected friends yet</h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs font-medium">
                     Accept pending requests or discover new members to build your network!
                   </p>
                   <button
                     onClick={() => setActiveTab("discover")}
-                    className="mt-4 bg-blue-600 text-white font-bold text-xs px-4 py-2 rounded-2xl hover:bg-blue-700 transition cursor-pointer"
+                    className="mt-4 bg-blue-600 text-white font-bold text-xs px-4 py-2 rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-xs border-0"
                   >
                     Discover Members
                   </button>
