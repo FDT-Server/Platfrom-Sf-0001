@@ -42,7 +42,14 @@ export default function LoginPage() {
         setError(data.error || "Login failed. Please try again.");
       } else {
         toast.success("Signed in successfully!");
-        router.push("/dashboard");
+        const userEmail = (data.user?.email || "").trim().toLowerCase();
+        if (userEmail === "webstrixx@gmail.com") {
+          router.push("/admin");
+        } else if (userEmail === "hrstudentforge@gmail.com") {
+          router.push("/sfadmin/dashboard");
+        } else {
+          router.push("/dashboard");
+        }
         router.refresh();
       }
     } catch (err) {

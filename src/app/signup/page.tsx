@@ -41,8 +41,8 @@ export default function SignupPage() {
       if (!res.ok) {
         setError(data.error || "Signup failed. Please try again.");
       } else {
-        toast.success("Account created successfully!");
-        router.push("/login");
+        toast.success("Account created successfully! Welcome to Studentforge.");
+        router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {
