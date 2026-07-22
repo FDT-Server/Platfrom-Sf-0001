@@ -14,43 +14,7 @@ export interface SuggestedUser {
   collegeStudying?: string | null;
 }
 
-const fallbackSuggested: SuggestedUser[] = [
-  {
-    id: "user-1",
-    fullName: "Kada Znapika Kumari",
-    selectedRole: "Aspiring Developer",
-    collegeStudying: "Computer Science",
-    profileImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kada%20Znapika%20Kumari&backgroundColor=b6e3f4,c0aede,d1d4f9",
-  },
-  {
-    id: "user-2",
-    fullName: "Paverasa Kumar",
-    selectedRole: "Software Engineer",
-    collegeStudying: "Information Tech",
-    profileImage: "https://api.dicebear.com/7.x/open-peeps/svg?seed=paverasa&backgroundColor=b6e3f4,c0aede,d1d4f9",
-  },
-  {
-    id: "user-3",
-    fullName: "Akshaya Reddy Metpally",
-    selectedRole: "Frontend Developer",
-    collegeStudying: "Web Systems",
-    profileImage: "https://api.dicebear.com/7.x/micah/svg?seed=Akshaya%20Reddy%20Metpally&backgroundColor=b6e3f4,c0aede,d1d4f9",
-  },
-  {
-    id: "user-4",
-    fullName: "Harshitha Reddy",
-    selectedRole: "Product Manager",
-    collegeStudying: "Design & UX",
-    profileImage: "https://api.dicebear.com/7.x/persona/svg?seed=Harshitha%20Reddy&backgroundColor=b6e3f4,c0aede,d1d4f9",
-  },
-  {
-    id: "user-5",
-    fullName: "Jashwanth Varma",
-    selectedRole: "Full Stack Engineer",
-    collegeStudying: "Data Science",
-    profileImage: "https://api.dicebear.com/7.x/bottts/svg?seed=Jashwanth&backgroundColor=b6e3f4,c0aede,d1d4f9",
-  },
-];
+const fallbackSuggested: SuggestedUser[] = [];
 
 const avatarGradients = [
   "from-blue-600 to-indigo-600 text-white",
@@ -188,58 +152,64 @@ export default function SuggestedConnectionsCard({ suggestedUsers }: SuggestedCo
 
       {/* Suggested Users List */}
       <div className="flex flex-col gap-2">
-        {usersToDisplay.map((userItem, index) => {
-          const isConnected = connectedIds.includes(userItem.id);
-          const gradientClass = avatarGradients[index % avatarGradients.length];
+        {usersToDisplay.length > 0 ? (
+          usersToDisplay.map((userItem, index) => {
+            const isConnected = connectedIds.includes(userItem.id);
+            const gradientClass = avatarGradients[index % avatarGradients.length];
 
-          return (
-            <div
-              key={userItem.id}
-              className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 transition duration-150 group"
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <UserAvatarItem
-                  src={userItem.profileImage}
-                  name={userItem.fullName}
-                  gradientClass={gradientClass}
-                />
-
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-slate-900 truncate leading-tight group-hover:text-blue-600 transition">
-                    {userItem.fullName}
-                  </h4>
-                  <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-                    {userItem.selectedRole || "Student Member"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <button
-                type="button"
-                onClick={() => handleConnect(userItem)}
-                disabled={isConnected}
-                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition duration-150 shrink-0 cursor-pointer flex items-center gap-1 shadow-2xs ${
-                  isConnected
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
-                    : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 active:scale-95"
-                }`}
+            return (
+              <div
+                key={userItem.id}
+                className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 transition duration-150 group"
               >
-                {isConnected ? (
-                  <>
-                    <IconCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Sent</span>
-                  </>
-                ) : (
-                  <>
-                    <IconUserPlus className="w-3.5 h-3.5" />
-                    <span>Connect</span>
-                  </>
-                )}
-              </button>
-            </div>
-          );
-        })}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <UserAvatarItem
+                    src={userItem.profileImage}
+                    name={userItem.fullName}
+                    gradientClass={gradientClass}
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-bold text-slate-900 truncate leading-tight group-hover:text-blue-600 transition">
+                      {userItem.fullName}
+                    </h4>
+                    <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+                      {userItem.selectedRole || "Student Member"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button
+                  type="button"
+                  onClick={() => handleConnect(userItem)}
+                  disabled={isConnected}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition duration-150 shrink-0 cursor-pointer flex items-center gap-1 shadow-2xs ${
+                    isConnected
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
+                      : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 active:scale-95"
+                  }`}
+                >
+                  {isConnected ? (
+                    <>
+                      <IconCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Sent</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconUserPlus className="w-3.5 h-3.5" />
+                      <span>Connect</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })
+        ) : (
+          <div className="p-4 text-center bg-slate-50 rounded-xl border border-slate-100">
+            <p className="text-xs text-slate-500 font-medium">No other registered members yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );

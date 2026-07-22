@@ -91,16 +91,23 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
 
   return (
     <div className="flex flex-col gap-4 relative">
-      {posts.map((post) => (
-        <FeedPostCard
-          key={post.id}
-          post={post}
-          currentUser={user}
-          onLikeToggle={handleLikeToggle}
-          onBookmarkToggle={handleBookmarkToggle}
-          onOpenCommentsDrawer={(postItem) => setActiveDrawerPost(postItem)}
-        />
-      ))}
+      {posts.length > 0 ? (
+        posts.map((post) => (
+          <FeedPostCard
+            key={post.id}
+            post={post}
+            currentUser={user}
+            onLikeToggle={handleLikeToggle}
+            onBookmarkToggle={handleBookmarkToggle}
+            onOpenCommentsDrawer={(postItem) => setActiveDrawerPost(postItem)}
+          />
+        ))
+      ) : !loading ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-xs">
+          <p className="text-sm font-bold text-slate-800">No posts in the community feed yet</p>
+          <p className="text-xs text-slate-500 mt-1">Be the first to share an update, ask a question, or start a discussion!</p>
+        </div>
+      ) : null}
 
       <FeedCommentDrawer
         post={activeDrawerPost}

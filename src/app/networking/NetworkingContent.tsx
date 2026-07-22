@@ -99,48 +99,7 @@ function getMemberImage(id: string, customImage?: string | null): string {
   return fallbackPortraits[index];
 }
 
-const initialDefaultRequests: ConnectionRequestItem[] = [
-  {
-    id: "req-1",
-    fullName: "Sienna Brooks",
-    selectedRole: "Student Developer",
-    collegeStudying: "Computer Science",
-    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600&h=600",
-    status: "PENDING",
-    sentAt: "12m ago",
-    incoming: true,
-  },
-  {
-    id: "req-2",
-    fullName: "Kada Znapika Kumari",
-    selectedRole: "Aspiring Developer",
-    collegeStudying: "Computer Science",
-    profileImage: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600&h=600",
-    status: "PENDING",
-    sentAt: "10m ago",
-    incoming: true,
-  },
-  {
-    id: "req-3",
-    fullName: "Paverasa Kumar",
-    selectedRole: "Software Engineer",
-    collegeStudying: "Information Tech",
-    profileImage: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600&h=600",
-    status: "PENDING",
-    sentAt: "1h ago",
-    incoming: true,
-  },
-  {
-    id: "req-4",
-    fullName: "Akshaya Reddy Metpally",
-    selectedRole: "Frontend Developer",
-    collegeStudying: "Web Systems",
-    profileImage: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600&h=600",
-    status: "ACCEPTED",
-    sentAt: "Yesterday",
-    incoming: false,
-  },
-];
+const initialDefaultRequests: ConnectionRequestItem[] = [];
 
 interface MemberCardProps {
   id: string;
