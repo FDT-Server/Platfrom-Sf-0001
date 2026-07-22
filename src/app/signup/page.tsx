@@ -63,20 +63,18 @@ export default function SignupPage() {
 
   return (
     <AuthLayout>
-      {/* Heading */}
       <div className="mb-7">
         <h1 className="text-[28px] font-bold text-slate-900 tracking-tight leading-tight">Create Account</h1>
         <p className="text-sm text-slate-500 mt-1.5">Fill in your details to get started.</p>
       </div>
 
-      {/* Error */}
+      {}
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-xs rounded-2xl px-4 py-3">
           {error}
         </div>
       )}
 
-      {/* Google */}
       <button
         type="button"
         className="w-full flex items-center justify-center gap-2.5 bg-white border border-slate-400 px-5 py-3.5 rounded-full text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-500 transition cursor-pointer shadow-sm mb-4"
@@ -99,12 +97,10 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Form */}
       <form
         className="space-y-3"
         onSubmit={(e) => { e.preventDefault(); if (isFormValid) handleSignupSubmit(); }}
       >
-        {/* Full Name */}
         <input
           type="text"
           id="full-name"
@@ -115,8 +111,6 @@ export default function SignupPage() {
           placeholder="Full name"
           className="w-full px-5 py-3.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-500"
         />
-
-        {/* Email */}
         <input
           type="email"
           id="email"
@@ -128,8 +122,6 @@ export default function SignupPage() {
           placeholder="Email address"
           className="w-full px-5 py-3.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-500"
         />
-
-        {/* Password */}
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
@@ -151,7 +143,7 @@ export default function SignupPage() {
           </button>
         </div>
 
-        {/* Password strength hints */}
+        {}
         {password.length > 0 && (
           <div className="flex gap-2 px-2">
             {[

@@ -11,7 +11,6 @@ export default async function VideoLecturesPage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {

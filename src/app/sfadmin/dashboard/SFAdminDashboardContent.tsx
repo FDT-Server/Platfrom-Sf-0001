@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { 
-  IconShieldLock, 
-  IconReceipt, 
-  IconCalendarEvent, 
-  IconLibrary, 
-  IconSchool, 
-  IconAward 
+import {
+  IconShieldLock,
+  IconReceipt,
+  IconCalendarEvent,
+  IconLibrary,
+  IconSchool,
+  IconAward
 } from "@tabler/icons-react";
 
 interface PaymentRequestInfo {
@@ -96,23 +96,20 @@ export default function SFAdminDashboardContent({
   initialCourses,
   initialCertificates,
 }: SFAdminDashboardContentProps) {
-  
+
   const [activeTab, setActiveTab] = useState<"payments" | "events" | "resources" | "courses" | "certificates">("payments");
 
-  
   const [requests, setRequests] = useState<PaymentRequestInfo[]>(paymentRequests);
   const [events, setEvents] = useState<EventInfo[]>(initialEvents);
   const [resources, setResources] = useState<ResourceInfo[]>(initialResources);
   const [courses, setCourses] = useState<CourseInfo[]>(initialCourses);
   const [certificates, setCertificates] = useState<CertificateInfo[]>(initialCertificates);
 
-  
   const [approvingIds, setApprovingIds] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  
   const [eventForm, setEventForm] = useState({
     title: "",
     description: "",
@@ -149,7 +146,6 @@ export default function SFAdminDashboardContent({
     link: "",
   });
 
-  
   const handleApprovePayment = async (requestId: string, userId: string) => {
     if (approvingIds[requestId]) return;
     setApprovingIds((prev) => ({ ...prev, [requestId]: true }));
@@ -181,7 +177,6 @@ export default function SFAdminDashboardContent({
     }
   };
 
-  
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -336,7 +331,7 @@ export default function SFAdminDashboardContent({
     <DashboardLayout user={adminUser}>
       <div className="flex h-fit w-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn relative">
         <div>
-          
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-6 border-b border-slate-100 gap-4">
             <div>
               <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit border border-amber-205">
@@ -348,7 +343,6 @@ export default function SFAdminDashboardContent({
               </h3>
             </div>
 
-            
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 font-medium text-slate-600 flex items-center gap-1">
                 <strong>{requests.filter(r => r.status === "PENDING").length}</strong> Pending Payments
@@ -362,7 +356,6 @@ export default function SFAdminDashboardContent({
             </div>
           </div>
 
-          
           {error && (
             <div className="mt-4 bg-red-50 border border-red-200 text-red-650 text-xs rounded-xl p-3 font-semibold">
               {error}
@@ -374,7 +367,6 @@ export default function SFAdminDashboardContent({
             </div>
           )}
 
-          
           <div className="flex flex-wrap gap-2 border-b border-slate-100 py-4 mt-2">
             <button
               onClick={() => { setActiveTab("payments"); setError(""); setSuccess(""); }}
@@ -423,9 +415,8 @@ export default function SFAdminDashboardContent({
             </button>
           </div>
 
-          
           <div className="mt-6">
-            
+
             {activeTab === "payments" && (
               <div className="w-full overflow-x-auto border border-slate-200 rounded-xl">
                 <table className="w-full min-w-[950px] text-left border-collapse">
@@ -499,10 +490,9 @@ export default function SFAdminDashboardContent({
               </div>
             )}
 
-            
             {activeTab === "events" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <div className="lg:col-span-1 border border-slate-200 rounded-xl p-5 bg-slate-50/50">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Add Event Details</h4>
                   <form onSubmit={handleAddEvent} className="space-y-3 text-xs">
@@ -650,7 +640,6 @@ export default function SFAdminDashboardContent({
                   </form>
                 </div>
 
-                
                 <div className="lg:col-span-2 space-y-4">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Existing Events ({events.length})</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -683,10 +672,9 @@ export default function SFAdminDashboardContent({
               </div>
             )}
 
-            
             {activeTab === "resources" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <div className="lg:col-span-1 border border-slate-200 rounded-xl p-5 bg-slate-50/50 h-fit">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Add Resource</h4>
                   <form onSubmit={handleAddResource} className="space-y-4 text-xs">
@@ -748,7 +736,6 @@ export default function SFAdminDashboardContent({
                   </form>
                 </div>
 
-                
                 <div className="lg:col-span-2 space-y-4">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Existing Resources ({resources.length})</h4>
                   <div className="w-full overflow-x-auto border border-slate-200 rounded-xl">
@@ -791,10 +778,9 @@ export default function SFAdminDashboardContent({
               </div>
             )}
 
-            
             {activeTab === "courses" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <div className="lg:col-span-1 border border-slate-200 rounded-xl p-5 bg-slate-50/50 h-fit">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Add Course</h4>
                   <form onSubmit={handleAddCourse} className="space-y-4 text-xs">
@@ -862,7 +848,6 @@ export default function SFAdminDashboardContent({
                   </form>
                 </div>
 
-                
                 <div className="lg:col-span-2 space-y-4">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Existing Courses ({courses.length})</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -887,10 +872,9 @@ export default function SFAdminDashboardContent({
               </div>
             )}
 
-            
             {activeTab === "certificates" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <div className="lg:col-span-1 border border-slate-200 rounded-xl p-5 bg-slate-50/50 h-fit">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">Add Certificate Option</h4>
                   <form onSubmit={handleAddCertificate} className="space-y-4 text-xs">
@@ -946,7 +930,6 @@ export default function SFAdminDashboardContent({
                   </form>
                 </div>
 
-                
                 <div className="lg:col-span-2 space-y-4">
                   <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Existing Certificates ({certificates.length})</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

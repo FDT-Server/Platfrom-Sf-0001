@@ -65,7 +65,7 @@ export default function FeedPostCard({
     : "SF";
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // If user clicked inside a button or link, do not navigate
+
     const target = e.target as HTMLElement;
     if (target.closest("button") || target.closest("a") || target.closest("input")) {
       return;

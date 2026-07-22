@@ -35,7 +35,6 @@ export default function ResumePreview({ parsedData, fileName = "Resume.pdf" }: R
     ? (rawText.match(new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")) || []).length
     : 0;
 
-  // Helper to highlight matching text query
   const renderHighlightedText = (text: string) => {
     if (!searchQuery.trim()) return text;
     const parts = text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));

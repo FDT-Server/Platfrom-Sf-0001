@@ -21,7 +21,6 @@ export default function ExperienceAnalysis({ experience }: ExperienceAnalysisPro
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
@@ -43,9 +42,7 @@ export default function ExperienceAnalysis({ experience }: ExperienceAnalysisPro
         </div>
       </div>
 
-      {/* Grid Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Years of Experience */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span className="flex items-center gap-1.5">
@@ -59,7 +56,6 @@ export default function ExperienceAnalysis({ experience }: ExperienceAnalysisPro
           <p className="text-[11px] text-slate-500 mt-1">Matches Mid-Senior engineering profiles</p>
         </div>
 
-        {/* Quantified Achievements */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span className="flex items-center gap-1.5">
@@ -73,7 +69,6 @@ export default function ExperienceAnalysis({ experience }: ExperienceAnalysisPro
           <p className="text-[11px] text-slate-500 mt-1">Percentages and latency benchmarks present</p>
         </div>
 
-        {/* Leadership Indicators */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500">
             <span className="flex items-center gap-1.5">
@@ -88,7 +83,6 @@ export default function ExperienceAnalysis({ experience }: ExperienceAnalysisPro
         </div>
       </div>
 
-      {/* Detailed Recommendations */}
       <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
           <IconFlame className="w-4 h-4 text-amber-500" /> Key Action Items for Experience Section

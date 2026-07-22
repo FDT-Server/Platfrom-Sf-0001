@@ -29,7 +29,6 @@ export default function AdminForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
-  
   const adminEmail = "webstrixx@gmail.com";
 
   const handleRequestOtp = async (e: React.FormEvent) => {
@@ -218,7 +217,6 @@ export default function AdminForgotPasswordPage() {
           </div>
         )}
 
-        
         <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-8">
           <Link href="/admin/login" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition">
             Back to Admin Login

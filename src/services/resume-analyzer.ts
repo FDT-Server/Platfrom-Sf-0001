@@ -61,10 +61,6 @@ const SOFT_KEYWORD_LIST = [
   "Agile", "Mentorship", "Technical Writing"
 ];
 
-
-/**
- * Main Orchestrator for Resume Analysis
- */
 export async function analyzeResume(
   file: File | { name: string; size: number; type: string; textContent?: string }
 ): Promise<ResumeAnalysisResult> {
@@ -74,31 +70,26 @@ export async function analyzeResume(
 
   const textLower = parsedData.rawText.toLowerCase();
 
-  // Detect Technical Skills
   const detectedTech = TECH_KEYWORD_LIST.filter((k) => textLower.includes(k.toLowerCase()));
   const missingTech = TECH_KEYWORD_LIST.filter((k) => !textLower.includes(k.toLowerCase())).slice(0, 5);
   const suggestedTech = ["System Design", "CI/CD Automation", "Microservices", "Cloud Security"].filter(
     (k) => !detectedTech.includes(k)
   );
 
-  // Detect Soft Skills
   const detectedSoft = SOFT_KEYWORD_LIST.filter((k) => textLower.includes(k.toLowerCase()));
   const missingSoft = SOFT_KEYWORD_LIST.filter((k) => !textLower.includes(k.toLowerCase())).slice(0, 3);
   const suggestedSoft = ["Stakeholder Management", "Agile Leadership"].filter(
     (k) => !detectedSoft.includes(k)
   );
 
-  // Industry Skills
   const detectedIndustry = ["RESTful API Design", "Web Applications", "Database Management"].filter(
     (k) => textLower.includes(k.toLowerCase()) || detectedTech.length > 2
   );
 
-  // Count Action Verbs & Metrics in uploaded rawText
   const actionVerbs = ["engineered", "built", "developed", "architected", "spearheaded", "designed", "led", "managed", "migrated", "automated", "created", "reduced", "improved"];
   const foundVerbs = actionVerbs.filter((v) => textLower.includes(v));
   const metricsMatches = parsedData.rawText.match(/\d+%/g) || parsedData.rawText.match(/\$\d+/g) || [];
 
-  // Dynamic Content Score
   let contentScore = 70;
   if (foundVerbs.length >= 4) contentScore += 10;
   if (metricsMatches.length >= 2) contentScore += 10;
@@ -143,7 +134,6 @@ export async function analyzeResume(
     },
   };
 
-  // Experience Analysis
   const expBullets = parsedData.sections.experience.bulletPoints.length;
   const expScore = Math.min(95, 70 + expBullets * 5);
   const experience: DetailedAnalysisSection = {

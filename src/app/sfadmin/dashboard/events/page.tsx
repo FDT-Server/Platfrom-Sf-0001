@@ -35,7 +35,6 @@ export default async function SFAdminEventsPage() {
     redirect("/dashboard");
   }
 
-  
   const events = await prisma.event.findMany({
     orderBy: { createdAt: "desc" },
   });

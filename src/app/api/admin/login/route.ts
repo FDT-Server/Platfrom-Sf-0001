@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    
     if (email.trim().toLowerCase() !== "webstrixx@gmail.com") {
       return NextResponse.json(
         { error: "Access denied: Unauthorized admin email." },
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       if (email === "webstrixx@gmail.com") {
-        
+
         user = await prisma.user.create({
           data: {
             email: "webstrixx@gmail.com",
@@ -53,14 +52,13 @@ export async function POST(req: Request) {
       );
     }
 
-    
     const cookieStore = await cookies();
     cookieStore.set({
       name: "session",
       value: user.id,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, 
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
       sameSite: "lax",
     });

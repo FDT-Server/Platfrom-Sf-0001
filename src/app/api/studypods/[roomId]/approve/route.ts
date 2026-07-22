@@ -33,7 +33,6 @@ export async function POST(
       return NextResponse.json({ error: "Study Pod not found" }, { status: 404 });
     }
 
-    
     if (studyPod.creatorId !== user.id) {
       return NextResponse.json(
         { error: "Only the host creator can approve participants" },
@@ -72,7 +71,6 @@ export async function POST(
       waitingList = [];
     }
 
-    
     const updatedWaitingList = waitingList.filter((w) => w.id !== targetUserId);
 
     if (action === "accept") {

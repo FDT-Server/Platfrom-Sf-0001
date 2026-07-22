@@ -34,7 +34,7 @@ export interface ChatMessage {
 interface ChatContextType {
   isOpen: boolean;
   isMinimized: boolean;
-  activeChatUserId: string | null | undefined; // null represents General Chatroom, undefined represents chat list view
+  activeChatUserId: string | null | undefined;
   openChat: (userId: string | null | undefined) => void;
   closeChat: () => void;
   toggleChat: () => void;
@@ -67,48 +67,44 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [activeChatUserId, setActiveChatUserId] = useState<string | null | undefined>(undefined);
-  
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [allUsers, setAllUsers] = useState<UserCompact[]>([]);
   const [currentUser, setCurrentUser] = useState<UserCompact | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
-  
+
   const [connections, setConnections] = useState<string[]>([]);
   const [sentRequests, setSentRequests] = useState<string[]>([]);
   const [activeProfilePreview, setActiveProfilePreview] = useState<UserCompact | null>(null);
-  
+
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
 
-  // Sound element for notification
   const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
   const prevMessagesRef = useRef<ChatMessage[]>([]);
 
-  // Load state from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedConnections = localStorage.getItem("sf_connections");
       const storedRequests = localStorage.getItem("sf_sent_requests");
-      
+
       if (storedConnections) setConnections(JSON.parse(storedConnections));
       if (storedRequests) setSentRequests(JSON.parse(storedRequests));
-      
+
       const lastActive = localStorage.getItem("sf_last_active_chat");
       if (lastActive) {
         setActiveChatUserId(lastActive === "general" ? null : lastActive);
       }
-      
-      // Setup notification sound (using a clean public URL or simple synth tone if not loaded)
+
       notificationAudioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav");
       notificationAudioRef.current.volume = 0.4;
     }
   }, []);
 
-  // Fetch current user and user directory
   const fetchUsers = async () => {
     try {
-      // Get logged in user profile
+
       const profRes = await fetch("/api/profile");
       if (profRes.ok) {
         const profData = await profRes.json();
@@ -117,14 +113,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Get all users
       const usersRes = await fetch("/api/users");
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         if (usersData.success && usersData.users) {
           setAllUsers(usersData.users);
-          
-          // Randomly assign online status to a subset of users
+
           const onlineIds = usersData.users
             .filter((u: any, idx: number) => idx % 3 === 0)
             .map((u: any) => u.id);
@@ -142,11 +136,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     fetchUsers();
   }, []);
 
-  // Fetch messages
   const fetchMessages = useCallback(async (showLoading = false) => {
     if (!currentUser) return;
     try {
-      // Include activeChatUserId in request so server marks them seen
+
       const queryParam = activeChatUserId ? activeChatUserId : "null";
       const res = await fetch(`/api/messages?activeChatUserId=${queryParam}&t=${Date.now()}`, {
         cache: "no-store",
@@ -159,28 +152,28 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         const newMsgs: ChatMessage[] = data.messages || [];
-        
+
         // Play sound and show toast notification for new private messages
         if (prevMessagesRef.current.length > 0 && newMsgs.length > prevMessagesRef.current.length) {
           const addedMsgs = newMsgs.filter(
             (nm) => !prevMessagesRef.current.some((pm) => pm.id === nm.id)
           );
-          
+
           addedMsgs.forEach((msg) => {
             // Is it a private message to me, and from someone else?
             const isPrivateToMe = msg.recipientId === currentUser.id;
             const isNotFromMe = msg.userId !== currentUser.id;
-            
+
             if (isPrivateToMe && isNotFromMe) {
               // If the chat drawer is closed or minimizing or active chat is with someone else
               const isNotActiveChat = activeChatUserId !== msg.userId || !isOpen || isMinimized;
-              
+
               if (isNotActiveChat) {
                 // Play audio notification
                 if (notificationAudioRef.current) {
                   notificationAudioRef.current.play().catch(() => {});
                 }
-                
+
                 // Show standard notification toast
                 toast.info(`New message from ${msg.fullName}`, {
                   description: msg.content.length > 60 ? `${msg.content.substring(0, 60)}...` : msg.content,
@@ -197,7 +190,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             }
           });
         }
-        
+
         setMessages(newMsgs);
         prevMessagesRef.current = newMsgs;
       }
@@ -210,7 +203,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!currentUser) return;
     fetchMessages(true);
-    
+
     const interval = setInterval(() => {
       fetchMessages(false);
     }, 1500);
@@ -304,19 +297,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 `That's a great question. Let's discuss it in our study pod.`,
               ];
               const randomReply = simulatedReplies[Math.floor(Math.random() * simulatedReplies.length)];
-              
-              // Post message from the recipient to the current user
+
               try {
                 await fetch("/api/messages", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  // Simple hack: We call api/messages from recipient but since our API endpoint requires auth,
-                  // we simulate a local message insertion or let it stay client-only unless we mock it.
-                  // For a realistic demo, we can fetch an endpoint or insert it locally in messages state.
-                  // Let's insert a beautiful mockup message in local state so it appears in the chat feed!
+
                 });
-                
-                // Let's generate a temporary mock message and append it locally for simulation
+
                 const mockMsg: ChatMessage = {
                   id: Math.random().toString(),
                   content: randomReply,
@@ -328,10 +316,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                   createdAt: new Date().toISOString(),
                   seenBy: {}
                 };
-                
+
                 setMessages(prev => [...prev, mockMsg]);
-                
-                // Play notification audio
+
                 if (notificationAudioRef.current) {
                   notificationAudioRef.current.play().catch(() => {});
                 }
@@ -350,7 +337,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // React to a message
   const reactToMessage = async (messageId: string, emoji: string) => {
     if (!currentUser) return;
     try {
@@ -369,7 +355,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const existingReaction = currentReactions[currentUser.id];
       const targetEmoji = existingReaction?.emoji === emoji ? null : emoji;
 
-      // Update state locally first (optimistic UI updates)
       setMessages((prev) =>
         prev.map((m) => {
           if (m.id === messageId) {
@@ -385,7 +370,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         })
       );
 
-      // Perform API call
       const res = await fetch(`/api/messages/${messageId}/react`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -447,7 +431,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // Send connection request
   const sendConnectRequest = (userId: string) => {
     if (sentRequests.includes(userId) || connections.includes(userId)) return;
-    
+
     const updatedRequests = [...sentRequests, userId];
     setSentRequests(updatedRequests);
     if (typeof window !== "undefined") {
@@ -481,10 +465,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const removeConnection = (userId: string) => {
     const updatedConnections = connections.filter((id) => id !== userId);
     const updatedRequests = sentRequests.filter((id) => id !== userId);
-    
+
     setConnections(updatedConnections);
     setSentRequests(updatedRequests);
-    
+
     if (typeof window !== "undefined") {
       localStorage.setItem("sf_connections", JSON.stringify(updatedConnections));
       localStorage.setItem("sf_sent_requests", JSON.stringify(updatedRequests));

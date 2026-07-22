@@ -55,23 +55,19 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      {/* Heading */}
       <div className="mb-7">
         <h1 className="text-[28px] font-bold text-slate-900 tracking-tight leading-tight">Login</h1>
         <p className="text-sm text-slate-500 mt-1.5">Enter your credentials to access the platform.</p>
       </div>
 
-
-      {/* Error */}
+      {}
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-xs rounded-2xl px-4 py-3">
           {error}
         </div>
       )}
 
-      {/* Form */}
       <form className="space-y-3.5" onSubmit={handleLoginSubmit}>
-        {/* Email */}
         <input
           type="email"
           id="login-email"
@@ -82,8 +78,6 @@ export default function LoginPage() {
           placeholder="Enter your email"
           className="w-full px-5 py-3.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-500"
         />
-
-        {/* Password */}
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
@@ -104,14 +98,12 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Forgot password */}
         <div className="flex justify-end">
           <Link href="/login/forgot" className="text-xs font-medium text-blue-600 hover:text-blue-700 transition">
             Forgot password?
           </Link>
         </div>
 
-        {/* Terms */}
         <div className="flex items-start gap-2 pt-1">
           <input
             type="checkbox"
@@ -127,7 +119,6 @@ export default function LoginPage() {
           </label>
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={!email || !password || loading}
@@ -137,7 +128,6 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Google */}
       <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
@@ -160,7 +150,6 @@ export default function LoginPage() {
         Continue with Google
       </button>
 
-      {/* Sign up link */}
       <p className="text-center text-[12px] text-slate-500 mt-6">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="text-blue-600 font-semibold hover:text-blue-700 transition">

@@ -14,7 +14,6 @@ export default async function SFAdminDashboardPage() {
     redirect("/sfadmin");
   }
 
-  
   const adminUser = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -24,7 +23,6 @@ export default async function SFAdminDashboardPage() {
     },
   });
 
-  
   if (!adminUser) {
     redirect("/sfadmin");
   }
@@ -37,7 +35,6 @@ export default async function SFAdminDashboardPage() {
     redirect("/dashboard");
   }
 
-  
   const paymentRequests = await prisma.paymentRequest.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -48,7 +45,6 @@ export default async function SFAdminDashboardPage() {
     updatedAt: req.updatedAt.toISOString(),
   }));
 
-  
   const courseEnrollments = await prisma.courseEnrollment.findMany({
     orderBy: { createdAt: "desc" },
     include: {

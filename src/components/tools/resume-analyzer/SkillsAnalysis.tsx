@@ -39,7 +39,6 @@ export default function SkillsAnalysis({ skills }: SkillsAnalysisProps) {
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
@@ -53,7 +52,6 @@ export default function SkillsAnalysis({ skills }: SkillsAnalysisProps) {
           </p>
         </div>
 
-        {/* Category Tabs */}
         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
           {(["technical", "soft", "industry"] as const).map((tabKey) => {
             const Icon = categoryMap[tabKey].icon;

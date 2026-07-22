@@ -35,7 +35,6 @@ export default async function SFAdminResourcesPage() {
     redirect("/dashboard");
   }
 
-  
   const resources = await prisma.resource.findMany({
     orderBy: { createdAt: "desc" },
   });

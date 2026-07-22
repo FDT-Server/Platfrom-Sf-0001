@@ -35,7 +35,6 @@ export default async function SFAdminCoursesPage() {
     redirect("/dashboard");
   }
 
-  
   const courses = await prisma.course.findMany({
     orderBy: { createdAt: "desc" },
   });

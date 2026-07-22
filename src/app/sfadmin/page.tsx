@@ -25,7 +25,7 @@ export default function SFAdminLoginPage() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
+
   const [view, setView] = useState<"login" | "forgot-request" | "forgot-reset" | "success">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -39,7 +39,6 @@ export default function SFAdminLoginPage() {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    
     if (normalizedEmail !== "hrstudentforge@gmail.com") {
       setError("Access denied: Unauthorized admin email.");
       return;
@@ -78,7 +77,6 @@ export default function SFAdminLoginPage() {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    
     if (normalizedEmail !== "hrstudentforge@gmail.com") {
       setError("Access denied: Password recovery is restricted to hrstudentforge@gmail.com.");
       setLoading(false);
@@ -152,7 +150,7 @@ export default function SFAdminLoginPage() {
   return (
     <AppLayout mode="login">
       <div className="flex flex-col justify-between h-full w-full max-w-md animate-fadeIn">
-        
+
         {view === "login" && (
           <div className="space-y-6 flex-1">
             <div>
@@ -194,7 +192,7 @@ export default function SFAdminLoginPage() {
                   <label htmlFor="admin-password" className="text-[10px] font-bold text-slate-700 block uppercase tracking-wider">
                     Admin Password
                   </label>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       setError("");
@@ -369,17 +367,16 @@ export default function SFAdminLoginPage() {
           </div>
         )}
 
-        
         <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-8">
           {view === "login" ? (
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition"
             >
               User Login Portal
             </Link>
           ) : (
-            <button 
+            <button
               type="button"
               onClick={() => {
                 setError("");

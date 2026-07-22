@@ -16,12 +16,9 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row font-sans bg-white">
 
-      {/* ── LEFT PANEL ─────────────────────────────────────────────────── */}
       <div className="hidden lg:flex lg:w-[52%] bg-[#f0ebe0] flex-col p-10 xl:p-12 overflow-hidden justify-between">
 
-        {/* Top Header & Quote */}
         <div className="shrink-0 space-y-6">
-          {/* Brand with Separator */}
           <div className="flex items-center gap-3">
             <img
               src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858"
@@ -34,7 +31,7 @@ export default function AuthLayout({
             </span>
           </div>
 
-          {/* Quote Section (Hidden if hideQuote is true) */}
+          {}
           {!hideQuote && (
             <div className="pt-2 max-w-md mx-auto text-center flex flex-col items-center">
               <svg
@@ -54,7 +51,6 @@ export default function AuthLayout({
           )}
         </div>
 
-        {/* Illustration Area */}
         <div className="flex-1 flex items-center justify-center py-2" suppressHydrationWarning>
           {illustrationUrl ? (
             <img
@@ -72,13 +68,11 @@ export default function AuthLayout({
           )}
         </div>
 
-        {/* Footer — Full Legal Entity Name */}
         <p className="text-[11px] text-slate-500 font-mono shrink-0 text-center">
           © 2026 Student Forge Technologies Private Limited. All Rights Reserved.
         </p>
       </div>
 
-      {/* ── RIGHT PANEL ────────────────────────────────────────────────── */}
       <div className="flex-1 bg-white flex flex-col items-center justify-center px-8 py-12 sm:px-12 lg:px-16 overflow-y-auto">
         <div className="w-full max-w-sm">
           {children}

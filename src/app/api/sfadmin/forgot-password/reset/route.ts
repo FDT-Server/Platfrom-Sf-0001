@@ -15,7 +15,6 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    
     if (normalizedEmail !== "hrstudentforge@gmail.com") {
       return NextResponse.json(
         { error: "Access denied: Unauthorized admin email." },
@@ -23,7 +22,6 @@ export async function POST(req: Request) {
       );
     }
 
-    
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -35,7 +33,6 @@ export async function POST(req: Request) {
       );
     }
 
-    
     if (!user.otpCode || user.otpCode !== otp.trim()) {
       return NextResponse.json(
         { error: "Invalid OTP verification code. Please check and try again." },
@@ -43,7 +40,6 @@ export async function POST(req: Request) {
       );
     }
 
-    
     if (!user.otpExpiry || new Date() > user.otpExpiry) {
       return NextResponse.json(
         { error: "OTP code has expired. Please request a new verification code." },
@@ -51,10 +47,8 @@ export async function POST(req: Request) {
       );
     }
 
-    
     const hashedPassword = hashPassword(password);
 
-    
     await prisma.user.update({
       where: { id: user.id },
       data: {

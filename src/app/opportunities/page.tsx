@@ -27,7 +27,6 @@ export default async function OpportunitiesPage() {
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
 
-        
         <div className="pb-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit border border-amber-200">
@@ -46,7 +45,6 @@ export default async function OpportunitiesPage() {
           )}
         </div>
 
-        
         {opportunities.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 mt-8">
             {opportunities.map((opp) => {
@@ -59,7 +57,7 @@ export default async function OpportunitiesPage() {
                   key={opp.id}
                   className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-slate-200 bg-white hover:border-amber-300 hover:shadow-xs transition duration-150 gap-4"
                 >
-                  
+
                   <div className="flex items-start gap-4">
                     {opp.imageUrl ? (
                       <img
@@ -91,7 +89,6 @@ export default async function OpportunitiesPage() {
 
                       <p className="text-xs text-slate-600 mt-2 max-w-2xl leading-relaxed">{opp.description}</p>
 
-                      
                       {tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {tags.map((tag, i) => (
@@ -104,7 +101,6 @@ export default async function OpportunitiesPage() {
                     </div>
                   </div>
 
-                  
                   <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center border-t border-dashed border-slate-200 md:border-0 pt-4 md:pt-0 shrink-0 gap-3">
                     <div className="flex flex-col md:items-end">
                       <span className="text-xs font-bold text-slate-700">{opp.compensation}</span>
@@ -129,7 +125,7 @@ export default async function OpportunitiesPage() {
             })}
           </div>
         ) : (
-          
+
           <div className="flex flex-col items-center justify-center py-24 mt-4">
             <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-4">
               <IconBriefcase className="w-7 h-7 text-amber-500" />

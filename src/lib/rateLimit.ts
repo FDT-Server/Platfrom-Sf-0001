@@ -18,19 +18,12 @@ if (REDIS_URL) {
 }
 
 interface LeakyBucketOptions {
-  capacity: number; // Maximum burst capacity of the bucket
-  leakRate: number; // Leaks per second (e.g. 2 means 2 requests allowed per second)
+  capacity: number;
+  leakRate: number;
 }
 
-// In-memory fallback if Redis is unavailable or unconfigured
 const memoryBucket = new Map<string, { level: number; lastUpdated: number }>();
 
-// Atomic Lua script for Leaky Bucket in Redis
-// KEYS[1]: Rate limit key (e.g. rate:ip)
-// ARGV[1]: Current timestamp in seconds (floating point/decimal)
-// ARGV[2]: Leak rate (tokens leaked per second)
-// ARGV[3]: Bucket capacity (burst size)
-// ARGV[4]: Cost of request (usually 1)
 const LUA_LEAKY_BUCKET = `
   local key = KEYS[1]
   local now = tonumber(ARGV[1])

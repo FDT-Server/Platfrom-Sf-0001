@@ -12,7 +12,6 @@ export default async function PlansPage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -39,8 +38,7 @@ export default async function PlansPage() {
   return (
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-300 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
-        
-        
+
         <div className="pb-6 border-b border-slate-300">
           <span className="text-xs font-bold text-blue-600 bg-blue-50/60 px-2.5 py-1 rounded-md">
             Premium Subscription
@@ -53,10 +51,8 @@ export default async function PlansPage() {
           </p>
         </div>
 
-        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          
-          
+
           <div className="flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs hover:border-slate-300 transition duration-150 p-6 justify-between min-h-[350px]">
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
@@ -64,12 +60,12 @@ export default async function PlansPage() {
               </span>
               <h4 className="text-xl font-extrabold text-slate-800 mt-4">Free Plan</h4>
               <p className="text-xs text-slate-500 mt-1">Access to standard portal tracks.</p>
-              
+
               <div className="mt-5 flex items-baseline text-slate-800">
                 <span className="text-3xl font-black">₹0</span>
                 <span className="ml-1 text-xs font-semibold text-slate-500">/ forever</span>
               </div>
-              
+
               <ul className="mt-6 space-y-2.5 text-xs text-slate-650 font-medium">
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">check_circle</span>
@@ -85,13 +81,12 @@ export default async function PlansPage() {
                 </li>
               </ul>
             </div>
-            
+
             <button disabled className="mt-8 w-full bg-slate-100 text-slate-400 rounded-xl py-2.5 text-center text-xs font-bold transition select-none cursor-not-allowed">
               Default Tier
             </button>
           </div>
 
-          
           <div className="flex flex-col rounded-2xl border border-blue-200 bg-white overflow-hidden shadow-xs hover:border-blue-300 transition duration-150 p-6 justify-between min-h-[350px] relative">
             <div className="absolute top-4 right-4 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[9px] font-bold px-2 py-0.5 uppercase tracking-wide">
               Popular
@@ -102,12 +97,12 @@ export default async function PlansPage() {
               </span>
               <h4 className="text-xl font-extrabold text-slate-800 mt-4">Monthly Premium</h4>
               <p className="text-xs text-slate-500 mt-1">Accelerate your training track monthly.</p>
-              
+
               <div className="mt-5 flex items-baseline text-slate-800">
                 <span className="text-3xl font-black">₹49</span>
                 <span className="ml-1 text-xs font-semibold text-slate-500">/ month</span>
               </div>
-              
+
               <ul className="mt-6 space-y-2.5 text-xs text-slate-650 font-medium">
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">check_circle</span>
@@ -123,13 +118,12 @@ export default async function PlansPage() {
                 </li>
               </ul>
             </div>
-            
+
             <Link href="/payment?plan=monthly" className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-center text-xs font-bold transition shadow-2xs hover:shadow-xs block select-none">
               Choose Monthly
             </Link>
           </div>
 
-          
           <div className="flex flex-col rounded-2xl border border-amber-300 bg-linear-to-b from-amber-50/30 to-white overflow-hidden shadow-2xs hover:border-amber-400 transition duration-150 p-6 justify-between min-h-[350px] relative">
             <div className="absolute top-4 right-4 bg-amber-100 text-amber-800 border border-amber-250 rounded-md text-[9px] font-bold px-2 py-0.5 uppercase tracking-wide">
               Best Value
@@ -140,12 +134,12 @@ export default async function PlansPage() {
               </span>
               <h4 className="text-xl font-extrabold text-slate-800 mt-4">Yearly Premium</h4>
               <p className="text-xs text-slate-500 mt-1">Get dedicated annual benefits & save.</p>
-              
+
               <div className="mt-5 flex items-baseline text-slate-800">
                 <span className="text-3xl font-black">₹499</span>
                 <span className="ml-1 text-xs font-semibold text-slate-500">/ year</span>
               </div>
-              
+
               <ul className="mt-6 space-y-2.5 text-xs text-slate-650 font-medium">
                 <li className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-emerald-600 font-bold">check_circle</span>
@@ -161,7 +155,7 @@ export default async function PlansPage() {
                 </li>
               </ul>
             </div>
-            
+
             <Link href="/payment?plan=yearly" className="mt-8 w-full bg-slate-900 hover:bg-black text-white border border-slate-950 rounded-xl py-2.5 text-center text-xs font-bold transition shadow-xs block select-none">
               Choose Yearly
             </Link>
@@ -169,7 +163,6 @@ export default async function PlansPage() {
 
         </div>
 
-        
         <div className="mt-12 border-t border-slate-200 pt-10">
           <h4 className="text-base font-extrabold text-slate-800 mb-6">Compare Plans Features</h4>
           <div className="w-full overflow-x-auto border border-slate-200 rounded-xl">

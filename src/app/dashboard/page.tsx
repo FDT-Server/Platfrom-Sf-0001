@@ -13,7 +13,6 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -38,7 +37,6 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  
   if (user.email.trim().toLowerCase() === "webstrixx@gmail.com") {
     redirect("/admin");
   }
@@ -47,7 +45,6 @@ export default async function DashboardPage() {
     redirect("/sfadmin/dashboard");
   }
 
-  
   const events = await prisma.event.findMany({
     orderBy: { createdAt: "desc" },
     take: 6,
@@ -71,7 +68,6 @@ export default async function DashboardPage() {
     },
   });
 
-  // Fetch suggested users (limit to 5)
   const suggestedUsers = await prisma.user.findMany({
     where: {
       id: { not: sessionToken },

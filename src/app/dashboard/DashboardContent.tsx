@@ -51,13 +51,8 @@ export default function DashboardContent({ user, events, suggestedUsers }: Dashb
 
   return (
     <DashboardLayout user={user}>
-      {/* 
-        CLEAN 2-COLUMN DASHBOARD GRID:
-        Center Scrollable Feed | Right Sidebar
-      */}
       <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start font-sans">
-        
-        {/* CENTER COLUMN (Scrollable Feed) */}
+
         <main className="w-full flex flex-col gap-6 min-w-0">
           <WelcomeCard userName={user.fullName} />
           <QuickStatsCards />
@@ -65,7 +60,6 @@ export default function DashboardContent({ user, events, suggestedUsers }: Dashb
           <FeedSection user={user} newPostSignal={createdPost} />
         </main>
 
-        {/* RIGHT SIDEBAR (Widgets - Sticky) */}
         <aside className="w-full flex flex-col gap-6 lg:sticky lg:top-6">
           <SuggestedConnectionsCard suggestedUsers={suggestedUsers} />
           <OpportunitiesSection />

@@ -112,7 +112,7 @@ export default function ReactionBar({
 
       {/* Interactive Action Toolbar */}
       <div className="relative flex items-center justify-between pt-1 text-xs font-bold text-slate-600">
-        
+
         {/* Hover/Click Reaction Popup Selector */}
         {showPicker && (
           <div className="absolute -top-12 left-0 bg-white border border-slate-200 shadow-xl rounded-2xl px-3 py-1.5 flex items-center gap-2 animate-fadeIn z-20">

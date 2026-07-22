@@ -24,7 +24,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ courseI
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-    
     const existing = await prisma.courseEnrollment.findUnique({
       where: { courseId_userId: { courseId, userId: user.id } },
     });

@@ -72,7 +72,6 @@ export async function POST(req: Request) {
       );
     }
 
-    
     if (!user.isPremium) {
       const existingPodsCount = await prisma.studyPod.count({
         where: { creatorId: user.id },

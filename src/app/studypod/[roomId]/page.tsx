@@ -12,7 +12,6 @@ export default async function StudyRoomPage(
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
 
-  
   const studyPod = await prisma.studyPod.findUnique({
     where: { id: roomId },
   });
@@ -30,12 +29,10 @@ export default async function StudyRoomPage(
     waitingUserIds: studyPod.waitingUserIds,
   };
 
-  
   if (!sessionToken) {
     return <StudyRoomContent user={null} studyPod={serializedPod} roomId={roomId} />;
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -48,7 +45,7 @@ export default async function StudyRoomPage(
   });
 
   if (!user) {
-    
+
     return <StudyRoomContent user={null} studyPod={serializedPod} roomId={roomId} />;
   }
 

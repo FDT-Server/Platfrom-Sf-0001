@@ -64,10 +64,8 @@ export default function ChatDrawer() {
   const chatScrollContainerRef = useRef<HTMLDivElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
-  // Emojis list
   const emojiList = ["👍", "❤️", "😂", "😮", "😢", "🙏", "🎉", "🔥", "🚀", "💻"];
 
-  // Typing indicator simulation when changing active chat user
   useEffect(() => {
     if (activeChatUserId) {
       setIsTyping(true);
@@ -76,7 +74,6 @@ export default function ChatDrawer() {
     }
   }, [activeChatUserId]);
 
-  // Scroll to bottom on new messages
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -87,14 +84,13 @@ export default function ChatDrawer() {
     }
   }, [messages.length, activeChatUserId, isOpen, isMinimized]);
 
-  // Group messages into conversation list
   const conversationList = useMemo(() => {
     if (!currentUser) return [];
 
     const convosMap: { [key: string]: { lastMessage: ChatMessage; unreadCount: number } } = {};
 
     messages.forEach((msg) => {
-      // General chatroom
+
       if (msg.recipientId === null) {
         const currentGeneral = convosMap["general"];
         if (!currentGeneral || new Date(msg.createdAt) > new Date(currentGeneral.lastMessage.createdAt)) {
@@ -103,7 +99,6 @@ export default function ChatDrawer() {
         return;
       }
 
-      // Private chat
       const isSentByMe = msg.userId === currentUser.id;
       const contactId = isSentByMe ? msg.recipientId! : msg.userId;
 
@@ -273,10 +268,10 @@ export default function ChatDrawer() {
           title="Open Student Forge Messenger"
         >
           <IconMessageCircle className="w-7 h-7 group-hover:rotate-6 transition-transform duration-200" />
-          
+
           {/* Online status green dot */}
           <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-xs" />
-          
+
           {/* Unread badge counter */}
           {unreadCount > 0 && (
             <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow-md animate-bounce border border-white">
@@ -292,7 +287,7 @@ export default function ChatDrawer() {
   return (
     <>
       <div className="fixed bottom-6 right-6 w-[360px] sm:w-[420px] md:w-[680px] h-[600px] bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col z-[9999] font-sans animate-fadeIn">
-        
+
         {/* MESSENGER TOP HEADER */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 py-3 flex items-center justify-between shrink-0 select-none">
           <div className="flex items-center gap-2">
@@ -366,7 +361,7 @@ export default function ChatDrawer() {
 
         {/* MESSENGER BODY (Split view on Desktop) */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
-          
+
           {/* CONVERSATION LIST PANE */}
           <div className={`w-full md:w-[260px] border-r border-slate-200/80 bg-slate-50 flex flex-col shrink-0 ${
             activeChatUserId !== undefined ? "hidden md:flex" : "flex"

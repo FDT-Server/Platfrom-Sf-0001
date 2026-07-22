@@ -27,7 +27,6 @@ export default async function EventsPage() {
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
 
-        
         <div className="pb-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit border border-amber-200">
@@ -41,7 +40,6 @@ export default async function EventsPage() {
           </div>
         </div>
 
-        
         {events.length > 0 ? (
           <div className="flex flex-col gap-6 mt-8">
             {events.map((evt) => (
@@ -49,7 +47,7 @@ export default async function EventsPage() {
                 key={evt.id}
                 className="flex flex-col lg:flex-row items-stretch rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition duration-150 bg-white"
               >
-                
+
                 <div className="bg-slate-50 border-r border-slate-200 w-full lg:w-36 flex flex-row lg:flex-col justify-center items-center p-4 lg:py-6 text-center gap-3 lg:gap-1 shrink-0">
                   <span className="text-xs font-extrabold text-slate-400 tracking-widest uppercase">{evt.month}</span>
                   <span className="text-3xl lg:text-4xl font-black text-slate-800 font-sans leading-none">{evt.day}</span>
@@ -58,14 +56,12 @@ export default async function EventsPage() {
                   </span>
                 </div>
 
-                
                 {evt.imageUrl && (
                   <div className="w-full lg:w-48 h-32 lg:h-auto overflow-hidden shrink-0 relative border-r border-slate-200/50">
                     <img src={evt.imageUrl} className="w-full h-full object-cover" alt={evt.title} />
                   </div>
                 )}
 
-                
                 <div className="p-6 flex flex-col justify-between flex-1 gap-4">
                   <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
@@ -101,7 +97,6 @@ export default async function EventsPage() {
                   </div>
                 </div>
 
-                
                 <div className="p-6 lg:border-l border-slate-200 bg-slate-50/50 flex flex-col justify-center items-stretch w-full lg:w-48 gap-2.5 shrink-0">
                   {evt.joinLink ? (
                     <a
@@ -123,7 +118,7 @@ export default async function EventsPage() {
             ))}
           </div>
         ) : (
-          
+
           <div className="flex flex-col items-center justify-center py-24 mt-4">
             <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-4">
               <IconCalendarEvent className="w-7 h-7 text-amber-500" />

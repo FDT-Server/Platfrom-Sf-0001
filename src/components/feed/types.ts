@@ -258,7 +258,6 @@ export function getPostById(id: string): FeedPost {
   const found = mockDetailedPosts.find((p) => p.id === id);
   if (found) return found;
 
-  // Generic fallback post for dynamic IDs
   return {
     id: id,
     title: `Student Forge Community Post #${id}`,

@@ -11,7 +11,6 @@ export default async function NetworkingPage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -27,7 +26,6 @@ export default async function NetworkingPage() {
     redirect("/login");
   }
 
-  
   const allUsers = await prisma.user.findMany({
     orderBy: { fullName: "asc" },
     select: {

@@ -32,7 +32,6 @@ import {
   ExecutiveTemplate,
 } from "./templates";
 
-// Import modular section form editors
 import PersonalInfoForm from "./components/PersonalInfoForm";
 import SummaryForm from "./components/SummaryForm";
 import ExperienceForm from "./components/ExperienceForm";
@@ -67,7 +66,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
   const printAreaRef = useRef<HTMLDivElement>(null);
   const previewParentRef = useRef<HTMLDivElement>(null);
 
-  // Handle mobile detection (xl breakpoint is 1280px)
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1280);
@@ -77,7 +75,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle preview auto-scaling / zoom modes
   useEffect(() => {
     if (typeof window === "undefined" || !previewParentRef.current) return;
 
@@ -94,7 +91,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
       return;
     }
 
-    // Auto-fit calculation (ResizeObserver)
     const resizeObserver = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
       const containerWidth = entries[0].contentRect.width;
@@ -110,14 +106,12 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     return () => resizeObserver.disconnect();
   }, [mobileTab, zoomMode]);
 
-  // Measure dynamic preview height for scroll calculations
   useEffect(() => {
     if (printAreaRef.current) {
       setPreviewHeight(printAreaRef.current.scrollHeight || 1123);
     }
   }, [data, scale, mobileTab]);
 
-  // Load draft from local storage
   useEffect(() => {
     const saved = localStorage.getItem("sf-resume-draft");
     if (saved) {
@@ -132,7 +126,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     }
   }, []);
 
-  // Save changes (Auto-save)
   const updateData = (newData: Partial<ResumeData>) => {
     setData((prev) => {
       const merged = { ...prev, ...newData };
@@ -166,7 +159,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     toast.success("Resume progress draft saved successfully!");
   };
 
-  // Section completeness calculations
   const completionMap: Record<string, boolean> = {
     personal: !!data.personalDetails.name && !!data.personalDetails.email,
     summary: !!data.summary && data.summary.trim().length > 0,
@@ -181,7 +173,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     references: (data.references || []).length > 0 && !!(data.references || [])[0].name,
   };
 
-  // Sections config array
   const sections = [
     { id: "personal", label: "Personal Information", icon: IconUser },
     { id: "summary", label: "Professional Summary", icon: IconFileText },
@@ -196,12 +187,10 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     { id: "references", label: "References", icon: IconUsers },
   ];
 
-  // Dynamic progress tracker percentage
   const totalSections = sections.length;
   const completedSections = Object.values(completionMap).filter(Boolean).length;
   const completionPercentage = Math.round((completedSections / totalSections) * 100);
 
-  // Dynamic order list of all sections (including custom ones)
   const getSectionsList = () => {
     const list = sections.map((s) => s.id);
     (data.customSections || []).forEach((_, idx) => {
@@ -307,7 +296,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     <DashboardLayout user={user}>
       {/* High Quality A4 Print Layout CSS */}
       <style>{`
-        /* Hide print portal on screen display */
+
         #resume-print-portal {
           display: none;
         }
@@ -330,18 +319,15 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
             print-color-adjust: exact !important;
           }
 
-          /* Hide screen layout elements */
           body * {
             visibility: hidden !important;
           }
 
-          /* Unclip parent containers */
           div, main, section {
             overflow: visible !important;
             max-height: none !important;
           }
 
-          /* Force top-level print portal to be 100% visible and positioned at top-left */
           #resume-print-portal,
           #resume-print-portal * {
             visibility: visible !important;
@@ -366,7 +352,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
             border: none !important;
           }
 
-          /* Preserve 2-column template layout on paper */
           #resume-print-portal .flex-col.md\:flex-row {
             flex-direction: row !important;
           }

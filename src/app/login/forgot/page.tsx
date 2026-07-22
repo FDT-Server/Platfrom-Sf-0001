@@ -104,7 +104,7 @@ export default function ForgotPasswordPage() {
       illustrationUrl="https://ik.imagekit.io/dypkhqxip/Forgot%20password-amico.svg"
       hideQuote
     >
-      {/* ── STEP 1: REQUEST OTP ────────────────────────────────────────────── */}
+      {}
       {step === "request" && (
         <div>
           <div className="mb-7">
@@ -156,7 +156,7 @@ export default function ForgotPasswordPage() {
         </div>
       )}
 
-      {/* ── STEP 2: ENTER OTP & NEW PASSWORD ───────────────────────────────── */}
+      {}
       {step === "otp" && (
         <div>
           <div className="mb-7">
@@ -181,7 +181,6 @@ export default function ForgotPasswordPage() {
           )}
 
           <form onSubmit={handleResetPassword} className="space-y-3.5">
-            {/* OTP Code */}
             <div>
               <label htmlFor="otp-code" className="text-[11px] font-semibold text-slate-600 mb-1.5 block uppercase tracking-wider">
                 6-Digit OTP Code
@@ -198,7 +197,6 @@ export default function ForgotPasswordPage() {
               />
             </div>
 
-            {/* New Password */}
             <div>
               <label htmlFor="new-password" className="text-[11px] font-semibold text-slate-600 mb-1.5 block uppercase tracking-wider">
                 New Password
@@ -223,7 +221,6 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label htmlFor="confirm-password" className="text-[11px] font-semibold text-slate-600 mb-1.5 block uppercase tracking-wider">
                 Confirm New Password
@@ -260,7 +257,7 @@ export default function ForgotPasswordPage() {
         </div>
       )}
 
-      {/* ── STEP 3: SUCCESS ────────────────────────────────────────────────── */}
+      {}
       {step === "success" && (
         <div className="text-center py-4">
           <div className="mx-auto bg-emerald-100 text-emerald-700 p-4 rounded-full w-fit mb-5 shadow-sm">

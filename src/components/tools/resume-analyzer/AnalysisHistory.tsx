@@ -61,7 +61,6 @@ export default function AnalysisHistory({ onSelectRecord }: AnalysisHistoryProps
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
@@ -76,7 +75,6 @@ export default function AnalysisHistory({ onSelectRecord }: AnalysisHistoryProps
         </div>
       </div>
 
-      {/* History List */}
       <div className="flex flex-col gap-3">
         {records.map((record) => (
           <div

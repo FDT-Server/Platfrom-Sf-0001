@@ -117,7 +117,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
     setStep("pending");
   };
 
-  
   if (step === "pending") {
     return (
       <DashboardLayout user={user}>
@@ -144,7 +143,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
     );
   }
 
-  
   if (step === "payment") {
     return (
       <DashboardLayout user={user}>
@@ -226,7 +224,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
     );
   }
 
-  
   if (step === "enroll") {
     return (
       <DashboardLayout user={user}>
@@ -341,15 +338,13 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
     );
   }
 
-  
   return (
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col gap-6 animate-fadeIn">
 
-        
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
           <div className="flex flex-col lg:flex-row items-stretch">
-            
+
             <div className="w-full lg:w-80 shrink-0 bg-slate-100 relative overflow-hidden">
               {course.imageUrl ? (
                 <img src={course.imageUrl} className="w-full h-56 lg:h-full object-cover" alt={course.title} />
@@ -360,7 +355,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
               )}
             </div>
 
-            
             <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-3">
@@ -412,7 +406,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
           </div>
         </div>
 
-        
         {(skillsList.length > 0 || outcomesList.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {skillsList.length > 0 && (
@@ -447,7 +440,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
           </div>
         )}
 
-        
         <div className="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
@@ -521,7 +513,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
           </div>
         </div>
 
-        
         {!isApproved && (
           <div className="border border-amber-200 bg-amber-50 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
             <div>
@@ -539,7 +530,6 @@ export default function CourseDetailContent({ user, course, enrollment, isApprov
         )}
       </div>
 
-      
       {activeVideo && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden animate-slideUp">

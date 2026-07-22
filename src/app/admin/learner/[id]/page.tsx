@@ -23,7 +23,7 @@ interface PageProps {
 
 export default async function LearnerDetailsPage({ params }: PageProps) {
   const { id } = await params;
-  
+
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
 
@@ -31,7 +31,6 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
     redirect("/admin/login");
   }
 
-  
   const adminUser = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -41,12 +40,10 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
     },
   });
 
-  
   if (!adminUser || adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com") {
     redirect("/dashboard");
   }
 
-  
   const learner = await prisma.user.findUnique({
     where: { id },
   });
@@ -57,7 +54,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
 
   const formatDate = (dateValue: Date | null) => {
     if (!dateValue) return "—";
-    return dateValue.toLocaleDateString(undefined, {
+    return dateValue.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -67,8 +64,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
   return (
     <DashboardLayout user={adminUser}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn gap-6">
-        
-        
+
         <nav className="flex items-center gap-2 text-xs font-semibold text-slate-500 pb-4 border-b border-slate-100">
           <Link
             href="/admin"
@@ -80,7 +76,6 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           <span className="text-slate-800 font-bold">{learner.fullName}</span>
         </nav>
 
-        
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 border-b border-slate-100 pb-6">
           <div className="relative">
             {learner.profileImage ? (
@@ -104,7 +99,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
                 {learner.email}
               </p>
             </div>
-            
+
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
               <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100">
                 Role: {learner.selectedRole}
@@ -117,7 +112,6 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        
         <div className="space-y-2">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <IconBook className="w-4 h-4 text-indigo-500" />
@@ -130,16 +124,14 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          
+
           <div className="border border-slate-200 rounded-xl p-5 bg-white space-y-4">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
               <IconSchool className="w-4 h-4 text-indigo-500" />
               Academic profile
             </h4>
-            
+
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
@@ -173,13 +165,12 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
             </div>
           </div>
 
-          
           <div className="border border-slate-200 rounded-xl p-5 bg-white space-y-4">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
               <IconLink className="w-4 h-4 text-indigo-500" />
               Links & Metadata
             </h4>
-            
+
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
@@ -237,7 +228,6 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
 
         </div>
 
-        
         <div className="space-y-3">
           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <IconTarget className="w-4 h-4 text-indigo-500" />
@@ -259,7 +249,6 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
           </div>
         </div>
 
-        
         <div className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-center justify-between text-slate-400 text-[10px] gap-2 font-mono">
           <span className="flex items-center gap-1">
             <IconClock className="w-3.5 h-3.5" />

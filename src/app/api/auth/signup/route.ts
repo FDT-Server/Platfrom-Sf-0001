@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -28,6 +27,8 @@ export async function POST(req: Request) {
 
     const hashedPassword = hashPassword(password);
 
+    const defaultAvatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200";
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -36,10 +37,10 @@ export async function POST(req: Request) {
         selectedRole,
         otherRoleText: otherRoleText || null,
         goals: goals || [],
+        profileImage: defaultAvatarUrl,
       },
     });
 
-    
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -131,7 +132,6 @@ export async function POST(req: Request) {
 </html>`,
       };
 
-      
       transporter.sendMail(mailOptions).catch(err => {
         console.error("Failed to send welcome email in background:", err);
       });

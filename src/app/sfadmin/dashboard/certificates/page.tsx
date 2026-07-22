@@ -35,7 +35,6 @@ export default async function SFAdminCertificatesPage() {
     redirect("/dashboard");
   }
 
-  
   const certificates = await prisma.certificate.findMany({
     orderBy: { createdAt: "desc" },
   });

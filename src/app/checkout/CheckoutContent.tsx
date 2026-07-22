@@ -90,8 +90,7 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
   return (
     <DashboardLayout user={user}>
       <div className="w-full px-4 md:px-8 py-6 space-y-6 animate-fadeIn">
-        
-        
+
         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium select-none">
           <a href="/plans" className="hover:text-indigo-600 transition">
             Plans
@@ -101,11 +100,9 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start max-w-5xl">
-          
-          
+
           <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
-            
-            
+
             <div className="bg-gradient-to-r from-amber-400 to-amber-500 p-6 border-b border-amber-300 text-slate-950">
               <h2 className="text-base font-extrabold flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] font-bold">payments</span>
@@ -124,8 +121,7 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
               )}
 
               <form onSubmit={handleCheckoutSubmit} className="space-y-4">
-                
-                
+
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                   <div>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Selected Plan</p>
@@ -137,7 +133,6 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
                   </div>
                 </div>
 
-                
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-slate-700">
                     Payer Name
@@ -152,7 +147,6 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
                   />
                 </div>
 
-                
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-slate-700">
                     Payment Reference / UPI Transaction ID
@@ -167,7 +161,6 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
                   />
                 </div>
 
-                
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-slate-700 flex items-center justify-between">
                     <span>UTR Number (12 Digits)</span>
@@ -204,15 +197,13 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
             </div>
           </div>
 
-          
           <div className="lg:col-span-2 space-y-6">
-            
-            
+
             <div className="p-5 rounded-3xl border border-slate-200 bg-slate-50 flex flex-col gap-4">
               <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">
                 Payment Instructions
               </h4>
-              
+
               <div className="text-xs text-slate-600 space-y-3 font-medium leading-relaxed">
                 <p>
                   To upgrade your account, send exactly <strong className="text-slate-850">{cost}</strong> to our verified academy UPI merchant identifier:
@@ -220,7 +211,7 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
                 <div className="bg-white p-3 border border-slate-200 rounded-xl text-center select-all font-mono font-bold text-slate-800 text-sm">
                   upi@studentforge
                 </div>
-                
+
                 <p className="border-t border-slate-200/80 pt-3">
                   Once the transfer completes in your banking application:
                 </p>
@@ -237,7 +228,6 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
               </div>
             </div>
 
-            
             <div className="p-4 rounded-2xl border border-dashed border-slate-300 bg-white text-center">
               <p className="text-[11px] text-slate-450 font-bold uppercase tracking-wider">Having issues?</p>
               <p className="text-xs text-slate-600 mt-1">Contact accounts at <strong>support@studentforge.com</strong></p>

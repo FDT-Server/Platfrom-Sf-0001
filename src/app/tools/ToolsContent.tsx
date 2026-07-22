@@ -43,7 +43,7 @@ type ToolCard = {
 };
 
 const tools: ToolCard[] = [
-  // Resume Section
+
   {
     id: "ai-resume-builder",
     title: "AI Resume Builder",
@@ -71,7 +71,6 @@ const tools: ToolCard[] = [
     badge: "Premium",
   },
 
-  // Coding Section
   {
     id: "code-playground",
     title: "Code Playground",
@@ -96,7 +95,6 @@ const tools: ToolCard[] = [
     icon: IconCalculator,
   },
 
-  // Career Section
   {
     id: "cover-letter",
     title: "Cover Letter Gen",
@@ -120,7 +118,6 @@ const tools: ToolCard[] = [
     icon: IconCoin,
   },
 
-  // AI Section
   {
     id: "ai-study-assistant",
     title: "AI Study Assistant",
@@ -145,7 +142,6 @@ const tools: ToolCard[] = [
     badge: "Interactive",
   },
 
-  // Productivity Section
   {
     id: "pomodoro",
     title: "Pomodoro Timer",
@@ -198,8 +194,7 @@ export default function ToolsContent({ user }: ToolsContentProps) {
   return (
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
-        
-        {/* Header */}
+
         <div className="pb-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-indigo-600 bg-indigo-50/60 px-2.5 py-1 rounded-md">
@@ -214,7 +209,6 @@ export default function ToolsContent({ user }: ToolsContentProps) {
           </div>
         </div>
 
-        {/* Categories Navigation */}
         <div className="flex flex-wrap gap-2 mt-6">
           {categories.map((category) => (
             <button

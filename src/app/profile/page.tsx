@@ -11,7 +11,6 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -37,7 +36,6 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  
   const serializedUser = {
     fullName: user.fullName,
     email: user.email,

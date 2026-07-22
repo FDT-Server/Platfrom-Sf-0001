@@ -23,15 +23,13 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
 
   const values = watch();
 
-  // Auto-save: propagate changes to parent
   useEffect(() => {
-    // Only update if changes actually occurred to prevent cycles
+
     if (JSON.stringify(values) !== JSON.stringify(data.personalDetails)) {
       onChange({ personalDetails: values });
     }
   }, [values, onChange, data.personalDetails]);
 
-  // Sync external changes (like resetting data)
   useEffect(() => {
     if (JSON.stringify(data.personalDetails) !== JSON.stringify(values)) {
       reset(data.personalDetails);
@@ -50,7 +48,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Full Name */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name *</label>
           <input
@@ -62,7 +59,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           {errors.name && <span className="text-[10px] text-red-500 font-bold mt-1">{errors.name.message?.toString()}</span>}
         </div>
 
-        {/* Professional Title */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Professional Title</label>
           <input
@@ -73,7 +69,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           />
         </div>
 
-        {/* Email Address */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Address</label>
           <input
@@ -85,7 +80,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           {errors.email && <span className="text-[10px] text-red-500 font-bold mt-1">{errors.email.message?.toString()}</span>}
         </div>
 
-        {/* Phone Number */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
           <input
@@ -96,7 +90,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           />
         </div>
 
-        {/* Address / Location */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider mb-1">Address / Location</label>
           <input
@@ -107,7 +100,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           />
         </div>
 
-        {/* Portfolio Website */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider mb-1">Portfolio Link</label>
           <input
@@ -119,7 +111,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           {errors.portfolio && <span className="text-[10px] text-red-500 font-bold mt-1">{errors.portfolio.message?.toString()}</span>}
         </div>
 
-        {/* LinkedIn Profile */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider mb-1">LinkedIn Profile</label>
           <input
@@ -131,7 +122,6 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
           {errors.linkedin && <span className="text-[10px] text-red-500 font-bold mt-1">{errors.linkedin.message?.toString()}</span>}
         </div>
 
-        {/* GitHub Profile */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider mb-1">GitHub Profile</label>
           <input

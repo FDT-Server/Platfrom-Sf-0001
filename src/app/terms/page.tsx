@@ -10,18 +10,18 @@ export default function TermsPage() {
         </Link>
         <h1 className="text-3xl font-bold mb-6 tracking-tight text-slate-900">Terms of Service</h1>
         <p className="text-slate-500 text-sm mb-8">Last Updated: July 2026</p>
-        
+
         <div className="space-y-6 text-sm leading-relaxed text-slate-700">
           <section>
             <h2 className="text-lg font-semibold text-slate-900 mb-2">1. Acceptance of Terms</h2>
             <p>By accessing or using the Studentforge Platform, you agree to be bound by these Terms of Service. If you do not agree to all of the terms and conditions, you may not access the service.</p>
           </section>
-          
+
           <section>
             <h2 className="text-lg font-semibold text-slate-900 mb-2">2. User Accounts</h2>
             <p>You are responsible for safeguarding your password and you agree not to disclose your password to any third party. You are responsible for any activities or actions under your account.</p>
           </section>
-          
+
           <section>
             <h2 className="text-lg font-semibold text-slate-900 mb-2">3. Educational Use</h2>
             <p>The content provided on Studentforge is for educational and training purposes. You may not distribute, modify, transmit, reuse, download, repost, copy, or use said Content, whether in whole or in part, for commercial purposes or for personal gain, without express advance written permission from us.</p>

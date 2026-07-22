@@ -27,7 +27,6 @@ export default async function CertificatesPage() {
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
 
-        
         <div className="pb-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit border border-amber-200">
@@ -41,7 +40,6 @@ export default async function CertificatesPage() {
           </div>
         </div>
 
-        
         {certificates.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             {certificates.map((cert) => (
@@ -55,7 +53,6 @@ export default async function CertificatesPage() {
                   </div>
                 )}
 
-                
                 {!cert.imageUrl && (
                   <span className="absolute -right-4 -bottom-4 text-slate-50 select-none pointer-events-none">
                     <IconAward className="w-28 h-28" />
@@ -101,7 +98,7 @@ export default async function CertificatesPage() {
             ))}
           </div>
         ) : (
-          
+
           <div className="flex flex-col items-center justify-center py-24 mt-4">
             <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-4">
               <IconAward className="w-7 h-7 text-amber-500" />

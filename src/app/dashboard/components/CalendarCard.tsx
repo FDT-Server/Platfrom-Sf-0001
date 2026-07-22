@@ -55,7 +55,6 @@ export default function CalendarCard() {
       <div className="flex flex-col gap-3">
         {calendarEvents.map((item, idx) => (
           <div key={idx} className="flex items-start gap-3">
-            {/* Date Box */}
             <div className="flex flex-col items-center justify-center bg-blue-50 border border-blue-150 rounded-xl p-1.5 w-11 shrink-0 shadow-2xs leading-none font-mono">
               <span className="text-[9px] font-black text-blue-700 uppercase">{item.dateMonth}</span>
               <span className="text-sm font-black text-blue-900 mt-0.5">{item.dateDay}</span>

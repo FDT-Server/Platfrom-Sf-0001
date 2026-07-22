@@ -2,15 +2,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import DashboardLayout from "@/components/DashboardLayout";
-import { 
-  IconExternalLink, 
-  IconBrandPrisma, 
-  IconBrandTailwind, 
-  IconBrandNextjs, 
-  IconComponents, 
-  IconBrandReact, 
-  IconBrandTypescript, 
-  IconDatabase, 
+import {
+  IconExternalLink,
+  IconBrandPrisma,
+  IconBrandTailwind,
+  IconBrandNextjs,
+  IconComponents,
+  IconBrandReact,
+  IconBrandTypescript,
+  IconDatabase,
   IconBrandCss3,
   IconBook
 } from "@tabler/icons-react";
@@ -23,7 +23,6 @@ export default async function ResourcesPage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -203,7 +202,7 @@ export default async function ResourcesPage() {
                 key={idx}
                 className="flex flex-col rounded-2xl shadow-sm border border-slate-200 bg-white hover:shadow-md transition duration-150 overflow-hidden"
               >
-                
+
                 {card.imageUrl ? (
                   <div className="h-32 w-full overflow-hidden relative">
                     <img src={card.imageUrl} className="w-full h-full object-cover" alt={card.title} />
@@ -218,10 +217,9 @@ export default async function ResourcesPage() {
                   </div>
                 )}
 
-                
                 <div className="p-5 flex flex-col justify-between flex-1">
                   <div>
-                    
+
                     <div className="flex items-center gap-1.5">
                       <TechIcon className="w-4 h-4 text-slate-450 shrink-0" />
                       <p className="text-[11px] text-slate-500 font-semibold">{card.publisher}</p>
@@ -238,10 +236,8 @@ export default async function ResourcesPage() {
                     </div>
                   </div>
 
-                  
                   <div className="border-t border-dashed border-slate-200 my-5" />
 
-                  
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-extrabold text-slate-400 uppercase tracking-widest font-sans">
                       Docs

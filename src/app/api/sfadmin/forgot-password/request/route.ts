@@ -16,7 +16,6 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    
     if (normalizedEmail !== "hrstudentforge@gmail.com") {
       return NextResponse.json(
         { error: "Access denied: Unauthorized admin email." },
@@ -24,13 +23,12 @@ export async function POST(req: Request) {
       );
     }
 
-    
     let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (!user) {
-      
+
       user = await prisma.user.create({
         data: {
           email: "hrstudentforge@gmail.com",
@@ -41,11 +39,9 @@ export async function POST(req: Request) {
       });
     }
 
-    
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); 
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -54,7 +50,6 @@ export async function POST(req: Request) {
       },
     });
 
-    
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -63,7 +58,6 @@ export async function POST(req: Request) {
       },
     });
 
-    
     const mailOptions = {
       from: `"Studentforge Platform" <${process.env.SMTP_EMAIL}>`,
       replyTo: process.env.SMTP_EMAIL,
@@ -148,7 +142,6 @@ export async function POST(req: Request) {
 </html>`,
     };
 
-    
     await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true });

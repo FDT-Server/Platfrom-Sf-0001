@@ -1,6 +1,6 @@
 export interface PersonalDetails {
   name: string;
-  title?: string; // e.g. Software Engineer / Student
+  title?: string;
   email: string;
   phone?: string;
   address?: string;
@@ -14,7 +14,7 @@ export interface WorkExperience {
   company: string;
   role: string;
   duration: string;
-  location?: string; // e.g. San Francisco, CA / Remote
+  location?: string;
   description: string;
   achievements: string[];
 }
@@ -24,10 +24,10 @@ export interface Education {
   school: string;
   degree: string;
   fieldOfStudy: string;
-  branch?: string; // e.g. Computer Science
+  branch?: string;
   duration: string;
-  grade?: string; // CGPA or GPA
-  description?: string; // Optional description
+  grade?: string;
+  description?: string;
 }
 
 export interface Project {
@@ -42,14 +42,14 @@ export interface Project {
 export interface Skill {
   id: string;
   name: string;
-  level: number; // 0 to 100
-  group?: string; // e.g. Frontend, Backend, etc.
+  level: number;
+  group?: string;
 }
 
 export interface Language {
   id: string;
   name: string;
-  level: string; // e.g. Native, Fluent, Intermediate
+  level: string;
 }
 
 export interface Certification {
@@ -57,8 +57,8 @@ export interface Certification {
   title: string;
   issuer: string;
   date: string;
-  link?: string; // Link or credential URL
-  credentialUrl?: string; // Credential URL
+  link?: string;
+  credentialUrl?: string;
 }
 
 export interface Award {
@@ -72,7 +72,7 @@ export interface Award {
 export interface Reference {
   id: string;
   name: string;
-  relationship: string; // Title / relationship
+  relationship: string;
   company: string;
   email: string;
   phone: string;
@@ -101,8 +101,8 @@ export interface ResumeData {
   languages: Language[];
   certifications: Certification[];
   awards: Award[];
-  achievements?: string[]; // Stand-alone achievements tag/list input
-  interests?: string[]; // Stand-alone interests tag/list input
-  references?: Reference[]; // Optional list of references
+  achievements?: string[];
+  interests?: string[];
+  references?: Reference[];
   customSections: CustomSection[];
 }

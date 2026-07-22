@@ -10,33 +10,30 @@ interface ScoreCardProps {
 }
 
 export default function ScoreCard({ score, analyzedAt, summary }: ScoreCardProps) {
-  // Color configuration based on score ranges
-  let strokeColor = "#ef4444"; // Red
+
+  let strokeColor = "#ef4444";
   let badgeBg = "bg-red-50 text-red-700 border-red-200";
   let gradeText = "Needs Major Improvement";
 
   if (score >= 80) {
-    strokeColor = "#10b981"; // Green
+    strokeColor = "#10b981";
     badgeBg = "bg-emerald-50 text-emerald-700 border-emerald-200";
     gradeText = "Excellent - ATS Ready";
   } else if (score >= 60) {
-    strokeColor = "#f59e0b"; // Orange
+    strokeColor = "#f59e0b";
     badgeBg = "bg-amber-50 text-amber-700 border-amber-200";
     gradeText = "Good - Needs Minor Optimization";
   }
 
-  // SVG Circle calculation
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-      {/* Score Circular Gauge */}
       <div className="flex items-center gap-6 shrink-0">
         <div className="relative flex items-center justify-center">
           <svg className="w-32 h-32 transform -rotate-90">
-            {/* Background Track */}
             <circle
               cx="64"
               cy="64"
@@ -46,7 +43,6 @@ export default function ScoreCard({ score, analyzedAt, summary }: ScoreCardProps
               stroke="currentColor"
               fill="transparent"
             />
-            {/* Animated Progress Ring */}
             <circle
               cx="64"
               cy="64"

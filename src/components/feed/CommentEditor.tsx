@@ -84,8 +84,6 @@ export default function CommentEditor({
           onChange={(e) => setText(e.target.value)}
           className="w-full text-xs font-medium bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-inner resize-none"
         />
-
-        {/* Toolbar & Submit */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-1">
             <button

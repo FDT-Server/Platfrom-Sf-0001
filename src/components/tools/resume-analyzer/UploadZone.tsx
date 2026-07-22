@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 export interface UploadedFileInfo {
   name: string;
-  size: number; // in bytes
+  size: number;
   type: string;
   uploadTime: string;
   fileObj?: File;
@@ -79,7 +79,6 @@ export default function UploadZone({
       return;
     }
 
-    // Simulate upload progress
     setUploadProgress(10);
     const interval = setInterval(() => {
       setUploadProgress((prev) => {

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import ResumeAnalyzerContent from "@/app/tools/resume-analyzer/ResumeAnalyzerContent";
 
-// Force dev server refresh
 export const dynamic = "force-dynamic";
 
 export default async function ResumeAnalyzerPage() {

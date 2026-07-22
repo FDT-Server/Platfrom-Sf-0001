@@ -85,7 +85,7 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
     };
 
     fetchUnreadCount();
-    
+
     const interval = setInterval(fetchUnreadCount, 8000);
 
     return () => clearInterval(interval);
@@ -182,6 +182,15 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
               workspace_premium
             </span>
           ),
+        },
+        {
+          label: "Reset Platform Data",
+          href: "/admin/reset-data",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-rose-300 group-hover/sidebar:text-rose-100 transition-colors duration-150 select-none animate-pulse">
+              delete_forever
+            </span>
+          ),
         }
       ]
       : [
@@ -216,6 +225,15 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
           icon: (
             <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
               groups
+            </span>
+          ),
+        },
+        {
+          label: "Reset Platform Data",
+          href: "/admin/reset-data",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-rose-300 group-hover/sidebar:text-rose-100 transition-colors duration-150 select-none animate-pulse">
+              delete_forever
             </span>
           ),
         },

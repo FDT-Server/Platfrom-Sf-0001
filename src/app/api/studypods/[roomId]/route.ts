@@ -4,7 +4,6 @@ import prisma from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-
 export async function GET(
   req: Request,
   props: { params: Promise<{ roomId: string }> }
@@ -25,7 +24,6 @@ export async function GET(
       );
     }
 
-    
     if (!sessionToken) {
       return NextResponse.json({
         authenticated: false,
@@ -50,7 +48,6 @@ export async function GET(
       });
     }
 
-    
     const isHost = user.id === studyPod.creatorId;
 
     let approvedList: string[] = [];
@@ -76,7 +73,7 @@ export async function GET(
     }
 
     if (!isHost && !approvedList.includes(user.id)) {
-      
+
       const isAlreadyWaiting = waitingList.some((w) => w.id === user.id);
       if (!isAlreadyWaiting) {
         waitingList.push({
@@ -106,7 +103,6 @@ export async function GET(
       });
     }
 
-    
     const [messages, todos, ideas] = await Promise.all([
       prisma.studyPodMessage.findMany({
         where: { studyPodId: roomId },
@@ -122,7 +118,6 @@ export async function GET(
       }),
     ]);
 
-    
     const userIds = Array.from(new Set(messages.map((m) => m.userId)));
     const users = await prisma.user.findMany({
       where: { id: { in: userIds } },
@@ -152,7 +147,6 @@ export async function GET(
     );
   }
 }
-
 
 export async function POST(
   req: Request,
@@ -232,7 +226,6 @@ export async function POST(
   }
 }
 
-
 export async function PATCH(
   req: Request,
   props: { params: Promise<{ roomId: string }> }
@@ -265,7 +258,6 @@ export async function PATCH(
     );
   }
 }
-
 
 export async function DELETE(
   req: Request,

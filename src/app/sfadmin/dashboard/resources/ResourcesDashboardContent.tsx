@@ -75,7 +75,7 @@ export default function ResourcesDashboardContent({ adminUser, initialResources 
   return (
     <div className="flex h-fit w-full flex-col justify-between rounded-2xl border border-slate-200/60 bg-white p-6 md:p-10 shadow-sm animate-fadeIn relative">
       <div>
-        
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-100 gap-4">
           <div>
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit border border-amber-200/50">
@@ -91,7 +91,6 @@ export default function ResourcesDashboardContent({ adminUser, initialResources 
           </div>
         </div>
 
-        
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 text-red-650 text-xs rounded-xl p-3 font-semibold">
             {error}
@@ -104,7 +103,7 @@ export default function ResourcesDashboardContent({ adminUser, initialResources 
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          
+
           <div className="lg:col-span-1 border border-slate-200/60 rounded-xl p-5 bg-slate-50/50 h-fit">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-1">
               <IconLibrary className="w-4 h-4 text-amber-600" />
@@ -179,7 +178,6 @@ export default function ResourcesDashboardContent({ adminUser, initialResources 
             </form>
           </div>
 
-          
           <div className="lg:col-span-2 space-y-4">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Curated Resources Table</h4>
             <div className="w-full overflow-x-auto border border-slate-200/60 rounded-xl">

@@ -33,7 +33,6 @@ export default function ResumeAnalyzerContent({ user }: ResumeAnalyzerContentPro
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(true);
 
-  // Trigger analysis on file upload
   const handleFileUpload = async (file: File) => {
     const info: UploadedFileInfo = {
       name: file.name,
@@ -47,9 +46,9 @@ export default function ResumeAnalyzerContent({ user }: ResumeAnalyzerContentPro
     setIsAnalyzing(true);
 
     try {
-      // Run analysis engine
+
       const result = await analyzeResume(file);
-      // Add slight timeout to display simulated scan animation
+
       setTimeout(() => {
         setAnalysisResult(result);
         setIsAnalyzing(false);

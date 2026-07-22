@@ -25,7 +25,6 @@ export default async function MentorshipPage() {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -85,8 +84,7 @@ export default async function MentorshipPage() {
   return (
     <DashboardLayout user={user}>
       <div className="flex h-fit w-full flex-col rounded-2xl border border-slate-300 bg-white p-6 md:p-10 shadow-sm animate-fadeIn">
-        
-        
+
         <div className="pb-6 border-b border-slate-300 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-blue-600 bg-blue-50/60 px-2.5 py-1 rounded-md">
@@ -105,24 +103,23 @@ export default async function MentorshipPage() {
           </button>
         </div>
 
-        
         {!user.isPremium ? (
           <div className="relative mt-8 p-8 md:p-12 rounded-3xl border border-slate-300 bg-linear-to-b from-slate-50/50 to-slate-100/50 backdrop-blur-md flex flex-col items-center text-center max-w-2xl mx-auto shadow-xs overflow-hidden animate-fadeIn">
-            
+
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-pink-500/10 rounded-full blur-2xl pointer-events-none" />
 
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-900 border border-amber-300 flex items-center justify-center shadow-md animate-pulse">
               <span className="material-symbols-outlined text-[32px]">workspace_premium</span>
             </div>
-            
+
             <h4 className="text-xl font-extrabold text-slate-850 mt-6 leading-tight">
               Unlock Premium 1-on-1 Mentorship
             </h4>
             <p className="text-sm text-slate-600 mt-2 max-w-md leading-relaxed">
               Gain access to industry specialists from Stripe, Netflix, and Vercel. Get code reviews, resume critiques, and direct career acceleration.
             </p>
-            
+
             <div className="border-t border-slate-200/80 w-full my-6" />
 
             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
@@ -173,25 +170,23 @@ export default async function MentorshipPage() {
               </div>
             </div>
 
-            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
               {mentors.map((mnt) => (
-                <div 
-                  key={mnt.id} 
+                <div
+                  key={mnt.id}
                   className="flex flex-col rounded-2xl border border-slate-200 overflow-hidden hover:border-slate-350 hover:shadow-xs transition duration-150 bg-white"
                 >
-                  
+
                   <div className={`h-3 bg-gradient-to-r ${mnt.gradientBg} w-full`} />
 
-                  
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      
+
                       <div className="flex items-start gap-3">
-                        <img 
-                          src={mnt.avatar} 
-                          alt={mnt.name} 
-                          className="w-12 h-12 rounded-full border border-slate-100 object-cover shrink-0" 
+                        <img
+                          src={mnt.avatar}
+                          alt={mnt.name}
+                          className="w-12 h-12 rounded-full border border-slate-100 object-cover shrink-0"
                         />
                         <div className="flex flex-col">
                           <h4 className="text-base font-extrabold text-slate-800 leading-tight">
@@ -206,7 +201,6 @@ export default async function MentorshipPage() {
                         </div>
                       </div>
 
-                      
                       <div className="flex items-center gap-1 mt-2.5 text-xs text-slate-600 bg-slate-50 self-start px-2 py-0.5 border border-slate-200 rounded-md">
                         <span className="material-symbols-outlined text-[14px] text-amber-500">star</span>
                         <strong className="text-slate-800">{mnt.rating}</strong>
@@ -217,7 +211,6 @@ export default async function MentorshipPage() {
                         "{mnt.bio}"
                       </p>
 
-                      
                       <div className="flex flex-wrap gap-1.5 mt-4">
                         {mnt.specialties.map((spec, i) => (
                           <span key={i} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50/60 border border-blue-100 text-blue-700">
@@ -228,7 +221,7 @@ export default async function MentorshipPage() {
                     </div>
 
                     <div className="mt-5 pt-4 border-t border-slate-100">
-                      
+
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Available Slots</p>
                       <div className="flex flex-wrap gap-1.5">
                         {mnt.slots.map((slot, i) => (
@@ -238,7 +231,6 @@ export default async function MentorshipPage() {
                         ))}
                       </div>
 
-                      
                       <button className="w-full mt-4 bg-black hover:bg-slate-900 text-white rounded-lg py-2 text-center text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
                         <span className="material-symbols-outlined text-[16px]">calendar_month</span>
                         Book Session

@@ -113,7 +113,7 @@ export default function PaymentsDashboardContent({ adminUser, paymentRequests, c
   return (
     <div className="flex h-fit w-full flex-col justify-between rounded-2xl border border-slate-200/60 bg-white p-6 md:p-10 shadow-sm animate-fadeIn relative">
       <div>
-        
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-100 gap-4">
           <div>
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md flex items-center gap-1 w-fit border border-amber-200/50">
@@ -128,7 +128,6 @@ export default function PaymentsDashboardContent({ adminUser, paymentRequests, c
             </p>
           </div>
 
-          
           <div className="flex flex-wrap items-center gap-3">
             <div className="bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-3 flex items-center gap-3">
               <span className="bg-amber-100 text-amber-800 p-2 rounded-lg">
@@ -162,7 +161,6 @@ export default function PaymentsDashboardContent({ adminUser, paymentRequests, c
           </div>
         </div>
 
-        
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 text-red-650 text-xs rounded-xl p-3 font-semibold">
             {error}
@@ -174,7 +172,6 @@ export default function PaymentsDashboardContent({ adminUser, paymentRequests, c
           </div>
         )}
 
-        
         <div className="bg-white border border-slate-200/60 rounded-2xl p-6 mt-8">
           <div className="mb-6">
             <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
@@ -257,7 +254,6 @@ export default function PaymentsDashboardContent({ adminUser, paymentRequests, c
           </div>
         </div>
 
-        
         <div className="bg-white border border-slate-200/60 rounded-2xl p-6 mt-8">
           <div className="mb-6 flex items-center gap-3">
             <span className="bg-amber-50 border border-amber-200 text-amber-700 p-2 rounded-lg">

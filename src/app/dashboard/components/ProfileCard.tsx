@@ -60,13 +60,11 @@ export default function ProfileCard({ user }: ProfileCardProps) {
     : "SF";
 
   return (
-    /* Outer Blue Deck Layer Container */
+
     <div className="w-full bg-blue-600 rounded-[28px] p-1.5 shadow-sm transition-all duration-200 hover:shadow-md select-none">
-      
-      {/* Top Grey Main Card Body */}
+
       <div className="bg-[#22252e] text-white rounded-[22px] p-5 flex flex-col gap-4">
 
-        {/* Top Row: Role (Left) & Clock/Time (Right) */}
         <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
           <span className="truncate max-w-[170px]">
             {user.selectedRole || "Student Developer"}
@@ -77,7 +75,6 @@ export default function ProfileCard({ user }: ProfileCardProps) {
           </div>
         </div>
 
-        {/* Middle Row: Avatar + Name + Available Status */}
         <div className="flex items-center gap-3.5 pt-1">
           {user.profileImage ? (
             <img
@@ -102,7 +99,6 @@ export default function ProfileCard({ user }: ProfileCardProps) {
           </div>
         </div>
 
-        {/* Action Buttons Row */}
         <div className="grid grid-cols-2 gap-2.5 pt-1">
           <Link
             href="/profile"
@@ -127,7 +123,6 @@ export default function ProfileCard({ user }: ProfileCardProps) {
         </div>
       </div>
 
-      {/* Bottom Blue Deck Banner Strip */}
       <div className="bg-blue-600 text-white py-3 px-4 flex items-center justify-center gap-2 text-xs font-semibold">
         <IconSparkles className="w-4 h-4 text-amber-300 shrink-0" />
         <span className="truncate">

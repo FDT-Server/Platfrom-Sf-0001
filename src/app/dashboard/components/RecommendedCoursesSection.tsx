@@ -47,7 +47,6 @@ const recommendedCourses: Course[] = [
 export default function RecommendedCoursesSection() {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 select-none">
-      {/* Header */}
       <div className="flex items-center justify-between pb-1 border-b border-slate-100 select-none">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-100">
@@ -68,7 +67,6 @@ export default function RecommendedCoursesSection() {
         </Link>
       </div>
 
-      {/* Vertical Compact Cards List */}
       <div className="flex flex-col gap-2.5">
         {recommendedCourses.map((course) => (
           <div

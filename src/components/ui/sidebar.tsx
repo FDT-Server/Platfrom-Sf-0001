@@ -101,7 +101,7 @@ export const DesktopSidebar = ({
         }}
         {...props}
       >
-        <div 
+        <div
            onClick={() => setOpen(!open)}
            className="absolute -right-3 top-6 bg-blue-700 text-white w-6 h-6 rounded-full cursor-pointer z-50 border border-blue-500 shadow-md flex items-center justify-center hover:bg-blue-600 transition"
         >
@@ -175,7 +175,7 @@ export const SidebarLink = ({
 } & React.ComponentPropsWithoutRef<"a">) => {
   const { open, animate } = useSidebar();
   const pathname = usePathname();
-  // Check if link is active
+
   const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
 
   return (

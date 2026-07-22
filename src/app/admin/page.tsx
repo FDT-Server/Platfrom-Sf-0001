@@ -11,7 +11,6 @@ export default async function AdminPanelPage() {
     redirect("/admin/login");
   }
 
-  
   const adminUser = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
@@ -21,12 +20,10 @@ export default async function AdminPanelPage() {
     },
   });
 
-  
   if (!adminUser || adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com") {
     redirect("/dashboard");
   }
 
-  
   const allUsers = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -50,12 +47,10 @@ export default async function AdminPanelPage() {
     },
   });
 
-  
   const paymentRequests = await prisma.paymentRequest.findMany({
     orderBy: { createdAt: "desc" },
   });
 
-  
   const serializedUsers = allUsers.map((u) => ({
     ...u,
     createdAt: u.createdAt.toISOString(),

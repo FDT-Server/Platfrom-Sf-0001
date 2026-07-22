@@ -32,7 +32,6 @@ export default function AdminLoginPage() {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    
     if (normalizedEmail !== "webstrixx@gmail.com") {
       setError("Access denied: Unauthorized admin email.");
       return;
@@ -133,8 +132,8 @@ export default function AdminLoginPage() {
         </div>
 
         <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-8">
-          <Link 
-            href="/login" 
+          <Link
+            href="/login"
             className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition"
           >
             User Login Portal

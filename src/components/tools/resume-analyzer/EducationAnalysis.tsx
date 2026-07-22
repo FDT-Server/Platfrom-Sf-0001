@@ -19,7 +19,6 @@ export default function EducationAnalysis({ education }: EducationAnalysisProps)
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
@@ -41,7 +40,6 @@ export default function EducationAnalysis({ education }: EducationAnalysisProps)
         </div>
       </div>
 
-      {/* Degree & CGPA Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 flex items-start gap-4">
           <div className="h-12 w-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-200">
@@ -65,7 +63,6 @@ export default function EducationAnalysis({ education }: EducationAnalysisProps)
           </div>
         </div>
 
-        {/* Certifications */}
         <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 flex items-start gap-4">
           <div className="h-12 w-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
             <IconCertificate className="w-6 h-6" />
@@ -90,7 +87,7 @@ export default function EducationAnalysis({ education }: EducationAnalysisProps)
         </div>
       </div>
 
-      {/* Relevant Coursework */}
+      {}
       {details.relevantCoursework && (
         <div className="rounded-xl border border-slate-200 p-4 bg-white">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5 pb-2 border-b border-slate-100">

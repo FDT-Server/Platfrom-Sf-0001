@@ -75,7 +75,6 @@ export default function CommentItem({
       )}
 
       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-        {/* Comment Header */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <span className="text-xs font-bold text-slate-900 truncate block">
@@ -86,7 +85,7 @@ export default function CommentItem({
             </span>
           </div>
 
-          {/* Owner Actions (Edit & Delete) */}
+          {}
           {isOwner && (
             <div className="flex items-center gap-1 opacity-80 hover:opacity-100 transition">
               <button
@@ -107,7 +106,7 @@ export default function CommentItem({
           )}
         </div>
 
-        {/* Comment Body / Edit View */}
+        {}
         {isEditing ? (
           <div className="flex flex-col gap-2 mt-1">
             <textarea
@@ -137,7 +136,6 @@ export default function CommentItem({
           </p>
         )}
 
-        {/* Comment Toolbar (Like & Reply Buttons) */}
         <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500 pt-1 select-none">
           <button
             onClick={() => onLikeComment(comment.id)}

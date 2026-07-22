@@ -19,7 +19,6 @@ export async function POST(
       );
     }
 
-    
     const adminUser = await prisma.user.findUnique({
       where: { id: sessionToken },
     });
@@ -31,7 +30,6 @@ export async function POST(
       );
     }
 
-    
     if (
       adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com" &&
       adminUser.email.trim().toLowerCase() !== "hrstudentforge@gmail.com"
@@ -44,7 +42,6 @@ export async function POST(
 
     const { requestId } = await params;
 
-    
     const paymentRequest = await prisma.paymentRequest.findUnique({
       where: { id: requestId },
     });
@@ -56,7 +53,6 @@ export async function POST(
       );
     }
 
-    
     const updatedRequest = await prisma.paymentRequest.update({
       where: { id: requestId },
       data: {
@@ -64,7 +60,6 @@ export async function POST(
       },
     });
 
-    
     const updatedUser = await prisma.user.update({
       where: { id: paymentRequest.userId },
       data: {

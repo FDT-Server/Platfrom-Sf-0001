@@ -22,7 +22,6 @@ export default function ProjectsAnalysis({ projects }: ProjectsAnalysisProps) {
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
@@ -44,7 +43,6 @@ export default function ProjectsAnalysis({ projects }: ProjectsAnalysisProps) {
         </div>
       </div>
 
-      {/* Detected Projects Cards */}
       <div className="flex flex-col gap-4">
         {projectList.map((proj, idx) => (
           <div key={idx} className="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -57,7 +55,6 @@ export default function ProjectsAnalysis({ projects }: ProjectsAnalysisProps) {
                 </span>
               </div>
 
-              {/* Tech Stack Pills */}
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {proj.techStack?.map((tech: string, tIdx: number) => (
                   <span key={tIdx} className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded border border-indigo-100">
@@ -67,7 +64,6 @@ export default function ProjectsAnalysis({ projects }: ProjectsAnalysisProps) {
               </div>
             </div>
 
-            {/* Repo Link Status */}
             <div className="flex items-center gap-2">
               {proj.githubLink?.includes("github.com") ? (
                 <a

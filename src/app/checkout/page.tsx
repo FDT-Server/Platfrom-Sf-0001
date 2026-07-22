@@ -18,7 +18,6 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {

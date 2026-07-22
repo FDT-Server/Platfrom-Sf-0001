@@ -15,11 +15,6 @@ export interface GeminiJobMatchResult {
   tailoredSummarySuggestion: string;
 }
 
-/**
- * Gemini AI Service Layer.
- * Modular structure ready to call Google Gemini API (gemini-1.5-pro / gemini-2.0-flash)
- * with prompt templates and fallback mock engine when offline or API key is absent.
- */
 export async function analyzeResumeWithGemini(
   resumeText: string,
   targetJobDescription?: string
@@ -29,19 +24,17 @@ export async function analyzeResumeWithGemini(
   topWeaknesses: string[];
   actionPlan: string[];
 }> {
-  // Check for Gemini API key if configured
+
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
   if (apiKey) {
     try {
-      // Future live call implementation placeholder
-      // const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, ...);
+
     } catch (e) {
       console.warn("Gemini API call failed, falling back to mock AI engine.", e);
     }
   }
 
-  // Fallback mock AI generator response
   return {
     aiSummary:
       "The resume demonstrates robust full-stack engineering competency with clear tech stack details (React, Next.js, Node.js, AWS). Bullet points showcase strong metric-driven outcomes, though adding more quantitative leadership metrics and aligning with specific job target keywords will increase ATS rank.",
@@ -65,9 +58,6 @@ export async function analyzeResumeWithGemini(
   };
 }
 
-/**
- * AI Powered Section Rewriter (Summary, Experience, Skills, Project Description)
- */
 export async function rewriteResumeSection(
   sectionType: "summary" | "experience" | "skills" | "projects",
   originalText: string,
@@ -135,16 +125,12 @@ export async function rewriteResumeSection(
   );
 }
 
-/**
- * Compare Resume against a target Job Description (JD)
- */
 export async function compareWithJobDescription(
   resumeText: string,
   jobDescription: string
 ): Promise<GeminiJobMatchResult> {
   const jdLower = jobDescription.toLowerCase();
 
-  // Basic keyword extraction matching
   const targetKeywords = [
     { word: "React", priority: "High" },
     { word: "TypeScript", priority: "High" },

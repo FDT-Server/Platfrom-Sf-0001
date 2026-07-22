@@ -6,12 +6,19 @@ import {
   IconSend,
   IconBrandTelegram,
   IconUsers,
-  IconUser,
   IconLock,
   IconMessage,
   IconMessageCircle,
   IconX,
+  IconUserPlus,
+  IconUserCheck,
+  IconClock,
+  IconCheck,
+  IconSearch,
+  IconBuilding,
+  IconPlus,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 interface UserCompact {
   id: string;
@@ -27,6 +34,17 @@ interface UserCompact {
   linkedinLink?: string | null;
   about?: string | null;
   shareWithNetworking?: boolean;
+}
+
+interface ConnectionRequestItem {
+  id: string;
+  fullName: string;
+  selectedRole: string;
+  profileImage: string | null;
+  collegeStudying?: string | null;
+  status: "PENDING" | "ACCEPTED";
+  sentAt?: string;
+  incoming?: boolean;
 }
 
 interface ChatMessage {
@@ -47,87 +65,280 @@ interface NetworkingContentProps {
   allUsers: UserCompact[];
 }
 
-
 const bubbleColors = [
-  { bg: "#4f46e5", text: "#ffffff", border: "transparent" }, 
-  { bg: "#059669", text: "#ffffff", border: "transparent" }, 
-  { bg: "#db2777", text: "#ffffff", border: "transparent" }, 
-  { bg: "#e11d48", text: "#ffffff", border: "transparent" }, 
-  { bg: "#0284c7", text: "#ffffff", border: "transparent" }, 
-  { bg: "#0891b2", text: "#ffffff", border: "transparent" }, 
-  { bg: "#f97316", text: "#ffffff", border: "transparent" }, 
-  { bg: "#0d9488", text: "#ffffff", border: "transparent" }, 
-  { bg: "#d97706", text: "#ffffff", border: "transparent" }, 
-  { bg: "#7c3aed", text: "#ffffff", border: "transparent" }, 
-  { bg: "#e2f952", text: "#0f172a", border: "transparent" }  
+  { bg: "#4f46e5", text: "#ffffff" },
+  { bg: "#059669", text: "#ffffff" },
+  { bg: "#db2777", text: "#ffffff" },
+  { bg: "#e11d48", text: "#ffffff" },
+  { bg: "#0284c7", text: "#ffffff" },
+  { bg: "#0891b2", text: "#ffffff" },
+  { bg: "#f97316", text: "#ffffff" },
+  { bg: "#0d9488", text: "#ffffff" },
+  { bg: "#7c3aed", text: "#ffffff" },
 ];
 
-interface ParsedReply {
-  replyingToName: string;
-  refId: string | null;
-  quotedText: string;
-  actualContent: string;
+const fallbackPortraits: string[] = [
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600&h=600",
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600&h=600",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600&h=600",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600&h=600",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600&h=600",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600&h=600",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600&h=600",
+];
+
+function getMemberImage(id: string, customImage?: string | null): string {
+  if (customImage && customImage.trim() !== "") {
+    return customImage;
+  }
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % fallbackPortraits.length;
+  return fallbackPortraits[index];
 }
 
-const parseReplyMessage = (content: string): ParsedReply | null => {
-  if (!content.startsWith("Replying to")) return null;
+const initialDefaultRequests: ConnectionRequestItem[] = [
+  {
+    id: "req-1",
+    fullName: "Sienna Brooks",
+    selectedRole: "Student Developer",
+    collegeStudying: "Computer Science",
+    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600&h=600",
+    status: "PENDING",
+    sentAt: "12m ago",
+    incoming: true,
+  },
+  {
+    id: "req-2",
+    fullName: "Kada Znapika Kumari",
+    selectedRole: "Aspiring Developer",
+    collegeStudying: "Computer Science",
+    profileImage: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600&h=600",
+    status: "PENDING",
+    sentAt: "10m ago",
+    incoming: true,
+  },
+  {
+    id: "req-3",
+    fullName: "Paverasa Kumar",
+    selectedRole: "Software Engineer",
+    collegeStudying: "Information Tech",
+    profileImage: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600&h=600",
+    status: "PENDING",
+    sentAt: "1h ago",
+    incoming: true,
+  },
+  {
+    id: "req-4",
+    fullName: "Akshaya Reddy Metpally",
+    selectedRole: "Frontend Developer",
+    collegeStudying: "Web Systems",
+    profileImage: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600&h=600",
+    status: "ACCEPTED",
+    sentAt: "Yesterday",
+    incoming: false,
+  },
+];
 
-  const firstDoubleNewlineIndex = content.indexOf("\n\n");
-  if (firstDoubleNewlineIndex === -1) return null;
+interface MemberCardProps {
+  id: string;
+  fullName: string;
+  handle: string;
+  role: string;
+  college?: string | null;
+  statusText?: string;
+  image: string;
+  actionType: "add" | "accept" | "message" | "pending";
+  onAction: () => void;
+  onDecline?: () => void;
+}
 
-  const headerAndQuote = content.substring(0, firstDoubleNewlineIndex);
-  const actualContent = content.substring(firstDoubleNewlineIndex + 2);
+function MemberCard({
+  fullName,
+  handle,
+  role,
+  college,
+  statusText,
+  image,
+  actionType,
+  onAction,
+  onDecline,
+}: MemberCardProps) {
+  return (
+    <div className="bg-white rounded-[22px] border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-2 flex flex-col justify-between transition-all duration-200 select-none group w-full max-w-[230px] shrink-0">
+      {/* Top Image Hero - No separate container */}
+      <div className="relative w-full h-44 rounded-[16px] overflow-hidden bg-slate-100 shadow-2xs group">
+        {/* Full Card Hero Image */}
+        <img
+          src={image}
+          alt={fullName}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
 
-  const lines = headerAndQuote.split("\n");
-  if (lines.length < 2) return null;
+        {/* Compact Glassmorphism Name & Status Badge directly on top of image */}
+        <div className="absolute top-2 inset-x-2 backdrop-blur-md bg-white/70 border border-white/60 shadow-xs rounded-lg px-2 py-1.5 flex flex-col items-center justify-center text-center">
+          <h3 className="text-xs font-semibold text-slate-900 leading-tight truncate w-full tracking-tight">
+            {fullName}
+          </h3>
+          <div className="flex items-center justify-center gap-1 text-[9px] font-medium text-slate-600 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse shrink-0" />
+            <span className="truncate">{statusText || role || "Connecting"}</span>
+          </div>
+        </div>
+      </div>
 
-  const headerLine = lines[0];
-  
-  let replyingToName = "";
-  let refId: string | null = null;
+      {/* Bottom Footer Row */}
+      <div className="flex items-center justify-between gap-1.5 pt-2 pb-0.5 px-1">
+        {/* Left: Thumbnail avatar + @handle & subtitle */}
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <div className="relative shrink-0">
+            <img
+              src={image}
+              alt={fullName}
+              className="w-6 h-6 rounded-full object-cover border border-white shadow-2xs"
+            />
+            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-1 ring-white" />
+          </div>
 
-  const refMatch = headerLine.match(/^Replying to (.*?)(?:\s*\[ref:(.*?)\])?:?$/);
-  if (refMatch) {
-    replyingToName = refMatch[1].trim();
-    refId = refMatch[2] || null;
-  } else {
-    replyingToName = headerLine.replace("Replying to ", "").replace(":", "").trim();
-  }
+          <div className="min-w-0 flex flex-col">
+            <span className="text-[10px] font-semibold text-[#111111] truncate">@{handle}</span>
+            <span className="text-[8px] font-medium text-slate-400 truncate">
+              {college || "12m ago"}
+            </span>
+          </div>
+        </div>
 
-  const quotedText = lines.slice(1)
-    .map(line => line.startsWith("> ") ? line.slice(2) : (line.startsWith(">") ? line.slice(1) : line))
-    .join("\n");
+        {/* Right: Action Button */}
+        {actionType === "add" && (
+          <button
+            onClick={onAction}
+            className="bg-[#1c1c1c] hover:bg-black text-white font-medium text-[9px] rounded-lg px-2.5 py-1 flex items-center gap-0.5 shadow-2xs transition active:scale-95 cursor-pointer border-0 shrink-0"
+          >
+            <IconPlus className="w-3 h-3" />
+            <span>Add</span>
+          </button>
+        )}
 
-  return {
-    replyingToName,
-    refId,
-    quotedText,
-    actualContent
-  };
-};
+        {actionType === "accept" && (
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={onAction}
+              className="bg-[#1c1c1c] hover:bg-black text-white font-medium text-[9px] rounded-lg px-2 py-1 flex items-center gap-0.5 shadow-2xs transition active:scale-95 cursor-pointer border-0"
+            >
+              <IconCheck className="w-3 h-3" />
+              <span>Accept</span>
+            </button>
+            {onDecline && (
+              <button
+                onClick={onDecline}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[9px] rounded-lg p-1 transition cursor-pointer border-0"
+              >
+                <IconX className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {actionType === "message" && (
+          <button
+            onClick={onAction}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-[9px] rounded-lg px-2.5 py-1 flex items-center gap-0.5 shadow-2xs transition active:scale-95 cursor-pointer border-0 shrink-0"
+          >
+            <IconMessageCircle className="w-3 h-3" />
+            <span>Message</span>
+          </button>
+        )}
+
+        {actionType === "pending" && (
+          <button
+            disabled
+            className="bg-amber-50 text-amber-700 border border-amber-200 font-semibold text-[9px] rounded-lg px-2 py-1 flex items-center gap-0.5 cursor-default shrink-0"
+          >
+            <IconClock className="w-3 h-3" />
+            <span>Pending</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function NetworkingContent({ user, allUsers }: NetworkingContentProps) {
+  const [activeTab, setActiveTab] = useState<"chat" | "friends" | "requests" | "discover">("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessageText, setNewMessageText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  
-  
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
-
-  
   const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  
-  const [activeMenuMsgId, setActiveMenuMsgId] = useState<string | null>(null);
-  const [replyingToMessage, setReplyingToMessage] = useState<ChatMessage | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [infoMessage, setInfoMessage] = useState<ChatMessage | null>(null);
+  const [requests, setRequests] = useState<ConnectionRequestItem[]>(initialDefaultRequests);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("sf_connection_requests");
+      if (stored) {
+        try {
+          const parsed: ConnectionRequestItem[] = JSON.parse(stored);
+          setRequests((prev) => {
+            const combined = [...prev];
+            parsed.forEach((item) => {
+              if (!combined.some((c) => c.id === item.id)) {
+                combined.unshift(item);
+              }
+            });
+            return combined;
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
+  const saveRequests = (updatedList: ConnectionRequestItem[]) => {
+    setRequests(updatedList);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sf_connection_requests", JSON.stringify(updatedList));
+    }
+  };
+
+  const handleAcceptRequest = (reqId: string, name: string) => {
+    const updated = requests.map((r) => (r.id === reqId ? { ...r, status: "ACCEPTED" as const } : r));
+    saveRequests(updated);
+    toast.success(`You and ${name} are now connected friends!`);
+  };
+
+  const handleDeclineRequest = (reqId: string) => {
+    const updated = requests.filter((r) => r.id !== reqId);
+    saveRequests(updated);
+    toast.info("Connection request declined.");
+  };
+
+  const handleConnectDiscover = (targetUser: UserCompact) => {
+    if (!requests.some((r) => r.id === targetUser.id)) {
+      const newReq: ConnectionRequestItem = {
+        id: targetUser.id,
+        fullName: targetUser.fullName,
+        selectedRole: targetUser.selectedRole || "Student Member",
+        profileImage: targetUser.profileImage || null,
+        collegeStudying: targetUser.collegeStudying || "Computer Science",
+        status: "PENDING",
+        sentAt: "Just now",
+        incoming: false,
+      };
+      const updated = [newReq, ...requests];
+      saveRequests(updated);
+      toast.success(`Connection request sent to ${targetUser.fullName}!`);
+    }
+  };
+
   const getUserColor = (userId: string) => {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
@@ -137,19 +348,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     return bubbleColors[index];
   };
 
-  
-  const [prevMessageCount, setPrevMessageCount] = useState(0);
-
-  
   const fetchMessages = async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
       const res = await fetch(`/api/messages?activeChatUserId=${activeChatUserId || "null"}&t=${Date.now()}`, {
         cache: "no-store",
-        headers: {
-          "Pragma": "no-cache",
-          "Cache-Control": "no-cache",
-        },
       });
       if (res.ok) {
         const data = await res.json();
@@ -162,69 +365,18 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  
   useEffect(() => {
     fetchMessages(true);
-    
     const interval = setInterval(() => {
       fetchMessages(false);
-    }, 1000);
-
+    }, 1500);
     return () => clearInterval(interval);
   }, [activeChatUserId]);
 
-  
-  const scrollToBottom = () => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages.length, activeChatUserId]);
 
-  
-  useEffect(() => {
-    scrollToBottom();
-    setPrevMessageCount(messages.length);
-  }, [activeChatUserId]);
-
-  
-  useEffect(() => {
-    if (messages.length > prevMessageCount) {
-      scrollToBottom();
-      setPrevMessageCount(messages.length);
-    }
-  }, [messages.length]);
-
-  
-  const handleScrollToMessage = (refId: string | null, quotedText: string, replyingToName: string) => {
-    let targetMsgId = refId;
-
-    if (!targetMsgId) {
-      
-      const cleanQuote = quotedText.trim();
-      const originalMsg = messages.find(m => {
-        if (m.fullName !== replyingToName) return false;
-        const cleanContent = m.content.startsWith("Replying to")
-          ? m.content.split("\n\n").slice(1).join("\n\n")
-          : m.content;
-        return cleanContent.trim().includes(cleanQuote) || cleanQuote.includes(cleanContent.trim());
-      });
-      if (originalMsg) {
-        targetMsgId = originalMsg.id;
-      }
-    }
-
-    if (targetMsgId) {
-      const element = document.getElementById(`msg-${targetMsgId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-        
-        element.classList.add("ring-2", "ring-indigo-500", "ring-offset-2", "transition-all", "duration-500");
-        setTimeout(() => {
-          element.classList.remove("ring-2", "ring-indigo-500", "ring-offset-2");
-        }, 2000);
-      }
-    }
-  };
-
-  
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessageText.trim() || sending) return;
@@ -233,26 +385,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     setError("");
 
     try {
-      let cleanContent = replyingToMessage ? replyingToMessage.content : "";
-      if (replyingToMessage) {
-        const parsed = parseReplyMessage(replyingToMessage.content);
-        if (parsed) {
-          cleanContent = parsed.actualContent;
-        }
-      }
-
-      const textToSend = replyingToMessage
-        ? `Replying to ${replyingToMessage.fullName} [ref:${replyingToMessage.id}]:\n> ${cleanContent.split("\n").join("\n> ")}\n\n${newMessageText.trim()}`
-        : newMessageText.trim();
-
       const res = await fetch("/api/messages", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: textToSend,
-          recipientId: activeChatUserId, 
+          content: newMessageText.trim(),
+          recipientId: activeChatUserId,
         }),
       });
 
@@ -260,7 +398,6 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
         const data = await res.json();
         setMessages((prev) => [...prev, data.message]);
         setNewMessageText("");
-        setReplyingToMessage(null); 
       } else {
         const errData = await res.json();
         setError(errData.error || "Failed to send message.");
@@ -273,999 +410,565 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
     }
   };
 
-  
-  const handleReactMessage = async (messageId: string, emoji: string) => {
-    try {
-      const msg = messages.find((m) => m.id === messageId);
-      let currentReactions = msg?.reactions || {};
-      if (typeof currentReactions === "string") {
-        try {
-          currentReactions = JSON.parse(currentReactions);
-        } catch {
-          currentReactions = {};
-        }
-      }
-      const existingReaction = currentReactions[user.id];
-      
-      const targetEmoji = existingReaction?.emoji === emoji ? null : emoji;
-
-      
-      setMessages((prev) =>
-        prev.map((m) => {
-          if (m.id === messageId) {
-            const updatedReactions = { ...currentReactions };
-            if (!targetEmoji) {
-              delete updatedReactions[user.id];
-            } else {
-              updatedReactions[user.id] = { emoji: targetEmoji, fullName: user.fullName };
-            }
-            return { ...m, reactions: updatedReactions };
-          }
-          return m;
-        })
-      );
-
-      
-      const res = await fetch(`/api/messages/${messageId}/react`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ emoji: targetEmoji }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to react to message");
-      }
-
-      const data = await res.json();
-      
-      setMessages((prev) =>
-        prev.map((m) => (m.id === messageId ? data.message : m))
-      );
-    } catch (err) {
-      console.error("React message error:", err);
-    }
-  };
-
-  const getGroupedReactions = (reactionsObj: any) => {
-    const reactionCounts: { [emoji: string]: number } = {};
-    const userReacted: { [emoji: string]: string[] } = {};
-    let totalReactions = 0;
-
-    Object.entries(reactionsObj || {}).forEach(([uid, react]: [string, any]) => {
-      if (react && react.emoji) {
-        reactionCounts[react.emoji] = (reactionCounts[react.emoji] || 0) + 1;
-        if (!userReacted[react.emoji]) userReacted[react.emoji] = [];
-        userReacted[react.emoji].push(react.fullName);
-        totalReactions++;
-      }
-    });
-
-    return { reactionCounts, userReacted, totalReactions };
-  };
-
-  
-  const renderMessageContent = (content: string, isCurrentUser: boolean) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = content.split(urlRegex);
-    return parts.map((part, index) => {
-      if (urlRegex.test(part)) {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline hover:opacity-85 break-all font-semibold ${
-              isCurrentUser ? "text-indigo-100 hover:text-white" : "text-indigo-650 hover:text-indigo-800"
-            }`}
-          >
-            {part}
-          </a>
-        );
-      }
-      return part;
-    });
-  };
-
-  
-  const getUnreadCount = (senderId: string) => {
-    return messages.filter((msg) => {
-      const isFromSender = msg.userId === senderId && msg.recipientId === user.id;
-      if (!isFromSender) return false;
-      let seenMap: any = msg.seenBy || {};
-      if (typeof seenMap === "string") {
-        try {
-          seenMap = JSON.parse(seenMap);
-        } catch {
-          seenMap = {};
-        }
-      }
-      return !seenMap[user.id];
-    }).length;
-  };
-
-  
-  const handleDeleteForMe = (messageId: string) => {
-    setMessages((prev) => prev.filter((m) => m.id !== messageId));
-    setActiveMenuMsgId(null);
-  };
-
-  
-  const handleDeleteForEveryone = async (messageId: string) => {
-    try {
-      
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
-      setActiveMenuMsgId(null);
-
-      const res = await fetch(`/api/messages/${messageId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to delete message for everyone");
-      }
-    } catch (err) {
-      console.error("Delete message error:", err);
-      
-      fetchMessages(false);
-    }
-  };
-
   const getInitials = (name: string) => {
-    if (!name) return "?";
+    if (!name) return "SF";
     return name
-      .split(" ")
+      .trim()
+      .split(/\s+/)
       .map((n) => n[0])
       .join("")
-      .substring(0, 2)
+      .slice(0, 2)
       .toUpperCase();
   };
 
-  const formatMessageTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch (e) {
-      return "";
-    }
-  };
-
-  
   const directoryUsers = allUsers.filter((u) => u.id !== user.id);
+  const pendingRequests = requests.filter((r) => r.status === "PENDING");
+  const acceptedFriends = requests.filter((r) => r.status === "ACCEPTED");
 
-  
-  const filteredMessages = messages.filter((msg) => {
-    if (activeChatUserId === null) {
-      
-      return msg.recipientId === null;
-    } else {
-      
-      return (
-        (msg.userId === user.id && msg.recipientId === activeChatUserId) ||
-        (msg.userId === activeChatUserId && msg.recipientId === user.id)
-      );
-    }
+  const filteredDiscoverUsers = directoryUsers.filter((u) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      u.fullName.toLowerCase().includes(q) ||
+      (u.selectedRole && u.selectedRole.toLowerCase().includes(q)) ||
+      (u.collegeStudying && u.collegeStudying.toLowerCase().includes(q))
+    );
   });
 
-  const getActiveChatUser = () => {
-    return allUsers.find((u) => u.id === activeChatUserId);
-  };
-
-  const activeUserObj = getActiveChatUser();
-
+  const activeUserObj = allUsers.find((u) => u.id === activeChatUserId);
   const isAdminEmail = (email: string) => email.trim().toLowerCase() === "webstrixx@gmail.com";
 
   return (
     <DashboardLayout user={user}>
-      
-      <div className="flex h-[88vh] lg:h-[92vh] w-full flex-col lg:flex-row rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden animate-fadeIn">
-        
-        
-        <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 max-h-[35%] lg:max-h-full">
-          
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <IconUsers className="w-5 h-5 text-indigo-600" />
-              <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wider">
-                Conversations
-              </h3>
+      <div className="flex h-[88vh] lg:h-[92vh] w-full flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden animate-fadeIn select-none">
+        {/* Navigation Tab Header Bar */}
+        <div className="bg-white text-slate-900 p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3.5 border-b border-slate-200/80 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shadow-2xs">
+              <IconUsers className="w-5 h-5" />
             </div>
-            <span className="text-[10px] bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-full">
-              {allUsers.length} Users
-            </span>
+            <div>
+              <h2 className="text-sm font-extrabold text-slate-900 leading-snug tracking-wide">
+                Developer Network & Community Hub
+              </h2>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                Connect with peers, manage invitations & chat in real-time
+              </p>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-            
+          <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/70 w-full sm:w-auto overflow-x-auto">
             <button
-              onClick={() => setActiveChatUserId(null)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl border transition text-left cursor-pointer ${
-                activeChatUserId === null
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-sm font-semibold"
-                  : "bg-white border-slate-200/80 hover:border-slate-350 text-slate-700"
+              onClick={() => setActiveTab("chat")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+                activeTab === "chat"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/80"
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
-                activeChatUserId === null ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"
-              }`}>
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold truncate">Public Chat Hub</p>
-                <p className={`text-[9px] mt-0.5 ${activeChatUserId === null ? "text-indigo-100" : "text-slate-400"}`}>
-                  Everyone in academy
-                </p>
-              </div>
+              <IconMessageCircle className="w-3.5 h-3.5" />
+              <span>Chat Hub</span>
             </button>
 
-            
-            <div className="py-1 flex items-center gap-2">
-              <span className="h-[1px] bg-slate-200 flex-1"></span>
-              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Direct Messages</span>
-              <span className="h-[1px] bg-slate-200 flex-1"></span>
-            </div>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+                activeTab === "requests"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/80"
+              }`}
+            >
+              <IconClock className="w-3.5 h-3.5" />
+              <span>Pending Requests</span>
+              {pendingRequests.length > 0 && (
+                <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-1.5 py-0.2 rounded-full">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </button>
 
-            
-            {directoryUsers.map((u) => {
-              const isSelected = activeChatUserId === u.id;
-              const isUserAdmin = isAdminEmail(u.email);
-              const userColor = getUserColor(u.id);
+            <button
+              onClick={() => setActiveTab("friends")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+                activeTab === "friends"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/80"
+              }`}
+            >
+              <IconUserCheck className="w-3.5 h-3.5" />
+              <span>My Connections</span>
+              <span className="bg-slate-200 text-slate-700 font-bold text-[10px] px-1.5 py-0.2 rounded-full">
+                {acceptedFriends.length}
+              </span>
+            </button>
 
-              return (
-                <button
-                  key={u.id}
-                  onClick={() => setActiveChatUserId(u.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition text-left cursor-pointer ${
-                    isSelected
-                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm font-semibold"
-                      : "bg-white border-slate-200/80 hover:border-slate-350 text-slate-700"
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    {u.profileImage ? (
-                      <img
-                        src={u.profileImage}
-                        alt={u.fullName}
-                        className="w-9 h-9 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div 
-                        style={isSelected ? {} : { backgroundColor: userColor.bg, color: userColor.text }}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition duration-150 ${
-                          isSelected ? "bg-white/20 text-white" : ""
-                        }`}
-                      >
-                        {getInitials(u.fullName)}
-                      </div>
-                    )}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold truncate">{u.fullName}</p>
-                    <span className={`inline-block text-[8px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${
-                      isSelected
-                        ? "bg-white/25 text-white"
-                        : isUserAdmin
-                        ? "bg-amber-50 text-amber-700 border border-amber-100"
-                        : "bg-slate-100 text-slate-500 border border-slate-200"
-                    }`}>
-                      {isUserAdmin ? "Admin" : u.selectedRole}
-                    </span>
-                  </div>
-
-                  
-                  {(() => {
-                    const count = getUnreadCount(u.id);
-                    if (count === 0) return null;
-                    return (
-                      <span className={`ml-auto ${isSelected ? "bg-white text-indigo-650" : "bg-indigo-600 text-white"} text-[10px] font-bold h-5 px-1.5 rounded-full flex items-center justify-center min-w-5 shadow-xs shrink-0`}>
-                        {count}
-                      </span>
-                    );
-                  })()}
-                </button>
-              );
-            })}
+            <button
+              onClick={() => setActiveTab("discover")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+                activeTab === "discover"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/80"
+              }`}
+            >
+              <IconUserPlus className="w-3.5 h-3.5" />
+              <span>Discover</span>
+            </button>
           </div>
         </div>
 
-        
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
-          
-          
-          <div 
-            onClick={() => {
-              if (activeChatUserId !== null) {
-                setShowProfilePanel(true);
-              }
-            }}
-            className={`p-4 border-b border-slate-200 flex items-center justify-between bg-white z-10 shrink-0 ${
-              activeChatUserId !== null ? "hover:bg-slate-50/80 cursor-pointer transition" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              {activeChatUserId === null ? (
-                <span className="p-2.5 rounded-xl border bg-indigo-55 text-indigo-700 border-indigo-100">
-                  <IconBrandTelegram className="w-5 h-5" />
-                </span>
-              ) : (
-                
-                activeUserObj?.profileImage ? (
-                  <img
-                    src={activeUserObj.profileImage}
-                    alt={activeUserObj.fullName}
-                    className="w-10 h-10 rounded-xl object-cover border border-slate-100"
-                  />
-                ) : (() => {
-                  const activeColor = getUserColor(activeChatUserId);
-                  return (
-                    <div 
-                      style={{ backgroundColor: activeColor.bg, color: activeColor.text }}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shadow-2xs"
-                    >
-                      {getInitials(activeUserObj?.fullName || "")}
-                    </div>
-                  );
-                })()
-              )}
-              <div>
-                <h3 className="text-sm font-bold text-slate-800 leading-snug flex items-center gap-1.5">
-                  {activeChatUserId === null ? (
-                    "Public Chat Hub"
-                  ) : (
-                    <>
-                      {activeUserObj?.fullName}
-                      <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                        <IconLock className="w-3 h-3 shrink-0" /> Private
-                      </span>
-                    </>
-                  )}
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {activeChatUserId === null
-                    ? "Share thoughts and queries publicly with all group members"
-                    : "Click to inspect profile & training details"}
-                </p>
-              </div>
-            </div>
+        {/* Main Content Area Based on Active Tab */}
+        <div className="flex-1 flex overflow-hidden bg-slate-50/40">
+          {/* TAB 1: CHAT HUB */}
+          {activeTab === "chat" && (
+            <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden w-full">
+              {/* Conversations Sidebar */}
+              <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50/60 flex flex-col shrink-0 max-h-[35%] lg:max-h-full">
+                <div className="p-3.5 border-b border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <IconMessageCircle className="w-4 h-4 text-blue-600" />
+                    <h3 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">
+                      Conversations
+                    </h3>
+                  </div>
+                  <span className="text-[10px] bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded-full">
+                    {allUsers.length} Members
+                  </span>
+                </div>
 
-            {activeChatUserId !== null && (
-              <button className="text-[11px] text-indigo-650 bg-indigo-50 hover:bg-indigo-100 font-bold px-3 py-1.5 rounded-xl transition duration-150 cursor-pointer">
-                View Profile
-              </button>
-            )}
-          </div>
-
-          
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2">
-                <div className="w-8 h-8 border-3 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p className="text-xs text-slate-400 font-semibold">Loading conversation...</p>
-              </div>
-            ) : filteredMessages.length > 0 ? (
-              filteredMessages.map((msg) => {
-                const isCurrentUser = msg.userId === user.id;
-                const isMsgAdmin = isAdminEmail(msg.email);
-                const senderColor = getUserColor(msg.userId);
-                
-                return (
-                  <div
-                    key={msg.id}
-                    id={`msg-${msg.id}`}
-                    className={`flex items-start gap-3 max-w-[85%] md:max-w-[70%] ${
-                      isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5">
+                  <button
+                    onClick={() => setActiveChatUserId(null)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition text-left cursor-pointer ${
+                      activeChatUserId === null
+                        ? "bg-blue-600 border-blue-600 text-white shadow-sm font-semibold"
+                        : "bg-white border-slate-200/80 hover:border-blue-200 text-slate-700"
                     }`}
                   >
-                    
-                    <div className="shrink-0">
-                      {(() => {
-                        const senderUser = allUsers.find((u) => u.id === msg.userId) || (msg.userId === user.id ? user : null);
-                        if (senderUser?.profileImage) {
-                          return (
-                            <img 
-                              src={senderUser.profileImage} 
-                              className="w-8 h-8 rounded-xl object-cover shadow-2xs border border-slate-200" 
-                              alt={msg.fullName} 
-                            />
-                          );
-                        }
-                        return (
-                          <div 
-                            style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shadow-2xs"
-                          >
-                            {getInitials(msg.fullName)}
-                          </div>
-                        );
-                      })()}
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                        activeChatUserId === null ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"
+                      }`}
+                    >
+                      <IconMessageCircle className="w-5 h-5" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold truncate">Public Chat Hub</p>
+                      <p
+                        className={`text-[10px] mt-0.5 ${
+                          activeChatUserId === null ? "text-blue-100" : "text-slate-400"
+                        }`}
+                      >
+                        Everyone in academy
+                      </p>
+                    </div>
+                  </button>
 
-                    
-                    <div className="space-y-1 group relative min-w-0">
-                      
-                      
-                      <div className={`absolute -top-7 ${isCurrentUser ? "left-0" : "right-0"} z-35 bg-slate-950 border border-slate-800 shadow-md rounded-full px-2.5 py-1.5 flex gap-2 items-center transition-all duration-150 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto`}>
-                        {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji) => {
-                          const currentReactions = msg.reactions || {};
-                          const userReact = currentReactions[user.id];
-                          const hasReacted = userReact?.emoji === emoji;
-                          return (
-                            <button
-                              key={emoji}
-                              onClick={() => handleReactMessage(msg.id, emoji)}
-                              className={`hover:scale-130 transition duration-100 text-sm cursor-pointer select-none ${
-                                hasReacted ? "bg-slate-800 p-0.5 rounded-full scale-110" : ""
+                  <div className="py-1.5 flex items-center gap-2">
+                    <span className="h-[1px] bg-slate-200 flex-1"></span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                      Direct Messages
+                    </span>
+                    <span className="h-[1px] bg-slate-200 flex-1"></span>
+                  </div>
+
+                  {directoryUsers.map((u) => {
+                    const isSelected = activeChatUserId === u.id;
+                    const isUserAdmin = isAdminEmail(u.email);
+                    const userColor = getUserColor(u.id);
+
+                    return (
+                      <button
+                        key={u.id}
+                        onClick={() => setActiveChatUserId(u.id)}
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition text-left cursor-pointer ${
+                          isSelected
+                            ? "bg-blue-600 border-blue-600 text-white shadow-sm font-semibold"
+                            : "bg-white border-slate-200/80 hover:border-blue-200 text-slate-700"
+                        }`}
+                      >
+                        <div className="relative shrink-0">
+                          {u.profileImage ? (
+                            <img
+                              src={u.profileImage}
+                              alt={u.fullName}
+                              className="w-9 h-9 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <div
+                              style={isSelected ? {} : { backgroundColor: userColor.bg, color: userColor.text }}
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold ${
+                                isSelected ? "bg-white/20 text-white" : ""
                               }`}
                             >
-                              {emoji}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      
-                      <div className={`absolute top-0.5 ${isCurrentUser ? "-left-5" : "-right-5"} z-30 opacity-0 group-hover:opacity-100 transition-all duration-150`}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveMenuMsgId(activeMenuMsgId === msg.id ? null : msg.id);
-                          }}
-                          className="text-slate-400 hover:text-slate-700 bg-white/90 hover:bg-white rounded-full p-0.5 border border-slate-200 shadow-3xs flex items-center justify-center cursor-pointer"
-                          title="Message Options"
-                        >
-                          <span className="material-symbols-outlined text-[14px] select-none font-bold">
-                            keyboard_arrow_down
-                          </span>
-                        </button>
-
-                        {activeMenuMsgId === msg.id && (
-                          <>
-                            
-                            <div 
-                              className="fixed inset-0 z-40 cursor-default" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenuMsgId(null);
-                              }}
-                            />
-                            
-                            <div className={`absolute top-6 ${isCurrentUser ? "left-0" : "right-0"} z-50 bg-white border border-slate-200/80 shadow-md rounded-lg py-1 w-36 animate-fadeIn`}>
-                              <button
-                                onClick={() => {
-                                  setReplyingToMessage(msg);
-                                  setActiveMenuMsgId(null);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
-                              >
-                                <span className="material-symbols-outlined text-[13px] text-slate-400">reply</span>
-                                Reply
-                              </button>
-                              
-                              {activeChatUserId === null && !isCurrentUser && (
-                                <button
-                                  onClick={() => {
-                                    setActiveChatUserId(msg.userId);
-                                    setReplyingToMessage(msg);
-                                    setActiveMenuMsgId(null);
-                                  }}
-                                  className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
-                                >
-                                  <span className="material-symbols-outlined text-[13px] text-slate-400">chat_bubble</span>
-                                  Reply privately
-                                </button>
-                              )}
-
-                              <button
-                                onClick={() => {
-                                  setInfoMessage(msg);
-                                  setActiveMenuMsgId(null);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
-                              >
-                                <span className="material-symbols-outlined text-[13px] text-slate-400">info</span>
-                                Info
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteForMe(msg.id)}
-                                className="w-full text-left px-3 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer font-medium"
-                              >
-                                <span className="material-symbols-outlined text-[13px] text-slate-400">delete</span>
-                                Delete for me
-                              </button>
-
-                              {(isCurrentUser || user.email.trim().toLowerCase() === "webstrixx@gmail.com") && (
-                                <button
-                                  onClick={() => handleDeleteForEveryone(msg.id)}
-                                  className="w-full text-left px-3 py-1.5 text-[11px] text-red-600 hover:bg-red-50 flex items-center gap-1.5 cursor-pointer font-semibold border-t border-slate-100"
-                                >
-                                  <span className="material-symbols-outlined text-[13px] text-red-500">delete_forever</span>
-                                  Delete for everyone
-                                </button>
-                              )}
+                              {getInitials(u.fullName)}
                             </div>
+                          )}
+                          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold truncate">{u.fullName}</p>
+                          <span
+                            className={`inline-block text-[8px] font-bold px-1.5 py-0.5 rounded-md mt-0.5 ${
+                              isSelected
+                                ? "bg-white/25 text-white"
+                                : isUserAdmin
+                                ? "bg-amber-50 text-amber-700 border border-amber-100"
+                                : "bg-slate-100 text-slate-500 border border-slate-200"
+                            }`}
+                          >
+                            {isUserAdmin ? "Admin" : u.selectedRole}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Chat View Panel */}
+              <div className="flex-1 flex flex-col h-full overflow-hidden bg-white">
+                <div
+                  onClick={() => {
+                    if (activeChatUserId !== null) {
+                      setShowProfilePanel(true);
+                    }
+                  }}
+                  className={`p-3.5 border-b border-slate-200 flex items-center justify-between bg-white z-10 shrink-0 ${
+                    activeChatUserId !== null ? "hover:bg-slate-50 cursor-pointer transition" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {activeChatUserId === null ? (
+                      <span className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                        <IconBrandTelegram className="w-5 h-5" />
+                      </span>
+                    ) : activeUserObj?.profileImage ? (
+                      <img
+                        src={activeUserObj.profileImage}
+                        alt={activeUserObj.fullName}
+                        className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          backgroundColor: getUserColor(activeChatUserId).bg,
+                          color: getUserColor(activeChatUserId).text,
+                        }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shadow-2xs"
+                      >
+                        {getInitials(activeUserObj?.fullName || "")}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-xs font-extrabold text-slate-900 leading-tight flex items-center gap-1.5">
+                        {activeChatUserId === null ? (
+                          "Public Chat Hub"
+                        ) : (
+                          <>
+                            {activeUserObj?.fullName}
+                            <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                              <IconLock className="w-3 h-3 shrink-0" /> Private Chat
+                            </span>
                           </>
                         )}
-                      </div>
+                      </h3>
+                      <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                        {activeChatUserId === null
+                          ? "Share ideas and project queries with all trainees"
+                          : "Click to view member profile & training details"}
+                      </p>
+                    </div>
+                  </div>
 
-                      
-                      <div className={`flex items-center gap-1.5 text-[10px] ${
-                        isCurrentUser ? "justify-end text-slate-500" : "text-slate-600"
-                      }`}>
-                        <span className="font-bold">{msg.fullName}</span>
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-md ${
-                          isMsgAdmin 
-                            ? "bg-amber-100 text-amber-850" 
-                            : "bg-slate-100 text-slate-600"
-                        }`}>
-                          {isMsgAdmin ? "Admin" : msg.role}
-                        </span>
-                      </div>
+                  {activeChatUserId !== null && (
+                    <button className="text-[11px] text-blue-600 bg-blue-50 hover:bg-blue-100 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer border border-blue-100">
+                      View Profile
+                    </button>
+                  )}
+                </div>
 
-                      
-                      <div className="relative min-w-0">
-                        {(() => {
-                          const parsedReply = parseReplyMessage(msg.content);
-                          if (parsedReply) {
-                            return (
-                              <div 
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/30 space-y-3.5">
+                  {loading ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-2">
+                      <div className="w-7 h-7 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+                      <p className="text-xs text-slate-400 font-semibold">Loading conversation...</p>
+                    </div>
+                  ) : messages.length > 0 ? (
+                    messages.map((msg) => {
+                      const isCurrentUser = msg.userId === user.id;
+                      const senderColor = getUserColor(msg.userId);
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex items-start gap-3 max-w-[85%] md:max-w-[70%] ${
+                            isCurrentUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                          }`}
+                        >
+                          <div className="shrink-0">
+                            {msg.userId === user.id && user.profileImage ? (
+                              <img
+                                src={user.profileImage}
+                                className="w-8 h-8 rounded-xl object-cover border border-slate-200 shadow-2xs"
+                                alt={msg.fullName}
+                              />
+                            ) : (
+                              <div
                                 style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
-                                className={`rounded-2xl px-4 py-2.5 shadow-2xs text-sm break-words leading-relaxed ${
-                                  isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
-                                } font-medium space-y-2 max-w-full overflow-hidden`}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shadow-2xs"
                               >
-                                
-                                <div 
-                                  onClick={() => handleScrollToMessage(parsedReply.refId, parsedReply.quotedText, parsedReply.replyingToName)}
-                                  className={`border-l-2 ${
-                                    isCurrentUser 
-                                      ? "border-white/40 bg-white/10 hover:bg-white/20" 
-                                      : "border-slate-400/40 bg-slate-100/35 hover:bg-slate-200/40"
-                                  } rounded-r-lg p-2 text-xs cursor-pointer transition select-none block max-w-full overflow-hidden`}
-                                  title="Click to see original message"
-                                >
-                                  <div className="font-bold opacity-80 leading-none truncate">
-                                    {parsedReply.replyingToName}
-                                  </div>
-                                  <div className="opacity-70 truncate mt-1 w-full block">
-                                    {parsedReply.quotedText.replace(/\n/g, " ")}
-                                  </div>
-                                </div>
-                                
-                                
-                                <div className="whitespace-pre-wrap">
-                                  {renderMessageContent(parsedReply.actualContent, isCurrentUser)}
-                                </div>
+                                {getInitials(msg.fullName)}
                               </div>
-                            );
-                          }
-                          
-                          return (
-                            <div 
+                            )}
+                          </div>
+
+                          <div className="space-y-1 min-w-0">
+                            <div
+                              className={`flex items-center gap-1.5 text-[10px] ${
+                                isCurrentUser ? "justify-end text-slate-500" : "text-slate-600"
+                              }`}
+                            >
+                              <span className="font-bold text-slate-800">{msg.fullName}</span>
+                              <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                                {msg.role}
+                              </span>
+                            </div>
+
+                            <div
                               style={{ backgroundColor: senderColor.bg, color: senderColor.text }}
-                              className={`rounded-2xl px-4 py-2.5 shadow-2xs text-sm break-words whitespace-pre-wrap leading-relaxed ${
+                              className={`rounded-2xl px-4 py-2.5 shadow-2xs text-xs font-medium leading-relaxed whitespace-pre-wrap ${
                                 isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
-                              } font-medium`}
+                              }`}
                             >
-                              {renderMessageContent(msg.content, isCurrentUser)}
+                              {msg.content}
                             </div>
-                          );
-                        })()}
-
-                        
-                        {(() => {
-                          const reactionsObj = msg.reactions || {};
-                          const { reactionCounts, userReacted, totalReactions } = getGroupedReactions(reactionsObj);
-
-                          if (totalReactions === 0) return null;
-
-                          return (
-                            <div 
-                              onClick={() => {
-                                const myReact = reactionsObj[user.id];
-                                if (myReact && myReact.emoji) {
-                                  handleReactMessage(msg.id, myReact.emoji);
-                                }
-                              }}
-                              className={`absolute -bottom-2 ${isCurrentUser ? "left-2.5" : "right-2.5"} z-20 bg-white border border-slate-200/90 shadow-2xs rounded-full px-1.5 py-0.5 flex gap-1 items-center select-none text-[9px] text-slate-650 font-bold hover:bg-slate-50 cursor-pointer transition`}
-                              title={Object.entries(userReacted)
-                                .map(([emoji, names]) => `${emoji} : ${names.join(", ")}`)
-                                .join("\n")}
-                            >
-                              <div className="flex -space-x-0.5">
-                                {Object.keys(reactionCounts).map((emoji) => (
-                                  <span key={emoji} className="text-xs leading-none">{emoji}</span>
-                                ))}
-                              </div>
-                              {totalReactions > 1 && <span className="leading-none text-slate-500">{totalReactions}</span>}
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      
-                      <div className={`text-[9px] text-slate-400 font-medium ${
-                        isCurrentUser ? "text-right" : ""
-                      }`}>
-                        {formatMessageTime(msg.createdAt)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              (() => {
-                const isChattingWithAdminPrivately = activeChatUserId !== null && activeUserObj && isAdminEmail(activeUserObj.email);
-                const isChattingWithTraineePrivately = activeChatUserId !== null && activeUserObj && !isAdminEmail(activeUserObj.email);
-                
-                if (isChattingWithAdminPrivately) {
-                  return (
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                      <div className="w-[300px] h-[300px] flex items-center justify-center overflow-hidden">
-                        <iframe
-                          src="https://lottie.host/embed/ed9443d8-2a36-4272-aa49-23f10b3bdc9f/Lr8kSnUjpu.lottie"
-                          style={{ width: "300px", height: "300px", border: "none" }}
-                          title="Admin Private Consultation"
-                        />
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mb-2">
+                        <IconMessage className="w-6 h-6" />
                       </div>
-                      <h4 className="text-sm font-bold text-slate-700 mt-1">
-                        Private Chat with {activeUserObj?.fullName}
-                      </h4>
-                      <p className="text-xs text-slate-500 max-w-sm mt-1">
-                        Send a secure message below to initiate your private consultation with the administrator.
+                      <h4 className="text-xs font-bold text-slate-700">No messages in this chat yet</h4>
+                      <p className="text-[11px] text-slate-500 max-w-xs mt-0.5">
+                        Type a message below to start the conversation!
                       </p>
                     </div>
-                  );
-                }
-
-                if (isChattingWithTraineePrivately) {
-                  return (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                      <div className="w-[300px] h-[300px] flex items-center justify-center overflow-hidden">
-                        <iframe
-                          src="https://lottie.host/embed/ea8bc4c7-442b-48c1-95b4-c7d02afd2cca/ebPEadNeIk.lottie"
-                          style={{ width: "300px", height: "300px", border: "none" }}
-                          title="Trainee Private Chat"
-                        />
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-700 mt-1">
-                        Private Chat with {activeUserObj?.fullName}
-                      </h4>
-                      <p className="text-xs text-slate-500 max-w-sm mt-1">
-                        Send a secure message below to start chatting privately with {activeUserObj?.fullName}.
-                      </p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center bg-indigo-55 text-indigo-650">
-                      <IconMessage className="w-7 h-7" />
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-700 mt-3">
-                      Welcome to the Public Hub!
-                    </h4>
-                    <p className="text-xs text-slate-500 max-w-sm mt-1">
-                      No group messages yet. Send a message to start sharing engineering ideas publicly.
-                    </p>
-                  </div>
-                );
-              })()
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          
-          <div className="p-4 border-t border-slate-200 bg-white z-20 shrink-0">
-            {error && (
-              <div className="mb-3 text-xs text-red-600 font-semibold bg-red-50 border border-red-150 p-2.5 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            
-            {replyingToMessage && (
-              <div className="flex items-center justify-between bg-slate-50/40 border-l-4 border-indigo-500/40 rounded-r-xl p-3 mb-3 text-xs animate-fadeIn shadow-3xs opacity-70">
-                <div 
-                  className="min-w-0 cursor-pointer flex-1" 
-                  title="Click to see original message"
-                  onClick={() => handleScrollToMessage(replyingToMessage.id, replyingToMessage.content, replyingToMessage.fullName)}
-                >
-                  <p className="font-bold text-slate-800 leading-none">
-                    Replying to {replyingToMessage.fullName}
-                  </p>
-                  <p className="text-slate-500 truncate mt-1.5 leading-snug">
-                    {(() => {
-                      const parsed = parseReplyMessage(replyingToMessage.content);
-                      const rawContent = parsed ? parsed.actualContent : replyingToMessage.content;
-                      return rawContent.replace(/\n/g, " ");
-                    })()}
-                  </p>
+                  )}
+                  <div ref={messagesEndRef} />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setReplyingToMessage(null)}
-                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-1 rounded-full hover:bg-slate-100 transition shrink-0"
-                  title="Cancel Reply"
-                >
-                  <IconX className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-            
-            <form onSubmit={handleSendMessage} className="flex gap-2 items-center relative">
-              
-              
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="p-3 rounded-xl border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-500 hover:text-slate-800 transition flex items-center justify-center cursor-pointer bg-white"
-                  title="Insert Emojis"
-                >
-                  <span className="material-symbols-outlined text-[20px] select-none">
-                    mood
-                  </span>
-                </button>
 
-                {showEmojiPicker && (
-                  <>
-                    
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setShowEmojiPicker(false)} 
+                <div className="p-3.5 border-t border-slate-200 bg-white shrink-0">
+                  {error && (
+                    <div className="mb-2 text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-150 p-2 rounded-lg">
+                      {error}
+                    </div>
+                  )}
+                  <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={newMessageText}
+                      onChange={(e) => setNewMessageText(e.target.value)}
+                      placeholder={
+                        activeChatUserId === null
+                          ? "Type a message to share with everyone..."
+                          : `Send private message to ${activeUserObj?.fullName}...`
+                      }
+                      maxLength={500}
+                      required
+                      className="flex-1 px-4 py-2.5 border border-slate-200 focus:border-blue-600 focus:outline-none rounded-xl text-slate-800 text-xs transition placeholder-slate-400"
                     />
-                    
-                    <div className="absolute bottom-14 left-0 z-50 bg-white border border-slate-200 shadow-xl rounded-2xl p-3.5 w-56 animate-fadeIn">
-                      <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-2 px-1 select-none">
-                        Select Emoji
-                      </span>
-                      <div className="grid grid-cols-5 gap-1 max-h-48 overflow-y-auto pr-0.5">
-                        {["😀", "😂", "😍", "👍", "❤️", "🎉", "🔥", "🚀", "💻", "💡", "👏", "🌟", "😭", "😡", "🤔", "😮", "🍿", "🎨", "🌈", "🎓"].map((emoji) => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => {
-                              setNewMessageText((prev) => prev + emoji);
-                              setShowEmojiPicker(false);
-                            }}
-                            className="hover:bg-slate-50 active:scale-95 transition text-lg p-1.5 rounded-lg cursor-pointer flex items-center justify-center"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <input
-                type="text"
-                value={newMessageText}
-                onChange={(e) => setNewMessageText(e.target.value)}
-                placeholder={
-                  activeChatUserId === null
-                    ? "Type your message to share with everyone..."
-                    : `Send a private message to ${activeUserObj?.fullName}...`
-                }
-                maxLength={500}
-                required
-                className="flex-1 px-4 py-3 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-sm transition placeholder-slate-400"
-              />
-              <button
-                type="submit"
-                disabled={!newMessageText.trim() || sending}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-3 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center shadow-xs shrink-0"
-              >
-                {sending ? (
-                  <div className="w-5 h-5 border-2 border-slate-300 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <IconSend className="w-5 h-5" />
-                )}
-              </button>
-            </form>
-          </div>
-
-        </div>
-
-        
-        {showProfilePanel && activeUserObj && (
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-200 bg-white flex flex-col shrink-0 h-[45%] lg:h-full overflow-hidden animate-fadeIn">
-            
-            <div className="relative w-full h-20 bg-gradient-to-r from-blue-100 via-sky-100 to-indigo-100 shrink-0">
-              <button
-                onClick={() => setShowProfilePanel(false)}
-                className="absolute top-3 right-3 bg-white hover:bg-slate-50 text-slate-700 w-8 h-8 rounded-full shadow-xs transition cursor-pointer flex items-center justify-center border border-slate-200/50"
-              >
-                <IconX className="w-4 h-4 text-slate-600" />
-              </button>
-            </div>
-
-            
-            <div className="p-5 flex flex-col flex-1 overflow-y-auto">
-              
-              <div className="flex items-center gap-3.5 mb-5 shrink-0">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm flex items-center justify-center bg-blue-150 shrink-0">
-                  {activeUserObj.profileImage ? (
-                    <img
-                      src={activeUserObj.profileImage}
-                      alt={activeUserObj.fullName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (() => {
-                    const activeColor = getUserColor(activeUserObj.id);
-                    return (
-                      <div 
-                        style={{ backgroundColor: activeColor.bg, color: activeColor.text }}
-                        className="w-full h-full flex items-center justify-center text-base font-extrabold"
-                      >
-                        {getInitials(activeUserObj.fullName)}
-                      </div>
-                    );
-                  })()}
+                    <button
+                      type="submit"
+                      disabled={!newMessageText.trim() || sending}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow-xs shrink-0"
+                    >
+                      <IconSend className="w-4 h-4" />
+                    </button>
+                  </form>
                 </div>
-                
-                <div className="min-w-0">
-                  <h3 className="text-base font-extrabold text-slate-900 truncate leading-snug">{activeUserObj.fullName}</h3>
-                  <p className="text-[11px] text-slate-500 truncate mt-0.5">{activeUserObj.email}</p>
-                  <span className="inline-block text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md mt-1.5">
-                    {isAdminEmail(activeUserObj.email) ? "Admin" : activeUserObj.selectedRole}
-                  </span>
-                </div>
-              </div>
-
-              
-              <div className="flex-1">
-                {activeUserObj.shareWithNetworking ? (
-                  
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/50">
-                      <div>
-                        <span className="block text-[9px] text-slate-600 font-bold uppercase tracking-wider">College</span>
-                        <span className="text-xs font-semibold text-slate-800 leading-tight mt-0.5 block">{activeUserObj.collegeStudying || "Not Specified"}</span>
-                      </div>
-                      <div>
-                        <span className="block text-[9px] text-slate-600 font-bold uppercase tracking-wider">Branch</span>
-                        <span className="text-xs font-semibold text-slate-800 leading-tight mt-0.5 block">{activeUserObj.branch || "Not Specified"}</span>
-                      </div>
-                      <div className="mt-1">
-                        <span className="block text-[9px] text-slate-600 font-bold uppercase tracking-wider">Year</span>
-                        <span className="text-xs font-semibold text-slate-800 leading-tight mt-0.5 block">{activeUserObj.year || "Not Specified"}</span>
-                      </div>
-                      <div className="mt-1">
-                        <span className="block text-[9px] text-slate-600 font-bold uppercase tracking-wider">DOB</span>
-                        <span className="text-xs font-semibold text-slate-800 leading-tight mt-0.5 block">{activeUserObj.dob || "Not Specified"}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="block text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">Biography</span>
-                      <p className="text-xs text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-200/50 leading-relaxed whitespace-pre-wrap">
-                        {activeUserObj.about || "No biography provided."}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-2 pt-1">
-                      {activeUserObj.linkedinLink && (
-                        <a
-                          href={activeUserObj.linkedinLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between text-xs text-blue-600 bg-blue-50/50 hover:bg-blue-50 p-2.5 rounded-xl border border-blue-100/50 transition"
-                        >
-                          <span className="truncate">LinkedIn Profile</span>
-                          <span className="text-[10px] font-bold">Visit ↗</span>
-                        </a>
-                      )}
-                      {activeUserObj.portfolioLink && (
-                        <a
-                          href={activeUserObj.portfolioLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between text-xs text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50 p-2.5 rounded-xl border border-indigo-100/50 transition"
-                        >
-                          <span className="truncate">Portfolio Link</span>
-                          <span className="text-[10px] font-bold">Visit ↗</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  
-                  <div className="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50 text-center">
-                    <IconLock className="w-8 h-8 text-slate-400 mb-2 shrink-0" />
-                    <h4 className="text-xs font-bold text-slate-700">Private Details</h4>
-                    <p className="text-[10px] text-slate-500 mt-1 leading-relaxed max-w-[200px]">
-                      This user has chosen to keep their profile details private. Visibility is restricted under networking sharing settings.
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
-          </div>
-        )}
-        
-        {infoMessage && (
-          <>
-            
-            <div 
-              className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
-              onClick={() => setInfoMessage(null)}
-            >
-              
-              <div 
-                className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-5 space-y-4 animate-scaleIn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                  <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-[18px] text-indigo-600">info</span>
-                    Message Info
+          )}
+
+          {/* TAB 2: PENDING REQUESTS */}
+          {activeTab === "requests" && (
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+                    Pending Connection Requests
                   </h3>
-                  <button 
-                    onClick={() => setInfoMessage(null)} 
-                    className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-full hover:bg-slate-100 transition shrink-0"
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Review and accept invitations sent by trainees to connect as friends
+                  </p>
+                </div>
+                <span className="bg-amber-50 text-amber-700 border border-amber-200 font-bold text-xs px-3 py-1 rounded-full">
+                  {pendingRequests.length} Pending
+                </span>
+              </div>
+
+              {pendingRequests.length > 0 ? (
+                <div className="flex flex-wrap items-start justify-start gap-4 w-full">
+                  {pendingRequests.map((req) => {
+                    const imgUrl = getMemberImage(req.id, req.profileImage);
+                    const handle = req.fullName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
+
+                    return (
+                      <MemberCard
+                        key={req.id}
+                        id={req.id}
+                        fullName={req.fullName}
+                        handle={handle}
+                        role={req.selectedRole}
+                        college={req.collegeStudying || "12m ago"}
+                        statusText="Connecting"
+                        image={imgUrl}
+                        actionType="accept"
+                        onAction={() => handleAcceptRequest(req.id, req.fullName)}
+                        onDecline={() => handleDeclineRequest(req.id)}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mb-3">
+                    <IconClock className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-800">No pending invitations</h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                    When other members send you connection requests, they will appear here for your approval.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: FRIENDS / MY CONNECTIONS */}
+          {activeTab === "friends" && (
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+                    My Connected Friends
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Your accepted network connections & study partners
+                  </p>
+                </div>
+                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs px-3 py-1 rounded-full">
+                  {acceptedFriends.length} Connected Friends
+                </span>
+              </div>
+
+              {acceptedFriends.length > 0 ? (
+                <div className="flex flex-wrap items-start justify-start gap-4 w-full">
+                  {acceptedFriends.map((friend) => {
+                    const imgUrl = getMemberImage(friend.id, friend.profileImage);
+                    const handle = friend.fullName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
+
+                    return (
+                      <MemberCard
+                        key={friend.id}
+                        id={friend.id}
+                        fullName={friend.fullName}
+                        handle={handle}
+                        role={friend.selectedRole}
+                        college={friend.collegeStudying || "Computer Science"}
+                        statusText="Connected Friend"
+                        image={imgUrl}
+                        actionType="message"
+                        onAction={() => {
+                          setActiveChatUserId(friend.id);
+                          setActiveTab("chat");
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center mb-3">
+                    <IconUserCheck className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-800">No connected friends yet</h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                    Accept pending requests or discover new members to build your network!
+                  </p>
+                  <button
+                    onClick={() => setActiveTab("discover")}
+                    className="mt-4 bg-blue-600 text-white font-bold text-xs px-4 py-2 rounded-2xl hover:bg-blue-700 transition cursor-pointer"
                   >
-                    <IconX className="w-4 h-4" />
+                    Discover Members
                   </button>
                 </div>
+              )}
+            </div>
+          )}
 
-                
-                <div className="bg-slate-50 border-l-4 border-slate-300 p-3 rounded-r-xl text-xs text-slate-600 break-words max-h-24 overflow-y-auto whitespace-pre-wrap italic">
-                  "{infoMessage.content.startsWith("Replying to") ? infoMessage.content.split("\n\n").slice(1).join("\n\n") : infoMessage.content}"
+          {/* TAB 4: DISCOVER MEMBERS */}
+          {activeTab === "discover" && (
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+                    Discover Academy Members
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Explore developers, engineers, and mentors in Student Forge
+                  </p>
                 </div>
 
-                
-                <div className="space-y-2">
-                  <h4 className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">
-                    Read By
-                  </h4>
-                  {(() => {
-                    const seenMap = infoMessage.seenBy || {};
-                    const seenEntries = Object.entries(seenMap);
-                    
-                    
-                    const readers = seenEntries.filter(([uid]) => uid !== infoMessage.userId);
-                    
-                    if (readers.length === 0) {
-                      return (
-                        <p className="text-xs text-slate-400 text-center py-3 italic">
-                          No one has read this message yet.
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                        {readers.map(([uid, info]: [string, any]) => (
-                          <div key={uid} className="flex justify-between items-center text-xs py-1 border-b border-slate-50 last:border-0">
-                            <span className="font-bold text-slate-700">{info.fullName}</span>
-                            <span className="text-[10px] text-slate-400 font-medium font-mono">
-                              {new Date(info.seenAt).toLocaleTimeString("en-US", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true
-                              })}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                <div className="relative w-full sm:w-64">
+                  <IconSearch className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name or role..."
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-600"
+                  />
                 </div>
               </div>
-            </div>
-          </>
-        )}
 
+              <div className="flex flex-wrap items-start justify-start gap-4 w-full">
+                {filteredDiscoverUsers.map((u) => {
+                  const reqStatus = requests.find((r) => r.id === u.id)?.status;
+                  const imgUrl = getMemberImage(u.id, u.profileImage);
+                  const handle = u.fullName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
+
+                  const actionType =
+                    reqStatus === "ACCEPTED" ? "message" : reqStatus === "PENDING" ? "pending" : "add";
+
+                  return (
+                    <MemberCard
+                      key={u.id}
+                      id={u.id}
+                      fullName={u.fullName}
+                      handle={handle}
+                      role={u.selectedRole || "Student Developer"}
+                      college={u.collegeStudying || "Computer Science"}
+                      statusText="Connecting"
+                      image={imgUrl}
+                      actionType={actionType}
+                      onAction={() => {
+                        if (actionType === "message") {
+                          setActiveChatUserId(u.id);
+                          setActiveTab("chat");
+                        } else if (actionType === "add") {
+                          handleConnectDiscover(u);
+                        }
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

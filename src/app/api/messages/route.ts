@@ -13,7 +13,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    
     const loggedInUser = await prisma.user.findUnique({
       where: { id: sessionToken },
     });
@@ -22,7 +21,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    
     const messages = await prisma.message.findMany({
       take: 200,
       where: {
@@ -37,17 +35,15 @@ export async function GET(req: Request) {
       },
     });
 
-    
     const url = new URL(req.url);
     const activeChatId = url.searchParams.get("activeChatUserId");
 
-    
     const messagesToMarkSeen = messages.filter((msg) => {
       const isInActiveChat =
         (activeChatId === "null" || !activeChatId)
-          ? msg.recipientId === null 
+          ? msg.recipientId === null
           : (msg.userId === activeChatId && msg.recipientId === loggedInUser.id) ||
-            (msg.userId === loggedInUser.id && msg.recipientId === activeChatId); 
+            (msg.userId === loggedInUser.id && msg.recipientId === activeChatId);
 
       if (!isInActiveChat) return false;
 
@@ -85,7 +81,6 @@ export async function GET(req: Request) {
           },
         });
 
-        
         msg.seenBy = seenMap;
       }
     }
@@ -106,7 +101,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    
     const sender = await prisma.user.findUnique({
       where: { id: sessionToken },
     });
@@ -121,7 +115,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message content cannot be empty" }, { status: 400 });
     }
 
-    
     const newMessage = await prisma.message.create({
       data: {
         content: content.trim(),

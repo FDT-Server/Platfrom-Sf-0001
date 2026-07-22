@@ -28,14 +28,12 @@ export default async function StudyPodPage() {
     redirect("/login");
   }
 
-  
   const initialPods = await prisma.studyPod.findMany({
     orderBy: { createdAt: "desc" },
   });
 
   const podIds = initialPods.map((p) => p.id);
 
-  
   const podMessages = await prisma.studyPodMessage.findMany({
     where: { studyPodId: { in: podIds } },
     select: {
@@ -62,14 +60,12 @@ export default async function StudyPodPage() {
 
   const userMap = new Map(dbUsers.map((u) => [u.id, u]));
 
-  
   const studyPods = initialPods.map((pod) => {
     const creatorInfo = userMap.get(pod.creatorId);
-    
-    
+
     const activeMsgSenders = podMessages.filter((m) => m.studyPodId === pod.id && m.userId !== pod.creatorId);
     const uniqueSenderIds = Array.from(new Set(activeMsgSenders.map((m) => m.userId)));
-    
+
     const participantsList = uniqueSenderIds
       .map((uid) => userMap.get(uid))
       .filter((u): u is NonNullable<typeof u> => !!u)
