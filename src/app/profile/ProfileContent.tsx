@@ -126,10 +126,11 @@ export default function ProfileContent({ user }: ProfileContentProps) {
       if (postsRes.ok) {
         const allDbPosts = await postsRes.json();
         if (Array.isArray(allDbPosts)) {
+          const userFullName = (user?.fullName || "").trim().toLowerCase();
           const ownPosts = allDbPosts.filter(
             (p: any) =>
-              p.userName?.trim().toLowerCase() === user.fullName.trim().toLowerCase() ||
-              (user.id && p.userId === user.id)
+              (p.userName && p.userName.trim().toLowerCase() === userFullName) ||
+              (user?.id && p.userId === user.id)
           );
           setUserPosts(ownPosts);
 
@@ -141,7 +142,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
           }
           const saved = allDbPosts.filter((p: any) => {
             const bArr = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
-            return (user.id && bArr.includes(user.id)) || localBookmarks.includes(p.id);
+            return (user?.id && bArr.includes(user.id)) || localBookmarks.includes(p.id);
           });
           setSavedPosts(saved);
         }
@@ -152,9 +153,11 @@ export default function ProfileContent({ user }: ProfileContentProps) {
       if (usersRes.ok) {
         const uData = await usersRes.json();
         if (uData.success && Array.isArray(uData.users)) {
+          const userFullName = (user?.fullName || "").trim().toLowerCase();
           const others = uData.users.filter(
             (u: any) =>
-              u.fullName.trim().toLowerCase() !== user.fullName.trim().toLowerCase() &&
+              u.fullName &&
+              u.fullName.trim().toLowerCase() !== userFullName &&
               u.email?.trim().toLowerCase() !== "webstrixx@gmail.com" &&
               u.email?.trim().toLowerCase() !== "hrstudentforge@gmail.com"
           );
