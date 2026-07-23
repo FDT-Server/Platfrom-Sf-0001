@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   IconUser,
   IconHash,
   IconUsers,
-  IconFlame,
-  IconSchool,
+  IconMessageCircle,
   IconUserPlus,
-  IconClock,
+  IconCheck,
 } from "@tabler/icons-react";
 import { PostAuthor } from "./types";
 import { toast } from "sonner";
@@ -19,13 +19,43 @@ interface PostSidebarProps {
 }
 
 export default function PostSidebar({ author }: PostSidebarProps) {
+  const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(author.isFollowing || false);
   const [pendingUserIds, setPendingUserIds] = useState<string[]>([]);
+  const [suggestedStudents, setSuggestedStudents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRealStudents = async () => {
+      try {
+        const res = await fetch(`/api/users?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.users)) {
+            const filtered = data.users.filter(
+              (u: any) =>
+                u.id !== author.id &&
+                u.email?.trim().toLowerCase() !== "webstrixx@gmail.com" &&
+                u.email?.trim().toLowerCase() !== "hrstudentforge@gmail.com"
+            );
+            setSuggestedStudents(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching real students for sidebar:", err);
+      }
+    };
+
+    fetchRealStudents();
+  }, [author.id]);
 
   const handleFollow = () => {
     const next = !isFollowing;
     setIsFollowing(next);
     toast.success(next ? `Following ${author.name}!` : `Unfollowed ${author.name}`);
+  };
+
+  const handleMessageAuthor = () => {
+    router.push(`/networking?chatWith=${encodeURIComponent(author.id || author.name)}`);
   };
 
   const handleConnect = (id: string, name: string) => {
@@ -48,15 +78,18 @@ export default function PostSidebar({ author }: PostSidebarProps) {
             <img
               src={author.image}
               alt={author.name}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author.name)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+              }}
               className="w-11 h-11 rounded-full object-cover border border-slate-100 shrink-0"
             />
           ) : (
-            <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm shrink-0">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold flex items-center justify-center text-sm shrink-0">
               {author.name.slice(0, 2).toUpperCase()}
             </div>
           )}
 
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h4 className="text-xs font-extrabold text-slate-900 truncate leading-tight">
               {author.name}
             </h4>
@@ -71,16 +104,27 @@ export default function PostSidebar({ author }: PostSidebarProps) {
           </div>
         </div>
 
-        <button
-          onClick={handleFollow}
-          className={`w-full py-2 rounded-xl text-xs font-bold transition duration-150 shadow-2xs cursor-pointer ${
-            isFollowing
-              ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
-              : "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
-          }`}
-        >
-          {isFollowing ? "Following Author" : "+ Follow Author"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleFollow}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition duration-150 shadow-2xs cursor-pointer ${
+              isFollowing
+                ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                : "bg-blue-600 hover:bg-blue-700 text-white border border-blue-600"
+            }`}
+          >
+            {isFollowing ? "Following" : "+ Follow"}
+          </button>
+
+          <button
+            onClick={handleMessageAuthor}
+            className="flex items-center justify-center gap-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-xl transition duration-150 cursor-pointer shrink-0"
+            title="Message Author Directly"
+          >
+            <IconMessageCircle className="w-4 h-4 text-blue-600" />
+            <span>Message</span>
+          </button>
+        </div>
       </div>
 
       {/* Trending Tags */}
@@ -88,11 +132,11 @@ export default function PostSidebar({ author }: PostSidebarProps) {
         <div className="flex items-center gap-1.5 pl-1">
           <IconHash className="w-4 h-4 text-blue-600" />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            Trending Tags
+            Trending Topics
           </span>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {["NextJS", "AWS", "Hackathon", "Placement", "UIUX", "Python", "WebDev"].map((tag) => (
+          {["FullStack", "NextJS", "Prisma", "AI", "Placements", "React", "Python"].map((tag) => (
             <button
               key={tag}
               onClick={() => toast.info(`Filtered feed by #${tag}`)}
@@ -104,69 +148,50 @@ export default function PostSidebar({ author }: PostSidebarProps) {
         </div>
       </div>
 
-      {/* Related Communities */}
+      {/* Suggested Registered Students */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
         <div className="flex items-center gap-1.5 pl-1">
           <IconUsers className="w-4 h-4 text-blue-600" />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            Related Communities
+            Community Members
           </span>
         </div>
 
         <div className="flex flex-col gap-2.5">
-          {[
-            { name: "Cloud Computing & AWS", members: "2.4k members" },
-            { name: "Full-Stack Web Dev Pod", members: "4.1k members" },
-            { name: "Placement Preparation 2026", members: "5.8k members" },
-          ].map((comm) => (
-            <div key={comm.name} className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <h5 className="text-xs font-bold text-slate-800 truncate leading-snug">{comm.name}</h5>
-                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">{comm.members}</span>
-              </div>
-              <button
-                onClick={() => toast.success(`Joined ${comm.name}!`)}
-                className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-150 px-2.5 py-1 rounded-lg hover:bg-blue-100 transition shrink-0 cursor-pointer"
-              >
-                Join
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+          {suggestedStudents.length > 0 ? (
+            suggestedStudents.slice(0, 4).map((student) => {
+              const isPending = pendingUserIds.includes(student.id);
+              return (
+                <div key={student.id} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <img
+                      src={student.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(student.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                      alt={student.fullName}
+                      className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <h5 className="text-xs font-bold text-slate-800 truncate leading-snug">{student.fullName}</h5>
+                      <span className="text-[10px] text-slate-400 font-medium block truncate">{student.selectedRole || "Student Member"}</span>
+                    </div>
+                  </div>
 
-      {/* Suggested Student Connections */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 block">
-          Suggested Students
-        </span>
-
-        <div className="flex flex-col gap-2.5">
-          {[
-            { id: "s1", name: "Rohan Gupta", role: "Web Dev Specialist" },
-            { id: "s2", name: "Kunal Shah", role: "Backend Developer" },
-          ].map((student) => {
-            const isPending = pendingUserIds.includes(student.id);
-            return (
-              <div key={student.id} className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <h5 className="text-xs font-bold text-slate-800 truncate leading-snug">{student.name}</h5>
-                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">{student.role}</span>
+                  <button
+                    onClick={() => handleConnect(student.id, student.fullName)}
+                    disabled={isPending}
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition shrink-0 cursor-pointer ${
+                      isPending
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                        : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                    }`}
+                  >
+                    {isPending ? "Sent" : "Connect"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleConnect(student.id, student.name)}
-                  disabled={isPending}
-                  className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition shrink-0 cursor-pointer ${
-                    isPending
-                      ? "bg-amber-50 text-amber-600 border-amber-200"
-                      : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                  }`}
-                >
-                  {isPending ? "Pending" : "Connect"}
-                </button>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <p className="text-xs text-slate-400 text-center py-2">No other registered members yet.</p>
+          )}
         </div>
       </div>
     </aside>

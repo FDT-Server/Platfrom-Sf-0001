@@ -72,39 +72,73 @@ export default function ReactionBar({
     setShowPicker(false);
   };
 
-  const handleBookmark = () => {
+  const handleBookmark = async () => {
     const next = !isBookmarked;
     setIsBookmarked(next);
-    toast.success(next ? "Post saved to bookmarks!" : "Removed from bookmarks");
+    toast.success(next ? "Post saved to profile bookmarks!" : "Removed from bookmarks");
+
+    if (typeof window !== "undefined") {
+      try {
+        const currentSaved: string[] = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
+        if (next) {
+          if (!currentSaved.includes(postId)) currentSaved.push(postId);
+        } else {
+          const idx = currentSaved.indexOf(postId);
+          if (idx > -1) currentSaved.splice(idx, 1);
+        }
+        localStorage.setItem("sf_saved_posts", JSON.stringify(currentSaved));
+      } catch (e) {}
+    }
+
+    try {
+      await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "bookmark" }),
+      });
+    } catch (err) {
+      console.error("Failed to persist bookmark:", err);
+    }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(`${window.location.origin}/dashboard/post/${postId}`);
       toast.success("Post link copied to clipboard!");
+      try {
+        await fetch(`/api/posts/${postId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "share" }),
+        });
+      } catch (err) {
+        console.error("Failed to persist share count:", err);
+      }
     }
   };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 select-none">
       {/* Engagement Stats Bar */}
-      <div className="flex items-center justify-between text-xs font-semibold text-slate-500 border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between text-xs font-semibold text-slate-500 border-b border-slate-100 pb-3 flex-wrap gap-2">
+        <div className="flex items-center gap-2">
           <span className="flex -space-x-1">
             <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[10px] shadow-2xs">👍</span>
             <span className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center text-[10px] shadow-2xs">👏</span>
             <span className="w-5 h-5 rounded-full bg-rose-100 flex items-center justify-center text-[10px] shadow-2xs">❤️</span>
           </span>
-          <span className="font-bold text-slate-800">{totalReactions} Reactions</span>
+          <span className="font-extrabold text-slate-900 bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-100">
+            {reactionCounts.like || totalReactions || 0} Likes
+          </span>
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400">
+        <div className="flex items-center gap-3 text-[11px] font-medium text-slate-500">
           <span>{commentsCount} Comments</span>
           <span>·</span>
           <span>{sharesCount} Shares</span>
           <span>·</span>
-          <span className="flex items-center gap-1">
-            <IconEye className="w-3.5 h-3.5" />
+          <span className="flex items-center gap-1 font-bold text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+            <IconEye className="w-3.5 h-3.5 text-blue-600" />
             {viewsCount} Views
           </span>
         </div>

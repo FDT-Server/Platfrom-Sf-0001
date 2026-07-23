@@ -131,9 +131,22 @@ export default function CommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-            {comment.content}
-          </p>
+          <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+            {comment.content.split(/(@[\w.-]+)/g).map((part, idx) => {
+              if (part.startsWith("@")) {
+                return (
+                  <span
+                    key={idx}
+                    onClick={() => toast.info(`Viewing mentioned user ${part}`)}
+                    className="text-blue-600 font-bold bg-blue-50 border border-blue-150 px-1.5 py-0.5 rounded-md hover:underline cursor-pointer inline-block mx-0.5 text-[11px]"
+                  >
+                    {part}
+                  </span>
+                );
+              }
+              return part;
+            })}
+          </div>
         )}
 
         <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500 pt-1 select-none">

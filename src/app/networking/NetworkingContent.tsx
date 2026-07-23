@@ -241,6 +241,26 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const chatTarget = params.get("chatWith");
+      if (chatTarget) {
+        const target = allUsers.find(
+          (u) =>
+            u.id === chatTarget ||
+            u.fullName.toLowerCase().includes(chatTarget.toLowerCase())
+        );
+        if (target) {
+          setActiveTab("chat");
+          setActiveChatUserId(target.id);
+        } else {
+          setActiveTab("chat");
+        }
+      }
+    }
+  }, [allUsers]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
       const stored = localStorage.getItem("sf_connection_requests");
       if (stored) {
         try {
