@@ -14,6 +14,7 @@ export default async function ProfilePage() {
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
+      id: true,
       fullName: true,
       email: true,
       selectedRole: true,
@@ -37,6 +38,7 @@ export default async function ProfilePage() {
   }
 
   const serializedUser = {
+    id: user.id,
     fullName: user.fullName,
     email: user.email,
     selectedRole: user.selectedRole,

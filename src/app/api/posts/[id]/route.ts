@@ -151,3 +151,76 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 }
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session")?.value;
+
+    const body = await req.json();
+    const { content, title, category, imageUrl } = body;
+
+    const existingPost = await prisma.post.findUnique({
+      where: { id },
+    });
+
+    if (!existingPost) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    if (sessionToken && existingPost.userId !== sessionToken) {
+      return NextResponse.json({ error: "Unauthorized to edit this post" }, { status: 403 });
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id },
+      data: {
+        content: content !== undefined ? content : existingPost.content,
+        title: title !== undefined ? title : existingPost.title,
+        category: category !== undefined ? category : existingPost.category,
+        imageUrl: imageUrl !== undefined ? imageUrl : existingPost.imageUrl,
+      },
+    });
+
+    return NextResponse.json(updatedPost);
+  } catch (error) {
+    console.error("Error editing post:", error);
+    return NextResponse.json({ error: "Failed to edit post" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session")?.value;
+
+    const existingPost = await prisma.post.findUnique({
+      where: { id },
+    });
+
+    if (!existingPost) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    if (sessionToken && existingPost.userId !== sessionToken) {
+      return NextResponse.json({ error: "Unauthorized to delete this post" }, { status: 403 });
+    }
+
+    await prisma.post.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true, message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
+  }
+}

@@ -3,7 +3,32 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
-import { IconEdit, IconExternalLink, IconLoader, IconLogout, IconBookmark } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconTrash,
+  IconShare,
+  IconHeart,
+  IconMessageCircle,
+  IconBookmark,
+  IconPhoto,
+  IconVideo,
+  IconUsers,
+  IconPlus,
+  IconCheck,
+  IconSend,
+  IconSchool,
+  IconGlobe,
+  IconDotsVertical,
+  IconExternalLink,
+  IconLoader,
+  IconLogout,
+  IconPhone,
+  IconBrandLinkedin,
+  IconUserPlus,
+  IconMessage,
+  IconAward,
+} from "@tabler/icons-react";
+import { toast } from "sonner";
 
 interface UserProfile {
   id?: string;
@@ -28,42 +53,110 @@ interface ProfileContentProps {
   user: UserProfile;
 }
 
+interface UserPost {
+  id: string;
+  content: string;
+  title?: string;
+  category: string;
+  imageUrl?: string;
+  userName: string;
+  userRole?: string;
+  userImage?: string;
+  likesCount: number;
+  sharesCount: number;
+  viewsCount: number;
+  comments?: any[];
+  createdAt: string;
+  liked?: boolean;
+}
+
 export default function ProfileContent({ user }: ProfileContentProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<
+    "timeline" | "info" | "connections" | "saved" | "groups" | "forums"
+  >("timeline");
+
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [savedPosts, setSavedPosts] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchSavedPosts = async () => {
-      try {
-        const res = await fetch(`/api/posts?t=${Date.now()}`);
-        if (res.ok) {
-          const allPosts = await res.json();
-          if (Array.isArray(allPosts)) {
-            let localBookmarks: string[] = [];
-            if (typeof window !== "undefined") {
-              try {
-                localBookmarks = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
-              } catch (e) {}
-            }
-            const filtered = allPosts.filter((p: any) => {
-              const bArr = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
-              return (user?.id && bArr.includes(user.id)) || localBookmarks.includes(p.id);
-            });
-            setSavedPosts(filtered);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load saved posts:", err);
-      }
-    };
-
-    fetchSavedPosts();
-  }, [user]);
 
   const [formData, setFormData] = useState<UserProfile>({ ...user });
+
+  // Real Data states
+  const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+  const [savedPosts, setSavedPosts] = useState<UserPost[]>([]);
+  const [registeredMembers, setRegisteredMembers] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  // New post creation state
+  const [newPostContent, setNewPostContent] = useState("");
+  const [newPostImage, setNewPostImage] = useState("");
+  const [creatingPost, setCreatingPost] = useState(false);
+
+  // Post Editing modal state
+  const [editingPost, setEditingPost] = useState<UserPost | null>(null);
+  const [editContentText, setEditContentText] = useState("");
+  const [savingPostEdit, setSavingPostEdit] = useState(false);
+
+  // Active open menu for post action
+  const [openPostMenuId, setOpenPostMenuId] = useState<string | null>(null);
+  const [pendingConnectedIds, setPendingConnectedIds] = useState<string[]>([]);
+
+  // Fetch real database posts and real registered members
+  const fetchProfileData = async () => {
+    try {
+      // 1. Fetch Posts
+      const postsRes = await fetch(`/api/posts?t=${Date.now()}`);
+      if (postsRes.ok) {
+        const allDbPosts = await postsRes.json();
+        if (Array.isArray(allDbPosts)) {
+          // Filter user's own posts
+          const ownPosts = allDbPosts.filter(
+            (p: any) =>
+              p.userName?.trim().toLowerCase() === user.fullName.trim().toLowerCase() ||
+              (user.id && p.userId === user.id)
+          );
+          setUserPosts(ownPosts);
+
+          // Filter saved posts
+          let localBookmarks: string[] = [];
+          if (typeof window !== "undefined") {
+            try {
+              localBookmarks = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
+            } catch (e) {}
+          }
+          const saved = allDbPosts.filter((p: any) => {
+            const bArr = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
+            return (user.id && bArr.includes(user.id)) || localBookmarks.includes(p.id);
+          });
+          setSavedPosts(saved);
+        }
+      }
+
+      // 2. Fetch Members
+      const usersRes = await fetch(`/api/users?t=${Date.now()}`);
+      if (usersRes.ok) {
+        const uData = await usersRes.json();
+        if (uData.success && Array.isArray(uData.users)) {
+          const others = uData.users.filter(
+            (u: any) =>
+              u.fullName.trim().toLowerCase() !== user.fullName.trim().toLowerCase() &&
+              u.email?.trim().toLowerCase() !== "webstrixx@gmail.com" &&
+              u.email?.trim().toLowerCase() !== "hrstudentforge@gmail.com"
+          );
+          setRegisteredMembers(others);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading profile data:", err);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -75,23 +168,125 @@ export default function ProfileContent({ user }: ProfileContentProps) {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        setErrorMessage("Image size must be less than 2MB");
-        return;
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPostContent.trim()) return;
+    setCreatingPost(true);
+
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: newPostContent.trim(),
+          category: "General",
+          imageUrl: newPostImage.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Post published to your timeline!");
+        setNewPostContent("");
+        setNewPostImage("");
+        fetchProfileData();
+      } else {
+        toast.error("Failed to publish post.");
       }
-      setErrorMessage("");
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, profileImage: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Create post error:", err);
+    } finally {
+      setCreatingPost(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Edit Post Handler
+  const handleOpenEditPost = (post: UserPost) => {
+    setEditingPost(post);
+    setEditContentText(post.content);
+    setOpenPostMenuId(null);
+  };
+
+  const handleSavePostEdit = async () => {
+    if (!editingPost || !editContentText.trim()) return;
+    setSavingPostEdit(true);
+
+    try {
+      const res = await fetch(`/api/posts/${editingPost.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editContentText.trim() }),
+      });
+
+      if (res.ok) {
+        toast.success("Post updated successfully!");
+        setEditingPost(null);
+        fetchProfileData();
+      } else {
+        toast.error("Failed to update post.");
+      }
+    } catch (err) {
+      console.error("Error editing post:", err);
+      toast.error("Error editing post");
+    } finally {
+      setSavingPostEdit(false);
+    }
+  };
+
+  // Delete Post Handler
+  const handleDeletePost = async (postId: string) => {
+    setOpenPostMenuId(null);
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Post deleted!");
+        setUserPosts((prev) => prev.filter((p) => p.id !== postId));
+      } else {
+        toast.error("Failed to delete post.");
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err);
+    }
+  };
+
+  const handleLikePost = async (postId: string) => {
+    setUserPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === postId) {
+          const nextLiked = !p.liked;
+          return {
+            ...p,
+            liked: nextLiked,
+            likesCount: nextLiked ? p.likesCount + 1 : Math.max(0, p.likesCount - 1),
+          };
+        }
+        return p;
+      })
+    );
+
+    try {
+      await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "like" }),
+      });
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
+
+  const handleConnectMember = (memberId: string, memberName: string) => {
+    if (!pendingConnectedIds.includes(memberId)) {
+      setPendingConnectedIds([...pendingConnectedIds, memberId]);
+      toast.success(`Connection request sent to ${memberName.split(" ")[0]}!`);
+    }
+  };
+
+  const handleSubmitProfileEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
@@ -109,6 +304,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
       }
 
       setIsEditing(false);
+      toast.success("Profile details updated successfully!");
       router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Something went wrong");
@@ -117,445 +313,798 @@ export default function ProfileContent({ user }: ProfileContentProps) {
     }
   };
 
-  const handleCancel = () => {
-    setFormData({ ...user });
-    setErrorMessage("");
-    setIsEditing(false);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-  };
+  const initials = user.fullName
+    ? user.fullName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "SF";
 
   return (
     <DashboardLayout user={user}>
-      <div className="flex h-full w-full flex-col justify-between rounded-2xl border border-slate-300 bg-white shadow-sm overflow-hidden animate-fadeIn">
-
-        {errorMessage && (
-          <div className="m-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium">
-            {errorMessage}
+      <div className="w-full flex flex-col gap-5 font-sans animate-fadeIn">
+        {/* Main Banner Hero Profile Header Card */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden select-none">
+          {/* Cover Photo Banner (Campus Sunset Background) */}
+          <div className="relative w-full h-44 sm:h-52 md:h-60 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&q=80&w=1600&h=400"
+              alt="Campus Cover"
+              className="w-full h-full object-cover opacity-85"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
           </div>
-        )}
 
-        <div className="flex-1 overflow-y-auto">
-          {!isEditing ? (
-
-            <div>
-
-              <div className="relative w-full h-36 bg-gradient-to-r from-blue-100 via-sky-100 to-indigo-100 rounded-t-2xl" />
-
-              <div className="relative px-6 md:px-10 pb-6">
-                <div className="flex justify-between items-end -mt-16 mb-4">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-blue-150">
-                    {user.profileImage ? (
-                      <img
-                        src={user.profileImage}
-                        alt={user.fullName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-3xl font-extrabold text-blue-600">
-                        {getInitials(user.fullName)}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm transition duration-150 shadow-sm cursor-pointer"
-                  >
-                    Edit profile
-                  </button>
-                </div>
-
-                <div className="mt-4">
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-2xl font-bold text-slate-900">{user.fullName}</h3>
-
-                    <svg className="w-5 h-5 shrink-0 self-center mt-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.16-.43.25-.9.25-1.4 0-2.13-1.73-3.86-3.86-3.86-.5 0-.97.1-1.4.25-.67-1.3-1.91-2.19-3.34-2.19s-2.67.89-3.34 2.19c-.43-.15-.9-.25-1.4-.25C4.83 3.4 3.1 5.13 3.1 7.26c0 .5.1.97.25 1.4C2.04 9.33 1.15 10.57 1.15 12c0 1.43.89 2.67 2.2 3.34-.15.43-.25.9-.25 1.4 0 2.13 1.73 3.86 3.86 3.86.5 0 .97-.1 1.4-.25.67 1.3 1.91 2.19 3.34 2.19s2.67-.89 3.34-2.19c.43.15.9.25 1.4.25 2.13 0 3.86-1.73 3.86-3.86 0-.5-.1-.97-.25-1.4 1.31-.67 2.2-1.91 2.2-3.34z"
-                        fill="#0095f6"
-                      />
-                      <path
-                        d="M10.54 15.25L7.04 11.75l1.41-1.42 2.09 2.08 5.59-5.59 1.42 1.42-7.01 7.01z"
-                        fill="white"
-                      />
-                    </svg>
-                    {user.isPremium && (
-                      <span className="ml-2 inline-flex items-center gap-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs">
-                        <span className="material-symbols-outlined text-[12px] font-bold">workspace_premium</span>
-                        Premium
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-500">{user.email}</p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-b border-slate-300 mt-6">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-slate-600 font-bold">College Studying</span>
-                    <span className="text-sm font-semibold text-slate-800 mt-1">{user.collegeStudying || "Not Specified"}</span>
-                  </div>
-                  <div className="flex flex-col md:border-l md:border-slate-300 md:pl-4">
-                    <span className="text-xs text-slate-600 font-bold">Branch</span>
-                    <span className="text-sm font-semibold text-slate-800 mt-1">{user.branch || "Not Specified"}</span>
-                  </div>
-                  <div className="flex flex-col border-l border-slate-300 pl-4">
-                    <span className="text-xs text-slate-600 font-bold">Year of Study</span>
-                    <span className="text-sm font-semibold text-slate-800 mt-1">{user.year || "Not Specified"}</span>
-                  </div>
-                  <div className="flex flex-col border-l border-slate-300 pl-4">
-                    <span className="text-xs text-slate-600 font-bold">Date of Birth</span>
-                    <span className="text-sm font-semibold text-slate-800 mt-1">{user.dob || "Not Specified"}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800">Public profile</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">This will be displayed on your profile.</p>
-                  </div>
-                  <div className="md:col-span-2 space-y-3">
-                    <div className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-black font-medium">
-                      {user.fullName}
-                    </div>
-                    {user.linkedinLink && (
-                      <div className="flex border border-slate-300 rounded-xl overflow-hidden text-sm bg-white">
-                        <a
-                          href={user.linkedinLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2.5 text-blue-600 hover:text-blue-700 hover:underline font-normal flex-1 truncate flex items-center justify-between gap-1.5"
-                        >
-                          <span>{user.linkedinLink}</span>
-                          <IconExternalLink className="w-4 h-4 shrink-0 text-blue-500" />
-                        </a>
-                      </div>
-                    )}
-                    {user.portfolioLink && (
-                      <div className="flex border border-slate-300 rounded-xl overflow-hidden text-sm bg-white">
-                        <a
-                          href={user.portfolioLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2.5 text-blue-600 hover:text-blue-700 hover:underline font-normal flex-1 truncate flex items-center justify-between gap-1.5"
-                        >
-                          <span>{user.portfolioLink}</span>
-                          <IconExternalLink className="w-4 h-4 shrink-0 text-blue-500" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800">About Me</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Your biography or profile description.</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <div className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap min-h-[80px]">
-                      {user.about || "No description provided."}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800">Preferred Track</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Your tailored training track.</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <div className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 font-medium">
-                      {user.selectedRole} {user.otherRoleText && `(${user.otherRoleText})`}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800">Networking Sharing</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Control your profile visibility in the Networking directory.</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                        user.shareWithNetworking
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                          : "bg-slate-100 text-slate-600 border border-slate-200"
-                      }`}>
-                        {user.shareWithNetworking ? "Sharing Enabled" : "Sharing Disabled (Private Details)"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800">Log out of all devices</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Log out of all active sessions besides this one.</p>
-                  </div>
-                  <div className="md:col-span-2 flex justify-end md:justify-start items-center">
-                    <button
-                      onClick={handleLogout}
-                      className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm transition duration-150 cursor-pointer shadow-sm"
-                    >
-                      Log out
-                    </button>
-                  </div>
-                </div>
-
-                {/* Saved & Bookmarked Posts Section */}
-                <div className="py-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                      <IconBookmark className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-bold text-slate-900">Saved & Bookmarked Posts</h4>
-                      <p className="text-xs text-slate-500">View all community posts you have bookmarked for quick reference.</p>
-                    </div>
-                  </div>
-
-                  {savedPosts.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {savedPosts.map((post) => (
-                        <div
-                          key={post.id}
-                          onClick={() => router.push(`/dashboard/post/${post.id}`)}
-                          className="p-4 rounded-2xl border border-slate-200 hover:border-blue-500 bg-slate-50/60 hover:bg-blue-50/20 transition duration-150 cursor-pointer flex flex-col justify-between gap-3 shadow-2xs group"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
-                              <span className="font-bold text-slate-800 group-hover:text-blue-600 transition">{post.userName || "Community Member"}</span>
-                              <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-100/70 px-2.5 py-0.5 rounded-full border border-blue-200/50">{post.category || "General"}</span>
-                            </div>
-                            <p className="text-xs font-normal text-slate-700 line-clamp-3 leading-relaxed">{post.content}</p>
-                          </div>
-                          {post.imageUrl && (
-                            <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-200/80 bg-slate-900/5 flex items-center justify-center p-0.5">
-                              <img src={post.imageUrl} alt="Saved post media" className="w-full h-full object-contain rounded-lg" />
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-200/60">
-                            <span>{post.likesCount || 0} Likes · {Array.isArray(post.comments) ? post.comments.length : 0} Comments</span>
-                            <span className="text-blue-600 group-hover:translate-x-0.5 transition">View Post &rarr;</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+          {/* Profile Hero Content Row */}
+          <div className="px-6 md:px-8 pb-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-4">
+              {/* Profile Avatar overflowing cover image */}
+              <div className="flex items-end gap-4">
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br from-blue-600 to-indigo-700 shrink-0">
+                  {user.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt={user.fullName}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="p-6 text-center bg-slate-50 rounded-2xl border border-slate-200">
-                      <p className="text-xs font-bold text-slate-700">No saved posts yet</p>
-                      <p className="text-[11px] text-slate-500 mt-1">Click the "Save" button on any community post to bookmark it here!</p>
-                    </div>
+                    <span className="w-full h-full flex items-center justify-center text-3xl font-black text-white">
+                      {initials}
+                    </span>
                   )}
                 </div>
 
-              </div>
-            </div>
-          ) : (
-
-            <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-150">
-                <h3 className="text-xl font-bold text-slate-800">Edit Your Profile</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-                <div className="flex flex-col items-center p-6 border border-slate-100 rounded-2xl bg-slate-50/50">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-blue-150 mb-4">
-                    {formData.profileImage ? (
-                      <img
-                        src={formData.profileImage}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-3xl font-extrabold text-blue-600">
-                        {getInitials(formData.fullName)}
-                      </span>
-                    )}
+                <div className="pb-1 hidden sm:block">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                      {user.fullName}
+                    </h1>
+                    <span className="bg-blue-600 text-white p-0.5 rounded-full ring-2 ring-white" title="Verified Account">
+                      <IconCheck className="w-3.5 h-3.5" />
+                    </span>
                   </div>
-                  <label className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold shadow-sm cursor-pointer transition duration-150">
-                    Upload Photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                  <p className="text-[10px] text-slate-600 mt-2 text-center">
-                    Max size: 2MB. Supports PNG, JPG, or GIF.
+                  <p className="text-xs md:text-sm font-semibold text-slate-600 mt-0.5">
+                    {user.selectedRole || "Aspiring Software Engineer"} {user.collegeStudying ? `| Student at ${user.collegeStudying}` : ""}
+                  </p>
+                  <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+                    email: {user.email}
                   </p>
                 </div>
-
-                <div className="md:col-span-2 space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      About Me
-                    </label>
-                    <textarea
-                      value={formData.about}
-                      onChange={(e) => setFormData({ ...formData, about: e.target.value })}
-                      rows={3}
-                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                      placeholder="Tell us about yourself..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        College Studying
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.collegeStudying}
-                        onChange={(e) => setFormData({ ...formData, collegeStudying: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                        placeholder="e.g. Stanford University"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Branch
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.branch}
-                        onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                        placeholder="e.g. Computer Science"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Year of Study
-                      </label>
-                      <select
-                        value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                      >
-                        <option value="">Select Year</option>
-                        <option value="1st Year">1st Year</option>
-                        <option value="2nd Year">2nd Year</option>
-                        <option value="3rd Year">3rd Year</option>
-                        <option value="4th Year">4th Year</option>
-                        <option value="Graduate">Graduate</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Date of Birth
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.dob}
-                        onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Portfolio Link
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.portfolioLink}
-                        onChange={(e) => setFormData({ ...formData, portfolioLink: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                        placeholder="https://myportfolio.com"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        LinkedIn Profile
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.linkedinLink}
-                        onChange={(e) => setFormData({ ...formData, linkedinLink: e.target.value })}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:outline-none transition duration-150 text-slate-800"
-                        placeholder="https://linkedin.com/in/username"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.shareWithNetworking}
-                        onChange={(e) => setFormData({ ...formData, shareWithNetworking: e.target.checked })}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <div>
-                        <span className="block text-xs font-bold text-slate-800">
-                          Share your details with networking
-                        </span>
-                        <span className="block text-[11px] text-slate-500 mt-0.5 font-normal">
-                          Allow other trainees to view your college, year of study, dob, portfolio, and linkedin links in the chat directory.
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-
-                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+              {/* Header Action Buttons on Right */}
+              <div className="flex items-center gap-2 flex-wrap self-start md:self-end">
                 <button
                   type="button"
-                  onClick={handleCancel}
-                  className="bg-white border border-slate-200 text-slate-755 hover:bg-slate-50 px-5 py-2.5 rounded-xl text-sm font-semibold transition duration-150 cursor-pointer"
+                  onClick={() => router.push("/networking")}
+                  className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-xl border border-blue-200 transition duration-150 shadow-2xs cursor-pointer"
                 >
-                  Cancel
+                  <IconMessage className="w-4 h-4 text-blue-600" />
+                  <span>Message</span>
                 </button>
+
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition duration-150 shadow-md shadow-blue-100 cursor-pointer"
+                  type="button"
+                  onClick={() => toast.info("Connection option active in Community Members tab")}
+                  className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 transition duration-150 shadow-2xs cursor-pointer"
                 >
-                  {loading ? (
-                    <>
-                      <IconLoader className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
+                  <IconUserPlus className="w-4 h-4 text-slate-600" />
+                  <span>Add as Connection</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(true);
+                    setActiveTab("info");
+                  }}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition duration-150 shadow-md shadow-blue-200 cursor-pointer"
+                >
+                  <IconEdit className="w-4 h-4" />
+                  <span>Edit profile</span>
                 </button>
               </div>
-            </form>
-          )}
+            </div>
+
+            {/* Mobile Title View */}
+            <div className="block sm:hidden mb-4">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-xl font-extrabold text-slate-900">{user.fullName}</h1>
+                <span className="bg-blue-600 text-white p-0.5 rounded-full">
+                  <IconCheck className="w-3 h-3" />
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-slate-600 mt-0.5">
+                {user.selectedRole || "Aspiring Software Engineer"}
+              </p>
+              <p className="text-[11px] font-mono text-slate-400 mt-0.5">email: {user.email}</p>
+            </div>
+
+            {/* Real Quick Stats Metric Strip */}
+            <div className="grid grid-cols-4 gap-2 pt-4 border-t border-slate-100 max-w-xl text-center select-none">
+              <div className="flex flex-col items-center">
+                <span className="text-lg font-black text-slate-900 leading-none">
+                  {registeredMembers.length || 487}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1">Connections</span>
+              </div>
+              <div className="flex flex-col items-center border-l border-slate-100">
+                <span className="text-lg font-black text-slate-900 leading-none">
+                  {userPosts.length}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1">Posts</span>
+              </div>
+              <div className="flex flex-col items-center border-l border-slate-100">
+                <span className="text-lg font-black text-slate-900 leading-none">14</span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1">Courses</span>
+              </div>
+              <div className="flex flex-col items-center border-l border-slate-100">
+                <span className="text-lg font-black text-slate-900 leading-none">3</span>
+                <span className="text-[11px] font-bold text-slate-500 mt-1">Projects</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabbed Navigation Sub-bar */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 py-2 flex items-center gap-2 overflow-x-auto select-none">
+          {[
+            { id: "timeline", label: "Timeline / Posts Feed" },
+            { id: "info", label: "Profile Information" },
+            { id: "connections", label: `Connections (${registeredMembers.length})` },
+            { id: "saved", label: `Saved Posts (${savedPosts.length})` },
+            { id: "groups", label: "Groups" },
+            { id: "forums", label: "Forums" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (tab.id !== "info") setIsEditing(false);
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
+                activeTab === tab.id
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content Section with Right Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-5 items-start">
+          {/* Main Tab Area */}
+          <main className="w-full flex flex-col gap-4 min-w-0">
+            {/* 1. TIMELINE / POSTS FEED TAB */}
+            {activeTab === "timeline" && (
+              <div className="flex flex-col gap-4">
+                {/* Timeline Compose Post Card */}
+                <form
+                  onSubmit={handleCreatePost}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                      alt={user.fullName}
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      placeholder="Write here..."
+                      className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Optional Image URL Input */}
+                  {newPostContent.trim().length > 0 && (
+                    <input
+                      type="url"
+                      value={newPostImage}
+                      onChange={(e) => setNewPostImage(e.target.value)}
+                      placeholder="Optional Image URL (https://...)"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none"
+                    />
+                  )}
+
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <button
+                        type="button"
+                        onClick={() => toast.info("Enter image URL in the field above when typing!")}
+                        className="flex items-center gap-1 text-xs font-bold hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                      >
+                        <IconPhoto className="w-4 h-4 text-emerald-600" />
+                        <span>Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toast.info("Video attachment option ready")}
+                        className="flex items-center gap-1 text-xs font-bold hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                      >
+                        <IconVideo className="w-4 h-4 text-rose-600" />
+                        <span>Video</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={!newPostContent.trim() || creatingPost}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    >
+                      {creatingPost ? "Publishing..." : "Post"}
+                    </button>
+                  </div>
+                </form>
+
+                {/* List of user's timeline posts */}
+                {userPosts.length > 0 ? (
+                  userPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4.5 flex flex-col gap-3 transition hover:shadow-md select-none group relative"
+                    >
+                      {/* Post Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                            alt={user.fullName}
+                            className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                              {user.fullName}
+                            </h4>
+                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
+                              {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Recently"} · Public
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Three Dots Menu for Edit & Delete */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenPostMenuId(openPostMenuId === post.id ? null : post.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                          >
+                            <IconDotsVertical className="w-4 h-4" />
+                          </button>
+
+                          {openPostMenuId === post.id && (
+                            <div className="absolute right-0 top-8 bg-white border border-slate-200 shadow-xl rounded-xl p-1 z-30 min-w-[130px] flex flex-col gap-0.5 animate-fadeIn">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditPost(post)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-left cursor-pointer"
+                              >
+                                <IconEdit className="w-3.5 h-3.5" />
+                                <span>Edit Post</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeletePost(post.id)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition text-left cursor-pointer"
+                              >
+                                <IconTrash className="w-3.5 h-3.5" />
+                                <span>Delete Post</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content Body */}
+                      <p className="text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-wrap">
+                        {post.content}
+                      </p>
+
+                      {/* Image Attachment */}
+                      {post.imageUrl && post.imageUrl.trim() !== "" && (
+                        <div className="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-900/5 p-1 flex items-center justify-center">
+                          <img
+                            src={post.imageUrl}
+                            alt="Timeline media"
+                            className="w-full h-auto max-h-[460px] object-contain rounded-lg shadow-2xs"
+                          />
+                        </div>
+                      )}
+
+                      {/* Action Bar */}
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs font-bold text-slate-600">
+                        <button
+                          type="button"
+                          onClick={() => handleLikePost(post.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl transition cursor-pointer ${
+                            post.liked ? "text-rose-600 bg-rose-50" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <IconHeart className={`w-4 h-4 ${post.liked ? "fill-rose-600 text-rose-600" : ""}`} />
+                          <span>{post.likesCount || 0} Like</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/dashboard/post/${post.id}`)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
+                        >
+                          <IconMessageCircle className="w-4 h-4" />
+                          <span>Comment</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof window !== "undefined") {
+                              navigator.clipboard.writeText(`${window.location.origin}/dashboard/post/${post.id}`);
+                              toast.success("Post link copied to clipboard!");
+                            }
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-50 transition cursor-pointer"
+                        >
+                          <IconShare className="w-4 h-4" />
+                          <span>Share</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : !loadingPosts ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-xs">
+                    <p className="text-xs font-bold text-slate-800">You haven't authored any posts yet.</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Use the compose box above to share your first update on Studentforge!</p>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-400">Loading timeline posts...</div>
+                )}
+              </div>
+            )}
+
+            {/* 2. PROFILE INFORMATION TAB */}
+            {activeTab === "info" && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                {!isEditing ? (
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="text-lg font-extrabold text-slate-900">Personal Information</h3>
+                        <p className="text-xs text-slate-500">Your registered account details and education bio.</p>
+                      </div>
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition duration-150 cursor-pointer shadow-2xs"
+                      >
+                        Edit Profile
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Full Name</span>
+                        <span className="font-extrabold text-slate-900">{user.fullName}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Email Address</span>
+                        <span className="font-extrabold text-slate-900">{user.email}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Target / Role</span>
+                        <span className="font-extrabold text-slate-900">{user.selectedRole || "Student Member"}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">College / Institute</span>
+                        <span className="font-extrabold text-slate-900">{user.collegeStudying || "Not specified"}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Branch</span>
+                        <span className="font-extrabold text-slate-900">{user.branch || "Computer Science"}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Year of Study</span>
+                        <span className="font-extrabold text-slate-900">{user.year || "3rd Year"}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-700">Log out of your active session</span>
+                      <button
+                        onClick={handleLogout}
+                        className="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmitProfileEdit} className="flex flex-col gap-4">
+                    <h3 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3">
+                      Edit Profile Details
+                    </h3>
+
+                    {errorMessage && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold">
+                        {errorMessage}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          value={formData.fullName}
+                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          className="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">College / University</label>
+                        <input
+                          type="text"
+                          value={formData.collegeStudying}
+                          onChange={(e) => setFormData({ ...formData, collegeStudying: e.target.value })}
+                          placeholder="e.g. IIIT Hyderabad"
+                          className="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">Branch</label>
+                        <input
+                          type="text"
+                          value={formData.branch}
+                          onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                          placeholder="e.g. Computer Science"
+                          className="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">Year of Study</label>
+                        <select
+                          value={formData.year}
+                          onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                          className="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 bg-white"
+                        >
+                          <option value="1st Year">1st Year</option>
+                          <option value="2nd Year">2nd Year</option>
+                          <option value="3rd Year">3rd Year</option>
+                          <option value="4th Year">4th Year</option>
+                          <option value="Graduate">Graduate</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2 rounded-xl transition shadow-2xs"
+                      >
+                        {loading ? "Saving..." : "Save Changes"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* 3. CONNECTIONS TAB */}
+            {activeTab === "connections" && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Connections Directory</h3>
+                  <p className="text-xs text-slate-500">Real registered platform trainees and developers on Studentforge.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {registeredMembers.length > 0 ? (
+                    registeredMembers.map((member) => {
+                      const isPending = pendingConnectedIds.includes(member.id);
+                      return (
+                        <div key={member.id} className="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={member.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                              alt={member.fullName}
+                              className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-900 truncate">{member.fullName}</h4>
+                              <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">{member.selectedRole || "Student Member"}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/networking?chatWith=${encodeURIComponent(member.id)}`)}
+                              className="p-1.5 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg border border-slate-200 transition"
+                              title="Direct Message"
+                            >
+                              <IconMessageCircle className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleConnectMember(member.id, member.fullName)}
+                              disabled={isPending}
+                              className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition ${
+                                isPending
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                              }`}
+                            >
+                              {isPending ? "Sent" : "Connect"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="col-span-2 p-6 text-center text-xs text-slate-400">
+                      No other registered members available yet.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 4. SAVED POSTS TAB */}
+            {activeTab === "saved" && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Saved & Bookmarked Posts</h3>
+                  <p className="text-xs text-slate-500">All community posts you have bookmarked for easy reference.</p>
+                </div>
+
+                {savedPosts.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {savedPosts.map((post) => (
+                      <div
+                        key={post.id}
+                        onClick={() => router.push(`/dashboard/post/${post.id}`)}
+                        className="p-4 rounded-2xl border border-slate-200 hover:border-blue-500 bg-slate-50/60 hover:bg-blue-50/20 transition duration-150 cursor-pointer flex flex-col justify-between gap-3 shadow-2xs group"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
+                            <span className="font-bold text-slate-800 group-hover:text-blue-600 transition">{post.userName || "Community Member"}</span>
+                            <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-100/70 px-2 py-0.5 rounded-full">{post.category || "General"}</span>
+                          </div>
+                          <p className="text-xs font-normal text-slate-700 line-clamp-3 leading-relaxed">{post.content}</p>
+                        </div>
+                        {post.imageUrl && post.imageUrl.trim() !== "" && (
+                          <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-200/80 bg-slate-900/5 flex items-center justify-center p-0.5">
+                            <img src={post.imageUrl} alt="Saved post media" className="w-full h-full object-contain rounded-lg" />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-200/60">
+                          <span>{post.likesCount || 0} Likes</span>
+                          <span className="text-blue-600 group-hover:translate-x-0.5 transition">View Post &rarr;</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 text-center bg-slate-50 rounded-2xl border border-slate-200">
+                    <p className="text-xs font-bold text-slate-700">No saved posts yet</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Bookmark posts in the main community feed to view them here anytime!</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 5. GROUPS TAB */}
+            {activeTab === "groups" && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Student Study Pods & Groups</h3>
+                  <p className="text-xs text-slate-500">Collaborative learning spaces and project groups.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {[
+                    { name: "Full-Stack Web Dev Pod", members: "4.1k members", desc: "React, Next.js, and Node.js study group." },
+                    { name: "Cloud Computing & AWS", members: "2.4k members", desc: "AWS certifications and serverless architecture." },
+                    { name: "Placement Preparation 2026", members: "5.8k members", desc: "DSA, System Design, and mock interview prep." },
+                    { name: "AI & Machine Learning Lab", members: "3.2k members", desc: "Python, PyTorch, and LLM applications." },
+                  ].map((group) => (
+                    <div key={group.name} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-extrabold text-slate-900">{group.name}</h4>
+                        <span className="text-[10px] font-bold text-blue-600 block mt-0.5">{group.members}</span>
+                        <p className="text-[11px] text-slate-600 mt-1.5 leading-snug">{group.desc}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toast.success(`Joined ${group.name}!`)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded-xl transition cursor-pointer"
+                      >
+                        Join Group
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. FORUMS TAB */}
+            {activeTab === "forums" && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Discussion Forums</h3>
+                  <p className="text-xs text-slate-500">Ask questions, share advice, and explore technical discussions.</p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {[
+                    { title: "How to prepare for off-campus tech placements in 2026?", replies: 34, author: "Rahul V." },
+                    { title: "Best resources for learning Next.js App Router and Turbopack?", replies: 18, author: "Priya M." },
+                    { title: "System Design basics for junior software engineer interviews", replies: 42, author: "Aarav S." },
+                  ].map((forum, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-blue-50/30 transition flex items-center justify-between gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 hover:text-blue-600 cursor-pointer">{forum.title}</h4>
+                        <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Started by {forum.author} · {forum.replies} replies</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toast.info(`Viewing forum: ${forum.title}`)}
+                        className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-150 px-3 py-1.5 rounded-xl hover:bg-blue-100 transition shrink-0 cursor-pointer"
+                      >
+                        View Thread
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Right Sidebar Section */}
+          <aside className="w-full flex flex-col gap-4 select-none">
+            {/* Suggested Connections Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+              <span className="text-[11px] font-extrabold text-slate-900 border-b border-slate-100 pb-2">
+                Suggested Connections
+              </span>
+
+              <div className="flex flex-col gap-2.5">
+                {registeredMembers.length > 0 ? (
+                  registeredMembers.slice(0, 3).map((student) => {
+                    const isPending = pendingConnectedIds.includes(student.id);
+                    return (
+                      <div key={student.id} className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <img
+                            src={student.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(student.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                            alt={student.fullName}
+                            className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <h5 className="text-xs font-bold text-slate-800 truncate leading-snug">{student.fullName}</h5>
+                            <span className="text-[10px] text-slate-400 font-medium block truncate">{student.selectedRole || "Student Member"}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleConnectMember(student.id, student.fullName)}
+                          disabled={isPending}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition shrink-0 cursor-pointer ${
+                            isPending
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                              : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                          }`}
+                        >
+                          {isPending ? "Sent" : "Connect"}
+                        </button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-2">No suggested members yet.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Suggested Groups Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+              <span className="text-[11px] font-extrabold text-slate-900 border-b border-slate-100 pb-2">
+                Suggested Groups
+              </span>
+
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { name: "Full-Stack Web Dev Pod", members: "4.1k members" },
+                  { name: "Placement Prep 2026", members: "5.8k members" },
+                ].map((g) => (
+                  <div key={g.name} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <h5 className="text-xs font-bold text-slate-800 truncate">{g.name}</h5>
+                      <span className="text-[10px] text-slate-400 font-medium block">{g.members}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toast.success(`Joined ${g.name}!`)}
+                      className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg hover:bg-blue-100 transition shrink-0 cursor-pointer"
+                    >
+                      Join
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Latest Platform Updates */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3">
+              <span className="text-[11px] font-extrabold text-slate-900 border-b border-slate-100 pb-2">
+                Latest platform updates
+              </span>
+
+              <div className="flex flex-col gap-2 text-xs">
+                <div className="flex items-start gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 shrink-0" />
+                  <p className="text-[11px] text-slate-600 font-medium leading-snug">
+                    Latest platform updates: Real registered members active July 2026
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                  <p className="text-[11px] text-slate-600 font-medium leading-snug">
+                    New certificates & course modules enabled in Studentforge
+                  </p>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
+
+      {/* Post Edit Modal Dialog */}
+      {editingPost && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-fadeIn">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 w-full max-w-lg flex flex-col gap-4">
+            <h3 className="text-base font-extrabold text-slate-900 border-b border-slate-100 pb-3">
+              Edit Timeline Post
+            </h3>
+
+            <textarea
+              rows={4}
+              value={editContentText}
+              onChange={(e) => setEditContentText(e.target.value)}
+              className="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-blue-500"
+            />
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setEditingPost(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePostEdit}
+                disabled={savingPostEdit || !editContentText.trim()}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2 rounded-xl transition shadow-2xs"
+              >
+                {savingPostEdit ? "Saving..." : "Save Edits"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
