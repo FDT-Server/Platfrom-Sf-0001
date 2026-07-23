@@ -19,28 +19,48 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeDrawerPost, setActiveDrawerPost] = useState<FeedPost | null>(null);
 
+  const formatExactDateTime = (dateValue: string | Date) => {
+    if (!dateValue) return "Recently";
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "Recently";
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   const fetchPostsFromApi = async () => {
     try {
-      const res = await fetch("/api/posts");
+      const res = await fetch(`/api/posts?t=${Date.now()}`);
       if (res.ok) {
         const dbPosts = await res.json();
-        if (Array.isArray(dbPosts) && dbPosts.length > 0) {
-          const formatted: FeedPost[] = dbPosts.map((p: any) => ({
-            id: p.id,
-            authorName: p.userName || "Community Developer",
-            authorRole: p.userRole || "Student Developer",
-            authorImage: p.userImage || null,
-            timeAgo: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recently",
-            category: p.category || "General",
-            content: p.content,
-            imageUrl: p.imageUrl || undefined,
-            likes: p.likesCount || 0,
-            comments: [],
-            liked: false,
-            bookmarked: false,
-          }));
-          setPosts(formatted);
-          return;
+        if (Array.isArray(dbPosts)) {
+          setPosts((prevPosts) => {
+            const prevMap = new Map(prevPosts.map((p) => [p.id, p]));
+            return dbPosts.map((p: any) => {
+              const prev = prevMap.get(p.id);
+              const exactTime = formatExactDateTime(p.createdAt);
+
+              return {
+                id: p.id,
+                authorName: p.userName || "Community Developer",
+                authorRole: p.userRole || "Student Developer",
+                authorImage: p.userImage && p.userImage.trim() !== "" ? p.userImage : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.userName || "Developer")}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
+                timeAgo: exactTime,
+                category: p.category || "General",
+                content: p.content,
+                imageUrl: p.imageUrl || undefined,
+                likes: p.likesCount || 0,
+                comments: [],
+                liked: prev ? prev.liked : false,
+                bookmarked: prev ? prev.bookmarked : false,
+              };
+            });
+          });
         }
       }
     } catch (err) {
@@ -52,6 +72,10 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
 
   useEffect(() => {
     fetchPostsFromApi();
+    const interval = setInterval(() => {
+      fetchPostsFromApi();
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

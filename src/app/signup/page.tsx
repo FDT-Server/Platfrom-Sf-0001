@@ -63,21 +63,20 @@ export default function SignupPage() {
 
   return (
     <AuthLayout>
-      <div className="mb-7">
-        <h1 className="text-[28px] font-bold text-slate-900 tracking-tight leading-tight">Create Account</h1>
-        <p className="text-sm text-slate-500 mt-1.5">Fill in your details to get started.</p>
+      <div className="mb-3">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">Create Account</h1>
+        <p className="text-xs text-slate-500 mt-1">Fill in your details to get started.</p>
       </div>
 
-      {}
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-xs rounded-2xl px-4 py-3">
+        <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl px-3.5 py-2">
           {error}
         </div>
       )}
 
       <button
         type="button"
-        className="w-full flex items-center justify-center gap-2.5 bg-white border border-slate-400 px-5 py-3.5 rounded-full text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-500 transition cursor-pointer shadow-sm mb-4"
+        className="w-full flex items-center justify-center gap-2.5 bg-white border border-slate-400 px-4 py-2.5 rounded-full text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-500 transition cursor-pointer shadow-sm mb-3"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -88,17 +87,17 @@ export default function SignupPage() {
         Continue with Google
       </button>
 
-      <div className="relative mb-4">
+      <div className="relative mb-3">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Or</span>
+          <span className="bg-white px-3 text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Or</span>
         </div>
       </div>
 
       <form
-        className="space-y-3"
+        className="space-y-2.5"
         onSubmit={(e) => { e.preventDefault(); if (isFormValid) handleSignupSubmit(); }}
       >
         <input
@@ -109,7 +108,7 @@ export default function SignupPage() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Full name"
-          className="w-full px-5 py-3.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-500"
+          className="w-full px-4 py-2.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-xs transition placeholder-slate-400 hover:border-slate-500"
         />
         <input
           type="email"
@@ -120,7 +119,7 @@ export default function SignupPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email address"
-          className="w-full px-5 py-3.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-500"
+          className="w-full px-4 py-2.5 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-xs transition placeholder-slate-400 hover:border-slate-500"
         />
         <div className="relative">
           <input
@@ -132,20 +131,19 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password (8+ chars, 1 cap, 1 num, 1 symbol)"
-            className="w-full px-5 py-3.5 pr-12 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-sm transition placeholder-slate-400 hover:border-slate-500"
+            className="w-full px-4 py-2.5 pr-11 rounded-full border border-slate-400 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-800 text-xs transition placeholder-slate-400 hover:border-slate-500"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 focus:outline-none p-1"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 focus:outline-none p-1"
           >
             {showPassword ? <EyeOffIcon /> : <EyeIcon />}
           </button>
         </div>
 
-        {}
         {password.length > 0 && (
-          <div className="flex gap-2 px-2">
+          <div className="flex gap-1.5 px-2">
             {[
               { label: "8+", ok: password.length >= 8 },
               { label: "A–Z", ok: /[A-Z]/.test(password) },
@@ -154,7 +152,7 @@ export default function SignupPage() {
             ].map(({ label, ok }) => (
               <span
                 key={label}
-                className={`text-[10px] px-2 py-0.5 rounded-full font-semibold transition ${
+                className={`text-[9px] px-2 py-0.5 rounded-full font-semibold transition ${
                   ok ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-400"
                 }`}
               >
@@ -165,7 +163,7 @@ export default function SignupPage() {
         )}
 
         {/* Terms */}
-        <div className="flex items-start gap-2 pt-1">
+        <div className="flex items-start gap-2 pt-0.5">
           <input
             type="checkbox"
             id="terms"
@@ -184,14 +182,14 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={!isFormValid || loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white py-3.5 rounded-full text-sm font-semibold transition duration-200 shadow-sm mt-1 cursor-pointer"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white py-2.5 rounded-full text-xs font-semibold transition duration-200 shadow-sm mt-1 cursor-pointer"
         >
           {loading ? "Creating account…" : "Create Account"}
         </button>
       </form>
 
       {/* Login link */}
-      <p className="text-center text-[12px] text-slate-500 mt-6">
+      <p className="text-center text-[11px] text-slate-500 mt-3.5">
         Already have an account?{" "}
         <Link href="/login" className="text-blue-600 font-semibold hover:text-blue-700 transition">
           Sign In

@@ -110,10 +110,13 @@ export default function FeedPostCard({
             <img
               src={post.authorImage}
               alt={post.authorName}
-              className="w-10 h-10 rounded-full object-cover border border-slate-100 shrink-0"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(post.authorName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+              }}
+              className="w-10 h-10 rounded-full object-cover border border-slate-200/80 bg-slate-50 shrink-0 shadow-2xs"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
               {initials}
             </div>
           )}

@@ -706,7 +706,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       <img
                         src="/images/no-messages.png"
                         alt="No messages illustration"
-                        className="w-44 h-auto object-contain mb-2 max-h-36"
+                        className="w-64 sm:w-80 h-auto object-contain mb-3 max-h-56 sm:max-h-64 drop-shadow-xs transition-transform duration-300 hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
                         }}
@@ -794,11 +794,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center select-none">
+                <div className="flex flex-col items-center justify-center py-10 text-center select-none">
                   <img
                     src="/images/no-messages.png"
                     alt="No pending requests illustration"
-                    className="w-48 h-auto object-contain mb-2 max-h-40"
+                    className="w-64 sm:w-80 h-auto object-contain mb-3 max-h-56 sm:max-h-64 drop-shadow-xs transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
                     }}
@@ -855,11 +855,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center select-none">
+                <div className="flex flex-col items-center justify-center py-10 text-center select-none">
                   <img
                     src="/images/no-messages.png"
                     alt="No connected friends illustration"
-                    className="w-48 h-auto object-contain mb-2 max-h-40"
+                    className="w-64 sm:w-80 h-auto object-contain mb-3 max-h-56 sm:max-h-64 drop-shadow-xs transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
                     }}

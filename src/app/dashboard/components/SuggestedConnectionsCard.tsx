@@ -78,6 +78,32 @@ interface SuggestedConnectionsCardProps {
 export default function SuggestedConnectionsCard({ suggestedUsers }: SuggestedConnectionsCardProps) {
   const router = useRouter();
   const [connectedIds, setConnectedIds] = useState<string[]>([]);
+  const [usersList, setUsersList] = useState<SuggestedUser[]>(suggestedUsers || []);
+
+  const fetchRealUsers = async () => {
+    try {
+      const res = await fetch(`/api/users?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+          const filtered = data.users.filter(
+            (u: any) =>
+              u.email?.trim().toLowerCase() !== "webstrixx@gmail.com" &&
+              u.email?.trim().toLowerCase() !== "hrstudentforge@gmail.com"
+          );
+          setUsersList(filtered);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch suggested connections:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRealUsers();
+    const interval = setInterval(fetchRealUsers, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -94,7 +120,7 @@ export default function SuggestedConnectionsCard({ suggestedUsers }: SuggestedCo
     }
   }, []);
 
-  const usersToDisplay = suggestedUsers && suggestedUsers.length > 0 ? suggestedUsers : fallbackSuggested;
+  const usersToDisplay = usersList;
 
   const handleConnect = (targetUser: SuggestedUser) => {
     if (!connectedIds.includes(targetUser.id)) {
