@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
-import { IconEdit, IconExternalLink, IconLoader, IconLogout } from "@tabler/icons-react";
+import { IconEdit, IconExternalLink, IconLoader, IconLogout, IconBookmark } from "@tabler/icons-react";
 
 interface UserProfile {
+  id?: string;
   fullName: string;
   email: string;
   selectedRole: string;
@@ -32,6 +33,35 @@ export default function ProfileContent({ user }: ProfileContentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [savedPosts, setSavedPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchSavedPosts = async () => {
+      try {
+        const res = await fetch(`/api/posts?t=${Date.now()}`);
+        if (res.ok) {
+          const allPosts = await res.json();
+          if (Array.isArray(allPosts)) {
+            let localBookmarks: string[] = [];
+            if (typeof window !== "undefined") {
+              try {
+                localBookmarks = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
+              } catch (e) {}
+            }
+            const filtered = allPosts.filter((p: any) => {
+              const bArr = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
+              return (user?.id && bArr.includes(user.id)) || localBookmarks.includes(p.id);
+            });
+            setSavedPosts(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load saved posts:", err);
+      }
+    };
+
+    fetchSavedPosts();
+  }, [user]);
 
   const [formData, setFormData] = useState<UserProfile>({ ...user });
 
@@ -265,7 +295,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-300">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800">Log out of all devices</h4>
                     <p className="text-xs text-slate-500 mt-0.5">Log out of all active sessions besides this one.</p>
@@ -278,6 +308,53 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       Log out
                     </button>
                   </div>
+                </div>
+
+                {/* Saved & Bookmarked Posts Section */}
+                <div className="py-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                      <IconBookmark className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900">Saved & Bookmarked Posts</h4>
+                      <p className="text-xs text-slate-500">View all community posts you have bookmarked for quick reference.</p>
+                    </div>
+                  </div>
+
+                  {savedPosts.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {savedPosts.map((post) => (
+                        <div
+                          key={post.id}
+                          onClick={() => router.push(`/dashboard/post/${post.id}`)}
+                          className="p-4 rounded-2xl border border-slate-200 hover:border-blue-500 bg-slate-50/60 hover:bg-blue-50/20 transition duration-150 cursor-pointer flex flex-col justify-between gap-3 shadow-2xs group"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
+                              <span className="font-bold text-slate-800 group-hover:text-blue-600 transition">{post.userName || "Community Member"}</span>
+                              <span className="text-[10px] uppercase font-bold text-blue-600 bg-blue-100/70 px-2.5 py-0.5 rounded-full border border-blue-200/50">{post.category || "General"}</span>
+                            </div>
+                            <p className="text-xs font-normal text-slate-700 line-clamp-3 leading-relaxed">{post.content}</p>
+                          </div>
+                          {post.imageUrl && (
+                            <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-200/80 bg-slate-900/5 flex items-center justify-center p-0.5">
+                              <img src={post.imageUrl} alt="Saved post media" className="w-full h-full object-contain rounded-lg" />
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold pt-2 border-t border-slate-200/60">
+                            <span>{post.likesCount || 0} Likes · {Array.isArray(post.comments) ? post.comments.length : 0} Comments</span>
+                            <span className="text-blue-600 group-hover:translate-x-0.5 transition">View Post &rarr;</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center bg-slate-50 rounded-2xl border border-slate-200">
+                      <p className="text-xs font-bold text-slate-700">No saved posts yet</p>
+                      <p className="text-[11px] text-slate-500 mt-1">Click the "Save" button on any community post to bookmark it here!</p>
+                    </div>
+                  )}
                 </div>
 
               </div>

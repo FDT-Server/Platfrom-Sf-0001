@@ -51,6 +51,9 @@ export default async function PostDetailPage({ params }: PageProps) {
   });
 
   if (dbPost) {
+    const bUserIds = Array.isArray(dbPost.bookmarkedUserIds) ? (dbPost.bookmarkedUserIds as string[]) : [];
+    const comms = Array.isArray(dbPost.comments) ? (dbPost.comments as any[]) : [];
+
     post = {
       id: dbPost.id,
       title: dbPost.title || undefined,
@@ -58,20 +61,23 @@ export default async function PostDetailPage({ params }: PageProps) {
         id: dbPost.userId,
         name: dbPost.userName,
         role: dbPost.userRole || "Student Developer",
-        image: dbPost.userImage || null,
+        image: dbPost.userImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(dbPost.userName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
         isVerified: true,
         isFollowing: false,
       },
-      createdAt: dbPost.createdAt.toLocaleDateString("en-US", {
-        month: "long",
+      createdAt: dbPost.createdAt.toLocaleString("en-US", {
+        month: "short",
         day: "numeric",
         year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
       }),
       visibility: "Public",
       category: (dbPost.category as any) || "General",
       content: dbPost.content,
       tags: dbPost.tags ? dbPost.tags.split(",").map((t) => t.trim()) : [],
-      media: dbPost.imageUrl
+      media: dbPost.imageUrl && dbPost.imageUrl.trim() !== ""
         ? [
             {
               id: `m-${dbPost.id}`,
@@ -89,14 +95,31 @@ export default async function PostDetailPage({ params }: PageProps) {
         love: 0,
       },
       userReaction: "like",
-      comments: [],
+      comments: comms.map((c: any) => ({
+        id: c.id,
+        author: {
+          id: c.authorId || "u-anon",
+          name: c.authorName || "Community Member",
+          role: "Member",
+          image: c.authorImage || null,
+        },
+        content: c.content,
+        createdAt: c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recently",
+        likes: 0,
+        liked: false,
+        replies: [],
+      })),
       sharesCount: dbPost.sharesCount || 0,
-      bookmarksCount: 0,
-      viewsCount: 1,
-      bookmarked: false,
+      bookmarksCount: bUserIds.length,
+      viewsCount: (dbPost.viewsCount || 0) + 1,
+      bookmarked: bUserIds.includes(user.id),
     };
   } else {
-    post = getPostById(id);
+    post = getPostById(id) || null;
+  }
+
+  if (!post) {
+    redirect("/dashboard");
   }
 
   return <PostDetailContent user={user} post={post} />;

@@ -39,11 +39,29 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
       if (res.ok) {
         const dbPosts = await res.json();
         if (Array.isArray(dbPosts)) {
+          let localBookmarks: string[] = [];
+          if (typeof window !== "undefined") {
+            try {
+              localBookmarks = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
+            } catch (e) {}
+          }
+
           setPosts((prevPosts) => {
             const prevMap = new Map(prevPosts.map((p) => [p.id, p]));
             return dbPosts.map((p: any) => {
               const prev = prevMap.get(p.id);
               const exactTime = formatExactDateTime(p.createdAt);
+              const bUserIds = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
+              const lUserIds = Array.isArray(p.likedUserIds) ? p.likedUserIds : [];
+              const comms = Array.isArray(p.comments) ? p.comments : [];
+
+              let isLiked = prev ? prev.liked : false;
+              let isBookmarked = prev ? prev.bookmarked : localBookmarks.includes(p.id);
+
+              if (user && user.id) {
+                if (lUserIds.includes(user.id)) isLiked = true;
+                if (bUserIds.includes(user.id)) isBookmarked = true;
+              }
 
               return {
                 id: p.id,
@@ -55,9 +73,11 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
                 content: p.content,
                 imageUrl: p.imageUrl || undefined,
                 likes: p.likesCount || 0,
-                comments: [],
-                liked: prev ? prev.liked : false,
-                bookmarked: prev ? prev.bookmarked : false,
+                sharesCount: p.sharesCount || 0,
+                viewsCount: p.viewsCount || 0,
+                comments: comms,
+                liked: isLiked,
+                bookmarked: isBookmarked,
               };
             });
           });
@@ -84,7 +104,7 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
     }
   }, [newPostSignal]);
 
-  const handleLikeToggle = (postId: string) => {
+  const handleLikeToggle = async (postId: string) => {
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
@@ -92,25 +112,59 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
           return {
             ...p,
             liked: nextLiked,
-            likes: nextLiked ? p.likes + 1 : p.likes - 1,
+            likes: nextLiked ? p.likes + 1 : Math.max(0, p.likes - 1),
           };
         }
         return p;
       })
     );
+
+    try {
+      await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "like" }),
+      });
+    } catch (err) {
+      console.error("Error persisting like:", err);
+    }
   };
 
-  const handleBookmarkToggle = (postId: string) => {
+  const handleBookmarkToggle = async (postId: string) => {
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
           const nextBookmarked = !p.bookmarked;
-          if (nextBookmarked) toast.success("Post saved to bookmarks!");
+          if (nextBookmarked) toast.success("Post saved to profile bookmarks!");
+
+          if (typeof window !== "undefined") {
+            try {
+              const currentSaved: string[] = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
+              if (nextBookmarked) {
+                if (!currentSaved.includes(postId)) currentSaved.push(postId);
+              } else {
+                const idx = currentSaved.indexOf(postId);
+                if (idx > -1) currentSaved.splice(idx, 1);
+              }
+              localStorage.setItem("sf_saved_posts", JSON.stringify(currentSaved));
+            } catch (e) {}
+          }
+
           return { ...p, bookmarked: nextBookmarked };
         }
         return p;
       })
     );
+
+    try {
+      await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "bookmark" }),
+      });
+    } catch (err) {
+      console.error("Error persisting bookmark:", err);
+    }
   };
 
   return (

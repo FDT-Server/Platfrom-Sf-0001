@@ -30,6 +30,8 @@ export interface FeedPost {
   content: string;
   imageUrl?: string;
   likes: number;
+  sharesCount?: number;
+  viewsCount?: number;
   comments: PostComment[];
   liked?: boolean;
   bookmarked?: boolean;
@@ -65,7 +67,6 @@ export default function FeedPostCard({
     : "SF";
 
   const handleCardClick = (e: React.MouseEvent) => {
-
     const target = e.target as HTMLElement;
     if (target.closest("button") || target.closest("a") || target.closest("input")) {
       return;
@@ -73,11 +74,20 @@ export default function FeedPostCard({
     router.push(`/dashboard/post/${post.id}`);
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(`${window.location.origin}/dashboard/post/${post.id}`);
       toast.success("Post link copied to clipboard!");
+      try {
+        await fetch(`/api/posts/${post.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "share" }),
+        });
+      } catch (err) {
+        console.error("Error sharing post:", err);
+      }
     }
   };
 
@@ -144,22 +154,33 @@ export default function FeedPostCard({
         {post.content}
       </p>
 
-      {/* Image attachment */}
-      {post.imageUrl && (
-        <div className="w-full max-h-80 rounded-xl overflow-hidden border border-slate-200/70 select-none bg-slate-50">
+      {/* Clear, Uncropped Image attachment */}
+      {post.imageUrl && post.imageUrl.trim() !== "" && (
+        <div className="w-full rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-950/5 select-none p-1 flex items-center justify-center">
           <img
             src={post.imageUrl}
             alt="Post media"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-101"
+            className="w-full h-auto max-h-[500px] object-contain rounded-xl shadow-2xs"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = "none";
+            }}
           />
         </div>
       )}
 
-      {/* Stats summary */}
+      {/* Real Stats summary */}
       <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold px-0.5 border-b border-slate-100 pb-2 select-none">
-        <span>{post.likes} Likes</span>
-        <span className="hover:text-blue-600 transition">
-          {post.comments.length} Comments · Click to view details
+        <div className="flex items-center gap-2">
+          <span>{post.likes} Likes</span>
+          <span>·</span>
+          <span>{post.comments.length} Comments</span>
+          <span>·</span>
+          <span>{post.sharesCount || 0} Shares</span>
+          <span>·</span>
+          <span>{post.viewsCount || 0} Views</span>
+        </div>
+        <span className="hover:text-blue-600 transition text-[10px] font-bold">
+          View post &rarr;
         </span>
       </div>
 

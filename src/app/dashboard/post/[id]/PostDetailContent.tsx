@@ -57,7 +57,7 @@ export default function PostDetailContent({ user, post }: PostDetailContentProps
             viewsCount={post.viewsCount}
             bookmarked={post.bookmarked}
           />
-          <CommentList comments={post.comments} currentUser={currentUserObj} />
+          <CommentList comments={post.comments} currentUser={currentUserObj} postId={post.id} />
           <RelatedPosts currentPostId={post.id} authorName={post.author.name} />
         </main>
 

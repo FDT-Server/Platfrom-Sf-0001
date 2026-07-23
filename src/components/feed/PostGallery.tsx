@@ -41,14 +41,14 @@ export default function PostGallery({ media }: PostGalleryProps) {
             <div
               key={img.id}
               onClick={() => setSelectedImage(img.url)}
-              className="relative group cursor-pointer overflow-hidden bg-slate-900 aspect-video md:aspect-auto md:h-80"
+              className="relative group cursor-pointer overflow-hidden bg-slate-950/5 border border-slate-200/80 rounded-2xl p-1 flex items-center justify-center min-h-[220px]"
             >
               <img
                 src={img.url}
                 alt={img.title || "Post Image"}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-auto max-h-[560px] object-contain rounded-xl shadow-2xs transition-transform duration-300 group-hover:scale-[1.01]"
               />
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center text-white">
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center text-white rounded-2xl">
                 <IconMaximize className="w-6 h-6 drop-shadow-md" />
               </div>
             </div>
