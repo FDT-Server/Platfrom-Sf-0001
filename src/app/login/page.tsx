@@ -44,13 +44,12 @@ export default function LoginPage() {
         toast.success("Signed in successfully!");
         const userEmail = (data.user?.email || "").trim().toLowerCase();
         if (userEmail === "webstrixx@gmail.com") {
-          router.push("/admin");
+          window.location.href = "/admin";
         } else if (userEmail === "hrstudentforge@gmail.com") {
-          router.push("/sfadmin/dashboard");
+          window.location.href = "/sfadmin/dashboard";
         } else {
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
         }
-        router.refresh();
       }
     } catch (err) {
       console.error(err);
