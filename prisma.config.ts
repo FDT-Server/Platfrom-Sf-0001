@@ -29,12 +29,22 @@ function loadEnvFile(filePath: string): void {
 loadEnvFile(resolve(process.cwd(), ".env.local"));
 loadEnvFile(resolve(process.cwd(), ".env"));
 
+const SUPABASE_DIRECT_URL = "postgresql://postgres.kskthifgazwqgprwvjwx:dbpasswordstudentforge@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+
+function getMigrationUrl(): string {
+  const url = process.env["DIRECT_URL"] || process.env["DATABASE_URL"];
+  if (!url || url.includes("neon.tech")) {
+    return SUPABASE_DIRECT_URL;
+  }
+  return url;
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"],
+    url: getMigrationUrl(),
   },
 });
