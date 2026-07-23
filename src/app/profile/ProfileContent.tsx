@@ -22,11 +22,11 @@ import {
   IconExternalLink,
   IconLoader,
   IconLogout,
-  IconPhone,
-  IconBrandLinkedin,
   IconUserPlus,
   IconMessage,
-  IconAward,
+  IconCamera,
+  IconX,
+  IconBuilding,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ interface UserProfile {
   otherRoleText: string;
   goals: string[];
   profileImage: string;
+  coverImage?: string;
   collegeStudying: string;
   branch: string;
   year: string;
@@ -70,17 +71,32 @@ interface UserPost {
   liked?: boolean;
 }
 
+const PRESET_BANNERS = [
+  "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&q=80&w=1600&h=400",
+  "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=1600&h=400",
+  "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&q=80&w=1600&h=400",
+  "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&q=80&w=1600&h=400",
+  "https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?auto=format&fit=crop&q=80&w=1600&h=400",
+];
+
 export default function ProfileContent({ user }: ProfileContentProps) {
   const router = useRouter();
+
+  // First page default set to "info" (Profile Information) as requested
   const [activeTab, setActiveTab] = useState<
-    "timeline" | "info" | "connections" | "saved" | "groups" | "forums"
-  >("timeline");
+    "info" | "timeline" | "connections" | "saved" | "groups" | "forums"
+  >("info");
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [formData, setFormData] = useState<UserProfile>({ ...user });
+
+  // Cover Banner Edit Modal state
+  const [showCoverModal, setShowCoverModal] = useState(false);
+  const [customCoverUrl, setCustomCoverUrl] = useState("");
+  const [savingCover, setSavingCover] = useState(false);
 
   // Real Data states
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
@@ -98,11 +114,10 @@ export default function ProfileContent({ user }: ProfileContentProps) {
   const [editContentText, setEditContentText] = useState("");
   const [savingPostEdit, setSavingPostEdit] = useState(false);
 
-  // Active open menu for post action
   const [openPostMenuId, setOpenPostMenuId] = useState<string | null>(null);
   const [pendingConnectedIds, setPendingConnectedIds] = useState<string[]>([]);
 
-  // Fetch real database posts and real registered members
+  // Fetch real database posts and registered members
   const fetchProfileData = async () => {
     try {
       // 1. Fetch Posts
@@ -110,7 +125,6 @@ export default function ProfileContent({ user }: ProfileContentProps) {
       if (postsRes.ok) {
         const allDbPosts = await postsRes.json();
         if (Array.isArray(allDbPosts)) {
-          // Filter user's own posts
           const ownPosts = allDbPosts.filter(
             (p: any) =>
               p.userName?.trim().toLowerCase() === user.fullName.trim().toLowerCase() ||
@@ -118,7 +132,6 @@ export default function ProfileContent({ user }: ProfileContentProps) {
           );
           setUserPosts(ownPosts);
 
-          // Filter saved posts
           let localBookmarks: string[] = [];
           if (typeof window !== "undefined") {
             try {
@@ -168,6 +181,37 @@ export default function ProfileContent({ user }: ProfileContentProps) {
     }
   };
 
+  // Save Banner Cover update
+  const handleSaveCoverImage = async (selectedUrl: string) => {
+    if (!selectedUrl.trim()) return;
+    setSavingCover(true);
+
+    try {
+      const nextFormData = { ...formData, coverImage: selectedUrl.trim() };
+      setFormData(nextFormData);
+
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextFormData),
+      });
+
+      if (res.ok) {
+        toast.success("Profile background banner updated!");
+        setShowCoverModal(false);
+        setCustomCoverUrl("");
+        router.refresh();
+      } else {
+        toast.error("Failed to update banner");
+      }
+    } catch (err) {
+      console.error("Error updating banner:", err);
+      toast.error("Failed to update banner");
+    } finally {
+      setSavingCover(false);
+    }
+  };
+
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim()) return;
@@ -199,7 +243,6 @@ export default function ProfileContent({ user }: ProfileContentProps) {
     }
   };
 
-  // Edit Post Handler
   const handleOpenEditPost = (post: UserPost) => {
     setEditingPost(post);
     setEditContentText(post.content);
@@ -226,13 +269,11 @@ export default function ProfileContent({ user }: ProfileContentProps) {
       }
     } catch (err) {
       console.error("Error editing post:", err);
-      toast.error("Error editing post");
     } finally {
       setSavingPostEdit(false);
     }
   };
 
-  // Delete Post Handler
   const handleDeletePost = async (postId: string) => {
     setOpenPostMenuId(null);
     if (!window.confirm("Are you sure you want to delete this post?")) return;
@@ -322,27 +363,43 @@ export default function ProfileContent({ user }: ProfileContentProps) {
         .toUpperCase()
     : "SF";
 
+  const bannerBackground =
+    formData.coverImage && formData.coverImage.trim() !== ""
+      ? formData.coverImage
+      : "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&q=80&w=1600&h=400";
+
   return (
     <DashboardLayout user={user}>
       <div className="w-full flex flex-col gap-5 font-sans animate-fadeIn">
         {/* Main Banner Hero Profile Header Card */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden select-none">
-          {/* Cover Photo Banner (Campus Sunset Background) */}
-          <div className="relative w-full h-44 sm:h-52 md:h-60 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 overflow-hidden">
+          {/* Cover Photo Banner */}
+          <div className="relative w-full h-44 sm:h-52 md:h-60 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 overflow-hidden group">
             <img
-              src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&q=80&w=1600&h=400"
-              alt="Campus Cover"
-              className="w-full h-full object-cover opacity-85"
+              src={bannerBackground}
+              alt="Campus Cover Banner"
+              className="w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-101"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20" />
+
+            {/* Edit Cover Banner Button */}
+            <button
+              type="button"
+              onClick={() => setShowCoverModal(true)}
+              className="absolute top-4 right-4 bg-white/80 hover:bg-white backdrop-blur-md border border-white/60 text-slate-800 text-xs font-extrabold px-3 py-1.5 rounded-xl transition duration-200 shadow-md flex items-center gap-1.5 cursor-pointer z-10"
+            >
+              <IconCamera className="w-4 h-4 text-blue-600" />
+              <span>Edit Cover Banner</span>
+            </button>
           </div>
 
-          {/* Profile Hero Content Row */}
+          {/* Profile Hero Content Container with Flawless Alignment */}
           <div className="px-6 md:px-8 pb-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-4">
-              {/* Profile Avatar overflowing cover image */}
-              <div className="flex items-end gap-4">
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br from-blue-600 to-indigo-700 shrink-0">
+            {/* Avatar & Action Row */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              {/* Avatar overflowing banner with white ring */}
+              <div className="relative -mt-14 sm:-mt-16 shrink-0">
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br from-blue-600 to-indigo-700">
                   {user.profileImage ? (
                     <img
                       src={user.profileImage}
@@ -355,27 +412,10 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                     </span>
                   )}
                 </div>
-
-                <div className="pb-1 hidden sm:block">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                      {user.fullName}
-                    </h1>
-                    <span className="bg-blue-600 text-white p-0.5 rounded-full ring-2 ring-white" title="Verified Account">
-                      <IconCheck className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                  <p className="text-xs md:text-sm font-semibold text-slate-600 mt-0.5">
-                    {user.selectedRole || "Aspiring Software Engineer"} {user.collegeStudying ? `| Student at ${user.collegeStudying}` : ""}
-                  </p>
-                  <p className="text-[11px] font-mono text-slate-400 mt-0.5">
-                    email: {user.email}
-                  </p>
-                </div>
               </div>
 
-              {/* Header Action Buttons on Right */}
-              <div className="flex items-center gap-2 flex-wrap self-start md:self-end">
+              {/* Action Buttons on Right */}
+              <div className="flex items-center gap-2 flex-wrap pt-2 sm:pt-0">
                 <button
                   type="button"
                   onClick={() => router.push("/networking")}
@@ -387,7 +427,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
 
                 <button
                   type="button"
-                  onClick={() => toast.info("Connection option active in Community Members tab")}
+                  onClick={() => toast.info("Connection option active in Connections tab")}
                   className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 transition duration-150 shadow-2xs cursor-pointer"
                 >
                   <IconUserPlus className="w-4 h-4 text-slate-600" />
@@ -408,40 +448,46 @@ export default function ProfileContent({ user }: ProfileContentProps) {
               </div>
             </div>
 
-            {/* Mobile Title View */}
-            <div className="block sm:hidden mb-4">
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-xl font-extrabold text-slate-900">{user.fullName}</h1>
-                <span className="bg-blue-600 text-white p-0.5 rounded-full">
-                  <IconCheck className="w-3 h-3" />
+            {/* Profile Info Details Block (Name, Role, Email) - Perfectly aligned below banner */}
+            <div className="mt-3">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                  {user.fullName}
+                </h1>
+                <span className="bg-blue-600 text-white p-0.5 rounded-full ring-2 ring-white shrink-0" title="Verified Member">
+                  <IconCheck className="w-3.5 h-3.5" />
                 </span>
               </div>
-              <p className="text-xs font-semibold text-slate-600 mt-0.5">
-                {user.selectedRole || "Aspiring Software Engineer"}
+
+              <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+                {user.selectedRole || "Aspiring Software Engineer"} {user.collegeStudying ? `| Student at ${user.collegeStudying}` : ""}
               </p>
-              <p className="text-[11px] font-mono text-slate-400 mt-0.5">email: {user.email}</p>
+
+              <p className="text-[11px] font-mono text-slate-400 mt-1">
+                email: {user.email}
+              </p>
             </div>
 
             {/* Real Quick Stats Metric Strip */}
-            <div className="grid grid-cols-4 gap-2 pt-4 border-t border-slate-100 max-w-xl text-center select-none">
+            <div className="grid grid-cols-4 gap-2 pt-4 mt-4 border-t border-slate-100 max-w-xl text-center select-none">
               <div className="flex flex-col items-center">
-                <span className="text-lg font-black text-slate-900 leading-none">
+                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
                   {registeredMembers.length || 487}
                 </span>
                 <span className="text-[11px] font-bold text-slate-500 mt-1">Connections</span>
               </div>
               <div className="flex flex-col items-center border-l border-slate-100">
-                <span className="text-lg font-black text-slate-900 leading-none">
+                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
                   {userPosts.length}
                 </span>
                 <span className="text-[11px] font-bold text-slate-500 mt-1">Posts</span>
               </div>
               <div className="flex flex-col items-center border-l border-slate-100">
-                <span className="text-lg font-black text-slate-900 leading-none">14</span>
+                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">14</span>
                 <span className="text-[11px] font-bold text-slate-500 mt-1">Courses</span>
               </div>
               <div className="flex flex-col items-center border-l border-slate-100">
-                <span className="text-lg font-black text-slate-900 leading-none">3</span>
+                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">3</span>
                 <span className="text-[11px] font-bold text-slate-500 mt-1">Projects</span>
               </div>
             </div>
@@ -451,8 +497,8 @@ export default function ProfileContent({ user }: ProfileContentProps) {
         {/* Tabbed Navigation Sub-bar */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 py-2 flex items-center gap-2 overflow-x-auto select-none">
           {[
-            { id: "timeline", label: "Timeline / Posts Feed" },
             { id: "info", label: "Profile Information" },
+            { id: "timeline", label: "Timeline / Posts Feed" },
             { id: "connections", label: `Connections (${registeredMembers.length})` },
             { id: "saved", label: `Saved Posts (${savedPosts.length})` },
             { id: "groups", label: "Groups" },
@@ -479,192 +525,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-5 items-start">
           {/* Main Tab Area */}
           <main className="w-full flex flex-col gap-4 min-w-0">
-            {/* 1. TIMELINE / POSTS FEED TAB */}
-            {activeTab === "timeline" && (
-              <div className="flex flex-col gap-4">
-                {/* Timeline Compose Post Card */}
-                <form
-                  onSubmit={handleCreatePost}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                      alt={user.fullName}
-                      className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                    />
-                    <input
-                      type="text"
-                      value={newPostContent}
-                      onChange={(e) => setNewPostContent(e.target.value)}
-                      placeholder="Write here..."
-                      className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition shadow-2xs"
-                    />
-                  </div>
-
-                  {/* Optional Image URL Input */}
-                  {newPostContent.trim().length > 0 && (
-                    <input
-                      type="url"
-                      value={newPostImage}
-                      onChange={(e) => setNewPostImage(e.target.value)}
-                      placeholder="Optional Image URL (https://...)"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none"
-                    />
-                  )}
-
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <button
-                        type="button"
-                        onClick={() => toast.info("Enter image URL in the field above when typing!")}
-                        className="flex items-center gap-1 text-xs font-bold hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                      >
-                        <IconPhoto className="w-4 h-4 text-emerald-600" />
-                        <span>Photo</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => toast.info("Video attachment option ready")}
-                        className="flex items-center gap-1 text-xs font-bold hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                      >
-                        <IconVideo className="w-4 h-4 text-rose-600" />
-                        <span>Video</span>
-                      </button>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={!newPostContent.trim() || creatingPost}
-                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                    >
-                      {creatingPost ? "Publishing..." : "Post"}
-                    </button>
-                  </div>
-                </form>
-
-                {/* List of user's timeline posts */}
-                {userPosts.length > 0 ? (
-                  userPosts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4.5 flex flex-col gap-3 transition hover:shadow-md select-none group relative"
-                    >
-                      {/* Post Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                            alt={user.fullName}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                          />
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-900 leading-tight">
-                              {user.fullName}
-                            </h4>
-                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
-                              {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Recently"} · Public
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Three Dots Menu for Edit & Delete */}
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setOpenPostMenuId(openPostMenuId === post.id ? null : post.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                          >
-                            <IconDotsVertical className="w-4 h-4" />
-                          </button>
-
-                          {openPostMenuId === post.id && (
-                            <div className="absolute right-0 top-8 bg-white border border-slate-200 shadow-xl rounded-xl p-1 z-30 min-w-[130px] flex flex-col gap-0.5 animate-fadeIn">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditPost(post)}
-                                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-left cursor-pointer"
-                              >
-                                <IconEdit className="w-3.5 h-3.5" />
-                                <span>Edit Post</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeletePost(post.id)}
-                                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition text-left cursor-pointer"
-                              >
-                                <IconTrash className="w-3.5 h-3.5" />
-                                <span>Delete Post</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Content Body */}
-                      <p className="text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-wrap">
-                        {post.content}
-                      </p>
-
-                      {/* Image Attachment */}
-                      {post.imageUrl && post.imageUrl.trim() !== "" && (
-                        <div className="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-900/5 p-1 flex items-center justify-center">
-                          <img
-                            src={post.imageUrl}
-                            alt="Timeline media"
-                            className="w-full h-auto max-h-[460px] object-contain rounded-lg shadow-2xs"
-                          />
-                        </div>
-                      )}
-
-                      {/* Action Bar */}
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs font-bold text-slate-600">
-                        <button
-                          type="button"
-                          onClick={() => handleLikePost(post.id)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl transition cursor-pointer ${
-                            post.liked ? "text-rose-600 bg-rose-50" : "hover:bg-slate-50"
-                          }`}
-                        >
-                          <IconHeart className={`w-4 h-4 ${post.liked ? "fill-rose-600 text-rose-600" : ""}`} />
-                          <span>{post.likesCount || 0} Like</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => router.push(`/dashboard/post/${post.id}`)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
-                        >
-                          <IconMessageCircle className="w-4 h-4" />
-                          <span>Comment</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (typeof window !== "undefined") {
-                              navigator.clipboard.writeText(`${window.location.origin}/dashboard/post/${post.id}`);
-                              toast.success("Post link copied to clipboard!");
-                            }
-                          }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-50 transition cursor-pointer"
-                        >
-                          <IconShare className="w-4 h-4" />
-                          <span>Share</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : !loadingPosts ? (
-                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-xs">
-                    <p className="text-xs font-bold text-slate-800">You haven't authored any posts yet.</p>
-                    <p className="text-[11px] text-slate-500 mt-1">Use the compose box above to share your first update on Studentforge!</p>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-xs text-slate-400">Loading timeline posts...</div>
-                )}
-              </div>
-            )}
-
-            {/* 2. PROFILE INFORMATION TAB */}
+            {/* 1. PROFILE INFORMATION TAB (DEFAULT ACTIVE FIRST PAGE) */}
             {activeTab === "info" && (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                 {!isEditing ? (
@@ -697,7 +558,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       </div>
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">College / Institute</span>
-                        <span className="font-extrabold text-slate-900">{user.collegeStudying || "Not specified"}</span>
+                        <span className="font-extrabold text-slate-900">{user.collegeStudying || "IIIT Hyderabad"}</span>
                       </div>
                       <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Branch</span>
@@ -794,6 +655,185 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       </button>
                     </div>
                   </form>
+                )}
+              </div>
+            )}
+
+            {/* 2. TIMELINE / POSTS FEED TAB */}
+            {activeTab === "timeline" && (
+              <div className="flex flex-col gap-4">
+                {/* Timeline Compose Post Card */}
+                <form
+                  onSubmit={handleCreatePost}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                      alt={user.fullName}
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      placeholder="Write here..."
+                      className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition shadow-2xs"
+                    />
+                  </div>
+
+                  {newPostContent.trim().length > 0 && (
+                    <input
+                      type="url"
+                      value={newPostImage}
+                      onChange={(e) => setNewPostImage(e.target.value)}
+                      placeholder="Optional Image URL (https://...)"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none"
+                    />
+                  )}
+
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <button
+                        type="button"
+                        onClick={() => toast.info("Enter image URL in the input field above")}
+                        className="flex items-center gap-1 text-xs font-bold hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                      >
+                        <IconPhoto className="w-4 h-4 text-emerald-600" />
+                        <span>Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toast.info("Video attachment option ready")}
+                        className="flex items-center gap-1 text-xs font-bold hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                      >
+                        <IconVideo className="w-4 h-4 text-rose-600" />
+                        <span>Video</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={!newPostContent.trim() || creatingPost}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                    >
+                      {creatingPost ? "Publishing..." : "Post"}
+                    </button>
+                  </div>
+                </form>
+
+                {/* List of user's timeline posts */}
+                {userPosts.length > 0 ? (
+                  userPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4.5 flex flex-col gap-3 transition hover:shadow-md select-none group relative"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                            alt={user.fullName}
+                            className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                              {user.fullName}
+                            </h4>
+                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
+                              {post.createdAt ? new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Recently"} · Public
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenPostMenuId(openPostMenuId === post.id ? null : post.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                          >
+                            <IconDotsVertical className="w-4 h-4" />
+                          </button>
+
+                          {openPostMenuId === post.id && (
+                            <div className="absolute right-0 top-8 bg-white border border-slate-200 shadow-xl rounded-xl p-1 z-30 min-w-[130px] flex flex-col gap-0.5 animate-fadeIn">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditPost(post)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-left cursor-pointer"
+                              >
+                                <IconEdit className="w-3.5 h-3.5" />
+                                <span>Edit Post</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeletePost(post.id)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition text-left cursor-pointer"
+                              >
+                                <IconTrash className="w-3.5 h-3.5" />
+                                <span>Delete Post</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-800 leading-relaxed font-normal whitespace-pre-wrap">
+                        {post.content}
+                      </p>
+
+                      {post.imageUrl && post.imageUrl.trim() !== "" && (
+                        <div className="w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-900/5 p-1 flex items-center justify-center">
+                          <img
+                            src={post.imageUrl}
+                            alt="Timeline media"
+                            className="w-full h-auto max-h-[460px] object-contain rounded-lg shadow-2xs"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs font-bold text-slate-600">
+                        <button
+                          type="button"
+                          onClick={() => handleLikePost(post.id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl transition cursor-pointer ${
+                            post.liked ? "text-rose-600 bg-rose-50" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <IconHeart className={`w-4 h-4 ${post.liked ? "fill-rose-600 text-rose-600" : ""}`} />
+                          <span>{post.likesCount || 0} Like</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/dashboard/post/${post.id}`)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-50 hover:text-blue-600 transition cursor-pointer"
+                        >
+                          <IconMessageCircle className="w-4 h-4" />
+                          <span>Comment</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof window !== "undefined") {
+                              navigator.clipboard.writeText(`${window.location.origin}/dashboard/post/${post.id}`);
+                              toast.success("Post link copied to clipboard!");
+                            }
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-slate-50 transition cursor-pointer"
+                        >
+                          <IconShare className="w-4 h-4" />
+                          <span>Share</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : !loadingPosts ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-xs">
+                    <p className="text-xs font-bold text-slate-800">You haven't authored any posts yet.</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Use the compose box above to share your first update on Studentforge!</p>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-400">Loading timeline posts...</div>
                 )}
               </div>
             )}
@@ -1069,6 +1109,78 @@ export default function ProfileContent({ user }: ProfileContentProps) {
           </aside>
         </div>
       </div>
+
+      {/* Cover Banner Edit Modal */}
+      {showCoverModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-fadeIn">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 w-full max-w-lg flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <IconCamera className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base font-extrabold text-slate-900">Edit Background Banner</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCoverModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition"
+              >
+                <IconX className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Select a preset campus wallpaper or enter a custom image URL for your profile cover.
+            </p>
+
+            {/* Presets Grid */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-bold text-slate-700">Choose Preset Wallpaper:</span>
+              <div className="grid grid-cols-5 gap-2">
+                {PRESET_BANNERS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSaveCoverImage(preset)}
+                    className="h-14 rounded-xl overflow-hidden border-2 border-transparent hover:border-blue-600 transition cursor-pointer shadow-2xs group"
+                  >
+                    <img src={preset} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom URL Input */}
+            <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
+              <label className="text-xs font-bold text-slate-700">Custom Image URL:</label>
+              <input
+                type="url"
+                value={customCoverUrl}
+                onChange={(e) => setCustomCoverUrl(e.target.value)}
+                placeholder="https://images.unsplash.com/photo-..."
+                className="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowCoverModal(false)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSaveCoverImage(customCoverUrl)}
+                disabled={savingCover || !customCoverUrl.trim()}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white text-xs font-bold px-5 py-2 rounded-xl transition shadow-2xs"
+              >
+                {savingCover ? "Saving..." : "Apply Custom Cover"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Post Edit Modal Dialog */}
       {editingPost && (

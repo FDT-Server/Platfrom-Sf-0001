@@ -22,6 +22,7 @@ model User {
   linkedinLink        String?            @default("")
   portfolioLink       String?            @default("")
   profileImage        String?
+  coverImage          String?            @default("")
   year                String?            @default("")
   about               String?            @default("")
   otpCode             String?

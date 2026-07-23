@@ -45,6 +45,7 @@ export async function PUT(req: Request) {
     const {
       fullName,
       profileImage,
+      coverImage,
       collegeStudying,
       branch,
       year,
@@ -64,6 +65,7 @@ export async function PUT(req: Request) {
       data: {
         fullName,
         profileImage,
+        coverImage: coverImage !== undefined ? coverImage : "",
         collegeStudying: collegeStudying || "",
         branch: branch || "",
         year: year || "",
@@ -81,6 +83,7 @@ export async function PUT(req: Request) {
         fullName: updatedUser.fullName,
         email: updatedUser.email,
         profileImage: updatedUser.profileImage,
+        coverImage: updatedUser.coverImage,
         collegeStudying: updatedUser.collegeStudying,
         branch: updatedUser.branch,
         year: updatedUser.year,
