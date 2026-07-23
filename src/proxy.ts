@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { applySecurityHeaders } from "@/lib/security/headers";
+import { checkRateLimit } from "@/lib/security/rateLimiter";
 
 const BANNED_BOT_PATTERNS = [
   "semrushbot",
@@ -14,7 +16,6 @@ const BANNED_BOT_PATTERNS = [
   "phantomjs",
   "scrapy",
   "python-requests",
-  "go-http-client",
   "masscan",
   "nikto",
   "sqlmap",
@@ -23,126 +24,86 @@ const BANNED_BOT_PATTERNS = [
   "libwww-perl",
 ];
 
-const ADMIN_EMAILS_SFADMIN = ["hrstudentforge@gmail.com"];
-const ADMIN_EMAILS_ADMIN = ["webstrixx@gmail.com"];
-const ALL_ADMIN_EMAILS = [...ADMIN_EMAILS_SFADMIN, ...ADMIN_EMAILS_ADMIN];
+const PROTECTED_USER_ROUTES = [
+  "/dashboard",
+  "/profile",
+  "/networking",
+  "/studypod",
+  "/checkout",
+  "/payment",
+];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const response = NextResponse.next();
+  let response = NextResponse.next();
 
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "SAMEORIGIN");
-  response.headers.set("X-XSS-Protection", "1; mode=block");
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.headers.set(
-    "Strict-Transport-Security",
-    "max-age=63072000; includeSubDomains; preload"
-  );
-  response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()"
-  );
-  response.headers.set("X-Robots-Tag", "index, follow");
+  // 1. Apply baseline Security Headers
+  response = applySecurityHeaders(response);
 
+  // 2. Block Known Malicious Web Scrapers & Automated Attack Bots
   const userAgent = (req.headers.get("user-agent") || "").toLowerCase();
   const isBot = BANNED_BOT_PATTERNS.some((pattern) =>
     userAgent.includes(pattern)
   );
 
   if (isBot) {
-    return new NextResponse(
-      JSON.stringify({
-        error: "Access denied.",
-        message:
-          "Automated access to Studentforge Platform is not permitted.",
-      }),
-      {
-        status: 403,
-        headers: {
-          "Content-Type": "application/json",
-          "X-Content-Type-Options": "nosniff",
-        },
-      }
+    return applySecurityHeaders(
+      new NextResponse(
+        JSON.stringify({
+          error: "Access denied",
+          message: "Automated access to Studentforge Platform is not permitted.",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        }
+      )
     );
   }
 
-  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (upstashUrl && upstashToken && pathname.startsWith("/api/")) {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-    const key = `ratelimit:leaky:${ip}`;
-    const now = Date.now() / 1000;
-    const capacity = 30;
-    const leakRate = 10;
-
-    try {
-      const getRes = await fetch(
-        `${upstashUrl}/hmget/${key}/level/lastUpdated`,
-        {
-          headers: { Authorization: `Bearer ${upstashToken}` },
-          signal: AbortSignal.timeout(2000),
-        }
-      );
-
-      if (getRes.ok) {
-        const getJson = await getRes.json();
-        const [rawLevel, rawLastUpdated] = getJson.result || [null, null];
-        const level = parseFloat(rawLevel || "0");
-        const lastUpdated = parseFloat(rawLastUpdated || now.toString());
-        const delta = Math.max(0, (now - lastUpdated) * leakRate);
-        const currentLevel = Math.max(0, level - delta);
-
-        if (currentLevel + 1 <= capacity) {
-          const nextLevel = currentLevel + 1;
-          await fetch(`${upstashUrl}/pipeline`, {
-            method: "POST",
+  // 3. Local Rate Limiter for Authentication & Sensitive API Endpoints
+  if (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/admin/") || pathname.startsWith("/api/sfadmin/")) {
+    const rateCheck = checkRateLimit(req, 25, 60 * 1000);
+    if (!rateCheck.allowed) {
+      return applySecurityHeaders(
+        new NextResponse(
+          JSON.stringify({
+            error: "Too Many Requests",
+            message: "Request rate limit exceeded. Please wait a minute and try again.",
+          }),
+          {
+            status: 429,
             headers: {
-              Authorization: `Bearer ${upstashToken}`,
               "Content-Type": "application/json",
+              "Retry-After": Math.ceil(rateCheck.resetMs / 1000).toString(),
             },
-            body: JSON.stringify([
-              [
-                "HMSET",
-                key,
-                "level",
-                nextLevel.toString(),
-                "lastUpdated",
-                now.toString(),
-              ],
-              ["EXPIRE", key, Math.ceil(capacity / leakRate) + 60],
-            ]),
-            signal: AbortSignal.timeout(2000),
-          });
+          }
+        )
+      );
+    }
+  }
 
-          response.headers.set("X-RateLimit-Limit", capacity.toString());
-          response.headers.set(
-            "X-RateLimit-Remaining",
-            Math.max(0, capacity - nextLevel).toFixed(0)
-          );
-          return response;
-        } else {
-          return new NextResponse(
-            JSON.stringify({
-              error: "Too Many Requests",
-              message:
-                "You have exceeded the request rate limit. Please wait and try again.",
-            }),
-            {
-              status: 429,
-              headers: {
-                "Content-Type": "application/json",
-                "X-RateLimit-Limit": capacity.toString(),
-                "X-RateLimit-Remaining": "0",
-                "Retry-After": "10",
-              },
-            }
-          );
-        }
-      }
-    } catch {
+  // 4. Session Cookie Route Protection & Authorization Verification
+  const sessionCookie = req.cookies.get("session")?.value;
+
+  // Protect Admin Portal
+  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") && !pathname.startsWith("/admin/forgot")) {
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+  }
+
+  // Protect SF Admin Portal
+  if (pathname.startsWith("/sfadmin/dashboard")) {
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL("/sfadmin", req.url));
+    }
+  }
+
+  // Protect User Dashboard & App Pages
+  if (PROTECTED_USER_ROUTES.some((route) => pathname.startsWith(route))) {
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL("/login", req.url));
     }
   }
 
@@ -150,5 +111,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|public/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images/|public/).*)"],
 };

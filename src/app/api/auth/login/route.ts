@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
+import { sanitizeInput, isValidEmail } from "@/lib/security/sanitizer";
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +15,17 @@ export async function POST(req: Request) {
       );
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!isValidEmail(cleanEmail)) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address." },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: cleanEmail },
     });
 
     if (!user) {
