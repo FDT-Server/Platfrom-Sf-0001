@@ -372,14 +372,14 @@ export default function ProfileContent({ user }: ProfileContentProps) {
   return (
     <DashboardLayout user={user}>
       <div className="w-full flex flex-col gap-5 font-sans animate-fadeIn">
-        {/* Main Banner Hero Profile Card (Reference Image 2 Exact Layout) */}
+        {/* Main Banner Hero Profile Card (100% Fully Responsive Header Layout) */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden select-none">
-          {/* Cover Photo Banner with Overlay Name & Title (Image 2 style) */}
-          <div className="relative w-full h-56 sm:h-64 md:h-72 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 overflow-hidden group">
+          {/* Cover Photo Banner */}
+          <div className="relative w-full h-48 sm:h-60 md:h-64 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900">
             <img
               src={bannerBackground}
               alt="Campus Cover Banner"
-              className="w-full h-full object-cover opacity-90 transition-transform duration-500"
+              className="w-full h-full object-cover opacity-90"
             />
             {/* Dark gradient overlay for text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-black/20" />
@@ -388,17 +388,17 @@ export default function ProfileContent({ user }: ProfileContentProps) {
             <button
               type="button"
               onClick={() => setShowCoverModal(true)}
-              className="absolute top-4 right-4 bg-white/85 hover:bg-white backdrop-blur-md border border-white/60 text-slate-800 text-xs font-extrabold px-3.5 py-1.5 rounded-xl transition duration-200 shadow-md flex items-center gap-1.5 cursor-pointer z-10"
+              className="absolute top-4 right-4 bg-white/85 hover:bg-white backdrop-blur-md border border-white/60 text-slate-800 text-xs font-extrabold px-3 py-1.5 rounded-xl transition duration-200 shadow-md flex items-center gap-1.5 cursor-pointer z-10"
             >
               <IconCamera className="w-4 h-4 text-blue-600" />
               <span>Edit Cover Banner</span>
             </button>
 
             {/* Bottom Content inside Cover Banner: Avatar + Name/Role/Email + Social Icons */}
-            <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between gap-4 z-10">
-              {/* Left: Avatar + Name Block inside Cover (Image 2 style) */}
-              <div className="flex items-end gap-4 min-w-0">
-                <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-600 to-indigo-700 shrink-0 transform translate-y-3">
+            <div className="absolute bottom-3 left-4 sm:left-6 right-4 sm:right-6 flex items-end justify-between gap-3 z-10">
+              {/* Left: Avatar + Name Block inside Cover Banner */}
+              <div className="flex items-end gap-3 sm:gap-4 min-w-0">
+                <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-blue-600 to-indigo-700 shrink-0">
                   {user.profileImage ? (
                     <img
                       src={user.profileImage}
@@ -406,7 +406,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="w-full h-full flex items-center justify-center text-3xl sm:text-4xl font-black text-white">
+                    <span className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-black text-white">
                       {initials}
                     </span>
                   )}
@@ -414,8 +414,8 @@ export default function ProfileContent({ user }: ProfileContentProps) {
 
                 {/* Name, Role & Email Text OVERLAY directly on Cover Banner */}
                 <div className="pb-1 min-w-0 text-white drop-shadow-md">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-tight truncate text-white">
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-tight truncate text-white">
                       {user.fullName}
                     </h1>
                     <span className="bg-blue-500 text-white p-0.5 rounded-full shrink-0 shadow-2xs" title="Verified Member">
@@ -432,7 +432,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
               </div>
 
               {/* Right Social Action Icons on Cover Banner (Phone, LinkedIn, Options) */}
-              <div className="hidden sm:flex items-center gap-2 pb-1 shrink-0">
+              <div className="hidden md:flex items-center gap-2 pb-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => toast.info(`Contact phone for ${user.fullName}`)}
@@ -464,49 +464,49 @@ export default function ProfileContent({ user }: ProfileContentProps) {
             </div>
           </div>
 
-          {/* Sub-Header Bar Below Cover Photo: Stats on Left + Main Action Buttons on Right (Image 2 style) */}
-          <div className="px-6 md:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
+          {/* Sub-Header Bar Below Cover Photo: Stats on Left + Main Action Buttons on Right */}
+          <div className="px-4 sm:px-6 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
             {/* Left: 4 Metric Columns */}
-            <div className="flex items-center gap-4 sm:gap-6 text-center divide-x divide-slate-200 select-none">
-              <div className="flex flex-col items-start pr-2">
-                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
+            <div className="grid grid-cols-4 gap-2 sm:gap-6 text-center select-none divide-x divide-slate-100">
+              <div className="flex flex-col items-center sm:items-start pr-1 sm:pr-2">
+                <span className="text-sm sm:text-lg font-black text-slate-900 leading-none">
                   {registeredMembers.length || 487}
                 </span>
-                <span className="text-[11px] font-bold text-slate-500 mt-1">Connections</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-1 truncate">Connections</span>
               </div>
-              <div className="flex flex-col items-start pl-4 sm:pl-6 pr-2">
-                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
+              <div className="flex flex-col items-center sm:items-start pl-2 sm:pl-6 pr-1 sm:pr-2">
+                <span className="text-sm sm:text-lg font-black text-slate-900 leading-none">
                   {userPosts.length}
                 </span>
-                <span className="text-[11px] font-bold text-slate-500 mt-1">Posts</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-1 truncate">Posts</span>
               </div>
-              <div className="flex flex-col items-start pl-4 sm:pl-6 pr-2">
-                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">14</span>
-                <span className="text-[11px] font-bold text-slate-500 mt-1">Courses</span>
+              <div className="flex flex-col items-center sm:items-start pl-2 sm:pl-6 pr-1 sm:pr-2">
+                <span className="text-sm sm:text-lg font-black text-slate-900 leading-none">14</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-1 truncate">Courses</span>
               </div>
-              <div className="flex flex-col items-start pl-4 sm:pl-6">
-                <span className="text-base sm:text-lg font-black text-slate-900 leading-none">3</span>
-                <span className="text-[11px] font-bold text-slate-500 mt-1">Projects</span>
+              <div className="flex flex-col items-center sm:items-start pl-2 sm:pl-6">
+                <span className="text-sm sm:text-lg font-black text-slate-900 leading-none">3</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-1 truncate">Projects</span>
               </div>
             </div>
 
-            {/* Right: Action Buttons Row (Image 2 exact style) */}
-            <div className="flex items-center gap-2.5 flex-wrap self-end md:self-auto">
+            {/* Right: Action Buttons Row */}
+            <div className="flex items-center gap-2 flex-wrap justify-stretch sm:justify-start">
               <button
                 type="button"
                 onClick={() => router.push("/networking")}
-                className="flex items-center gap-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold px-4 py-2 rounded-xl border border-blue-300 transition duration-150 shadow-2xs cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-300 transition duration-150 shadow-2xs cursor-pointer"
               >
-                <IconMessage className="w-4 h-4 text-blue-600" />
+                <IconMessage className="w-4 h-4 text-blue-600 shrink-0" />
                 <span>Message</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => toast.info("Connection option active in Connections tab")}
-                className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-300 transition duration-150 shadow-2xs cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-300 transition duration-150 shadow-2xs cursor-pointer"
               >
-                <IconUserPlus className="w-4 h-4 text-slate-600" />
+                <IconUserPlus className="w-4 h-4 text-slate-600 shrink-0" />
                 <span>Add as Connection</span>
               </button>
 
@@ -516,9 +516,9 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                   setIsEditing(true);
                   setActiveTab("info");
                 }}
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition duration-150 shadow-md shadow-blue-200 cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition duration-150 shadow-md shadow-blue-200 cursor-pointer"
               >
-                <IconEdit className="w-4 h-4" />
+                <IconEdit className="w-4 h-4 shrink-0" />
                 <span>Edit profile</span>
               </button>
             </div>
