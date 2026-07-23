@@ -14,16 +14,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
-
-    // Find user by normalized email (case-insensitive)
-    const user = await prisma.user.findFirst({
-      where: {
-        email: {
-          equals: trimmedEmail,
-          mode: "insensitive",
-        },
-      },
+    const user = await prisma.user.findUnique({
+      where: { email },
     });
 
     if (!user) {
@@ -34,8 +26,7 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = hashPassword(password);
-    // Allow both SHA256 hashed password and fallback plain text matching
-    if (user.password !== hashedPassword && user.password !== password) {
+    if (user.password !== hashedPassword) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -47,6 +38,7 @@ export async function POST(req: Request) {
       name: "session",
       value: user.id,
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
       sameSite: "lax",

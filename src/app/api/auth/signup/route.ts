@@ -51,6 +51,7 @@ export async function POST(req: Request) {
       name: "session",
       value: user.id,
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
       sameSite: "lax",
