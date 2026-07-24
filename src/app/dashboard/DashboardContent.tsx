@@ -1,0 +1,71 @@
+"use client";
+
+import React, { useState } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import WelcomeCard from "./components/WelcomeCard";
+import QuickStatsCards from "./components/QuickStatsCards";
+import CreatePostCard, { PostCategory } from "./components/CreatePostCard";
+import FeedSection from "./components/FeedSection";
+import OpportunitiesSection from "./components/OpportunitiesSection";
+import SuggestedConnectionsCard, { SuggestedUser } from "./components/SuggestedConnectionsCard";
+import { toast } from "sonner";
+
+import { EventInfo } from "./components/UpcomingEventsSection";
+
+interface DashboardContentProps {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    selectedRole: string;
+    otherRoleText: string | null;
+    goals: string[];
+    profileImage?: string | null;
+    collegeStudying?: string | null;
+    branch?: string | null;
+    year?: string | null;
+    linkedinLink?: string | null;
+    portfolioLink?: string | null;
+    about?: string | null;
+    shareWithNetworking?: boolean;
+  };
+  events: EventInfo[];
+  suggestedUsers: SuggestedUser[];
+}
+
+export default function DashboardContent({ user, events, suggestedUsers }: DashboardContentProps) {
+  const [createdPost, setCreatedPost] = useState<{
+    content: string;
+    category: PostCategory;
+    imageUrl?: string;
+  } | null>(null);
+
+  const handlePostCreated = (post: {
+    content: string;
+    category: PostCategory;
+    imageUrl?: string;
+  }) => {
+    setCreatedPost(post);
+    toast.success("Post published to your feed!");
+  };
+
+  return (
+    <DashboardLayout user={user}>
+      <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start font-sans">
+
+        <main className="w-full flex flex-col gap-6 min-w-0">
+          <WelcomeCard userName={user.fullName} />
+          <QuickStatsCards />
+          <CreatePostCard user={user} onPostCreated={handlePostCreated} />
+          <FeedSection user={user} newPostSignal={createdPost} />
+        </main>
+
+        <aside className="w-full flex flex-col gap-6 lg:sticky lg:top-6">
+          <SuggestedConnectionsCard suggestedUsers={suggestedUsers} />
+          <OpportunitiesSection />
+        </aside>
+
+      </div>
+    </DashboardLayout>
+  );
+}

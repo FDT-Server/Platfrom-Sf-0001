@@ -1,0 +1,456 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+export const Logo = () => (
+  <a href="/dashboard" className="relative z-20 flex items-center gap-2 py-1">
+    <span className="text-lg font-bold tracking-tight text-white select-none">Platform</span>
+    <div className="h-4 w-[1px] bg-white/20"></div>
+    <img
+      src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858"
+      className="h-8 w-auto object-contain"
+      alt="Studentforge Logo"
+    />
+  </a>
+);
+
+export const LogoIcon = () => (
+  <a href="/dashboard" className="relative z-20 flex items-center py-1">
+    <img
+      src="https://ik.imagekit.io/dypkhqxip/temp_logo.png"
+      className="h-8 w-auto object-contain"
+      alt="Studentforge Logo Icon"
+    />
+  </a>
+);
+
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  user: {
+    fullName: string;
+    email: string;
+    profileImage?: string | null;
+    isPremium?: boolean;
+  };
+}
+
+function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const isNetworkingPage = typeof window !== "undefined" && window.location.pathname === "/networking";
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch(`/api/messages?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const messages = data.messages || [];
+
+          if (isNetworkingPage) {
+            if (messages.length > 0) {
+              const latestTime = messages[messages.length - 1].createdAt;
+              localStorage.setItem("lastSeenMessageTime", latestTime);
+            } else {
+              localStorage.setItem("lastSeenMessageTime", new Date().toISOString());
+            }
+            setUnreadCount(0);
+          } else {
+            const lastSeen = localStorage.getItem("lastSeenMessageTime") || new Date(0).toISOString();
+            const unread = messages.filter((msg: any) => {
+              return (
+                msg.email.trim().toLowerCase() !== user.email.trim().toLowerCase() &&
+                msg.createdAt > lastSeen
+              );
+            });
+            setUnreadCount(unread.length);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch notification count:", err);
+      }
+    };
+
+    fetchUnreadCount();
+
+    const interval = setInterval(fetchUnreadCount, 8000);
+
+    return () => clearInterval(interval);
+  }, [user.email]);
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      if (user.email.trim().toLowerCase() === "hrstudentforge@gmail.com") {
+        router.push("/sfadmin");
+      } else {
+        router.push("/login");
+      }
+      router.refresh();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  const [premium, setPremium] = useState<boolean>(user.isPremium || false);
+  const [prevIsPremium, setPrevIsPremium] = useState(user.isPremium);
+  if (user.isPremium !== prevIsPremium) {
+    setPrevIsPremium(user.isPremium);
+    setPremium(user.isPremium || false);
+  }
+
+  const isAdmin = user.email.trim().toLowerCase() === "webstrixx@gmail.com" || user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
+
+  useEffect(() => {
+    if (isAdmin) return;
+    const fetchPremiumStatus = async () => {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            setPremium(data.user.isPremium);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch premium status:", err);
+      }
+    };
+    fetchPremiumStatus();
+  }, [isAdmin]);
+
+  const isSfAdmin = user.email.trim().toLowerCase() === "hrstudentforge@gmail.com";
+
+  const links = isAdmin
+    ? (isSfAdmin
+      ? [
+        {
+          label: "Payments",
+          href: "/sfadmin/dashboard",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              payments
+            </span>
+          ),
+        },
+        {
+          label: "Events",
+          href: "/sfadmin/dashboard/events",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              calendar_month
+            </span>
+          ),
+        },
+        {
+          label: "Resources",
+          href: "/sfadmin/dashboard/resources",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              folder_special
+            </span>
+          ),
+        },
+        {
+          label: "Courses",
+          href: "/sfadmin/dashboard/courses",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              local_library
+            </span>
+          ),
+        },
+        {
+          label: "Certificates",
+          href: "/sfadmin/dashboard/certificates",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              workspace_premium
+            </span>
+          ),
+        },
+        {
+          label: "Reset Platform Data",
+          href: "/admin/reset-data",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-rose-300 group-hover/sidebar:text-rose-100 transition-colors duration-150 select-none animate-pulse">
+              delete_forever
+            </span>
+          ),
+        }
+      ]
+      : [
+        {
+          label: "Learners",
+          href: "/admin",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              shield_person
+            </span>
+          ),
+        },
+        {
+          label: "Networking",
+          href: "/networking",
+          icon: (
+            <div className="relative flex items-center shrink-0">
+              <span className="material-symbols-outlined text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+                forum
+              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-xs animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+          ),
+        },
+        {
+          label: "Study Pods",
+          href: "/studypod",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-amber-200 group-hover/sidebar:text-amber-100 transition-colors duration-150 select-none">
+              groups
+            </span>
+          ),
+        },
+        {
+          label: "Reset Platform Data",
+          href: "/admin/reset-data",
+          icon: (
+            <span className="material-symbols-outlined shrink-0 text-[20px] text-rose-300 group-hover/sidebar:text-rose-100 transition-colors duration-150 select-none animate-pulse">
+              delete_forever
+            </span>
+          ),
+        },
+      ]
+    )
+    : [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            team_dashboard
+          </span>
+        ),
+      },
+      {
+        label: "Networking",
+        href: "/networking",
+        icon: (
+          <div className="relative flex items-center shrink-0">
+            <span className="material-symbols-outlined text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+              forum
+            </span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-xs">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
+        label: "Study Pods",
+        href: "/studypod",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            groups
+          </span>
+        ),
+      },
+      {
+        label: "Video Lectures",
+        href: "/lectures",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            books_movies_and_music
+          </span>
+        ),
+      },
+      {
+        label: "Resources",
+        href: "/resources",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            library_books
+          </span>
+        ),
+      },
+      {
+        label: "Courses",
+        href: "/courses",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            school
+          </span>
+        ),
+      },
+      {
+        label: "Certificates",
+        href: "/certificates",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            workspace_premium
+          </span>
+        ),
+      },
+      {
+        label: "Opportunities",
+        href: "/opportunities",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            work
+          </span>
+        ),
+      },
+      {
+        label: "Events",
+        href: "/events",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            calendar_month
+          </span>
+        ),
+      },
+    ];
+
+  if (!isAdmin && premium) {
+    links.push(
+      {
+        label: "Mentorship",
+        href: "/mentorship",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            diversity_3
+          </span>
+        ),
+      },
+      {
+        label: "Startup Hub",
+        href: "/startup-hub",
+        icon: (
+          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+            rocket_launch
+          </span>
+        ),
+      }
+    );
+  }
+
+  if (!isAdmin) {
+    links.push({
+      label: "Tools",
+      href: "/tools",
+      icon: (
+        <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+          construction
+        </span>
+      ),
+    });
+  }
+
+  links.push({
+    label: "Profile",
+    href: "/profile",
+    icon: user.profileImage ? (
+      <img
+        src={user.profileImage}
+        alt="Profile"
+        className="h-5 w-5 rounded-full object-cover border border-blue-200/50 shrink-0"
+      />
+    ) : (
+      <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
+        recent_patient
+      </span>
+    ),
+  });
+
+  return (
+    <div className="flex h-screen w-screen bg-slate-50 overflow-hidden md:flex-row flex-col">
+      <Sidebar open={open} setOpen={setOpen}>
+        <SidebarBody className="justify-between gap-10">
+          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+            <div className={cn("flex w-full items-center transition-all duration-150", open ? "justify-start px-2" : "justify-center")}>
+              {open ? <Logo /> : <LogoIcon />}
+            </div>
+            <div className="mt-8 flex flex-col gap-2">
+              {links.map((link, idx) => (
+                <SidebarLink key={idx} link={link} />
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            {open && !isAdmin && !premium && (
+              <div
+                className="mx-2 p-3 rounded-xl text-slate-950 shadow-sm border border-amber-400/80 flex flex-col gap-2 relative overflow-hidden animate-fadeIn"
+                style={{ backgroundImage: "url('/gold-bg.png')", backgroundSize: "cover", backgroundPosition: "center" }}
+              >
+                <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-center gap-1.5 font-sans font-black text-[10px] uppercase tracking-wider">
+                  <span className="material-symbols-outlined text-[14px] text-slate-950 font-bold">workspace_premium</span>
+                  <span>Go Premium</span>
+                </div>
+                <Link
+                  href="/plans"
+                  className="w-full bg-slate-950 hover:bg-slate-900 text-white rounded-lg py-1.5 text-[10px] font-bold transition shadow-md hover:shadow-lg cursor-pointer text-center select-none block font-sans"
+                >
+                  Upgrade Now
+                </Link>
+              </div>
+            )}
+
+            <a
+              href="#"
+              onClick={handleLogout}
+              className={cn(
+                "flex items-center gap-2 group/sidebar py-2 transition-all duration-150 cursor-pointer",
+                open ? "justify-start px-2" : "justify-center w-full"
+              )}
+            >
+              <span className="material-symbols-outlined shrink-0 text-[20px] text-red-300 group-hover/sidebar:text-red-100 transition-colors duration-150 select-none">
+                logout
+              </span>
+              <motion.span
+                animate={{
+                  display: open ? "inline-block" : "none",
+                  opacity: open ? 1 : 0,
+                }}
+                className="text-red-300 text-sm font-semibold group-hover/sidebar:text-red-100 group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+              >
+                Logout
+              </motion.span>
+            </a>
+          </div>
+        </SidebarBody>
+      </Sidebar>
+
+      <div className="flex flex-1 w-full overflow-y-auto bg-slate-50 p-4 md:p-6">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+  return (
+    <DashboardLayoutContent user={user}>
+      {children}
+    </DashboardLayoutContent>
+  );
+}
