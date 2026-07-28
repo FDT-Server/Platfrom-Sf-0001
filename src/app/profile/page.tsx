@@ -14,6 +14,7 @@ export default async function ProfilePage() {
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
     select: {
+      id: true,
       fullName: true,
       email: true,
       selectedRole: true,
@@ -36,7 +37,23 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
+  const [postsCount, coursesCount, networkSize] = await Promise.all([
+    prisma.post.count({ where: { userId: user.id } }),
+    prisma.courseEnrollment.count({
+      where: { userId: user.id, status: "APPROVED" },
+    }),
+    prisma.user.count({
+      where: {
+        id: { not: user.id },
+        email: {
+          notIn: ["webstrixx@gmail.com", "hrstudentforge@gmail.com"],
+        },
+      },
+    }),
+  ]);
+
   const serializedUser = {
+    id: user.id,
     fullName: user.fullName,
     email: user.email,
     selectedRole: user.selectedRole,
@@ -54,5 +71,15 @@ export default async function ProfilePage() {
     isPremium: user.isPremium ?? false,
   };
 
-  return <ProfileContent user={serializedUser} />;
+  return (
+    <ProfileContent
+      user={serializedUser}
+      stats={{
+        postsCount,
+        coursesCount,
+        networkSize,
+        projectsCount: Array.isArray(user.goals) ? user.goals.length : 0,
+      }}
+    />
+  );
 }
