@@ -73,12 +73,18 @@ function UserAvatarItem({
 
 interface SuggestedConnectionsCardProps {
   suggestedUsers?: SuggestedUser[];
+  currentUserId?: string;
 }
 
-export default function SuggestedConnectionsCard({ suggestedUsers }: SuggestedConnectionsCardProps) {
+export default function SuggestedConnectionsCard({
+  suggestedUsers,
+  currentUserId,
+}: SuggestedConnectionsCardProps) {
   const router = useRouter();
   const [connectedIds, setConnectedIds] = useState<string[]>([]);
-  const [usersList, setUsersList] = useState<SuggestedUser[]>(suggestedUsers || []);
+  const [usersList, setUsersList] = useState<SuggestedUser[]>(
+    (suggestedUsers || []).filter((u) => !currentUserId || u.id !== currentUserId)
+  );
 
   const fetchRealUsers = async () => {
     try {
@@ -88,6 +94,7 @@ export default function SuggestedConnectionsCard({ suggestedUsers }: SuggestedCo
         if (data.success && Array.isArray(data.users)) {
           const filtered = data.users.filter(
             (u: any) =>
+              (!currentUserId || u.id !== currentUserId) &&
               u.email?.trim().toLowerCase() !== "webstrixx@gmail.com" &&
               u.email?.trim().toLowerCase() !== "hrstudentforge@gmail.com"
           );
@@ -138,6 +145,7 @@ export default function SuggestedConnectionsCard({ suggestedUsers }: SuggestedCo
             profileImage: targetUser.profileImage || null,
             collegeStudying: targetUser.collegeStudying || "Computer Science",
             status: "PENDING",
+            incoming: false,
             sentAt: new Date().toISOString(),
           };
           localStorage.setItem("sf_connection_requests", JSON.stringify([...existing, newReq]));

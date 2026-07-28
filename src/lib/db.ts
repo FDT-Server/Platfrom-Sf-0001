@@ -6,10 +6,12 @@ declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
 
+const SUPABASE_DATABASE_URL = "postgresql://postgres.kskthifgazwqgprwvjwx:dbpasswordstudentforge@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true";
+
 function getActiveDbUrl(): string {
-  const envUrl = process.env.DATABASE_URL?.trim();
-  if (!envUrl) {
-    throw new Error("DATABASE_URL is not configured. Add it to your .env or .env.local file.");
+  const envUrl = process.env.DATABASE_URL;
+  if (!envUrl || envUrl.includes("neon.tech")) {
+    return SUPABASE_DATABASE_URL;
   }
   return envUrl;
 }

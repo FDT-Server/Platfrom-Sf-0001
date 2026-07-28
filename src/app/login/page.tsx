@@ -37,16 +37,9 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const isJsonResponse = res.headers
-        .get("content-type")
-        ?.toLowerCase()
-        .includes("application/json");
-      const data = isJsonResponse ? await res.json() : null;
+      const data = await res.json();
       if (!res.ok) {
-        setError(
-          data?.error ||
-            `Login failed (${res.status}). Please check server and database configuration.`
-        );
+        setError(data.error || "Login failed. Please try again.");
       } else {
         toast.success("Signed in successfully!");
         const userEmail = (data.user?.email || "").trim().toLowerCase();

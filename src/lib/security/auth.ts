@@ -12,7 +12,7 @@ export interface AuthenticatedUser {
 }
 
 export const ADMIN_EMAILS_MAIN = ["webstrixx@gmail.com"];
-export const ADMIN_EMAILS_SFADMIN = ["hrstudentforge@gmail.com"];
+export const ADMIN_EMAILS_SFADMIN = ["hrstudentforge@gmail.com", "studentforgetechnologies@gmail.com"];
 
 /**
  * Gets and validates the currently logged-in user from the session cookie.

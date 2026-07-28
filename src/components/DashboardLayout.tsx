@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
 export const Logo = () => (
   <a href="/dashboard" className="relative z-20 flex items-center gap-2 py-1">
@@ -386,7 +387,7 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            <div className={cn("flex w-full items-center transition-all duration-150", open ? "justify-start px-2" : "justify-center")}>
+            <div className={cn("flex w-full items-center transition-all duration-300", open ? "justify-start px-2" : "justify-center")}>
               {open ? <Logo /> : <LogoIcon />}
             </div>
             <div className="mt-8 flex flex-col gap-2">
@@ -427,11 +428,17 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
                 logout
               </span>
               <motion.span
+                initial={false}
                 animate={{
                   display: open ? "inline-block" : "none",
                   opacity: open ? 1 : 0,
+                  x: open ? 0 : -6,
                 }}
-                className="text-red-300 text-sm font-semibold group-hover/sidebar:text-red-100 group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+                transition={{
+                  duration: 0.25,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="text-red-300 text-sm font-semibold group-hover/sidebar:text-red-100 group-hover/sidebar:translate-x-1 transition-transform duration-150 whitespace-pre inline-block !p-0 !m-0"
               >
                 Logout
               </motion.span>
@@ -440,8 +447,11 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
         </SidebarBody>
       </Sidebar>
 
-      <div className="flex flex-1 w-full overflow-y-auto bg-slate-50 p-4 md:p-6">
-        {children}
+      <div className="flex flex-1 w-full flex-col justify-between overflow-y-auto scroll-smooth custom-scrollbar bg-slate-50 p-3 sm:p-5 md:p-6 space-y-6">
+        <div className="w-full flex-1">
+          {children}
+        </div>
+        <Footer variant="dashboard" />
       </div>
     </div>
   );

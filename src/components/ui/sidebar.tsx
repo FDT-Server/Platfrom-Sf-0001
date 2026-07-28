@@ -93,22 +93,20 @@ export const DesktopSidebar = ({
     <>
       <motion.div
         className={cn(
-          "h-full px-4 py-4 hidden  md:flex md:flex-col bg-blue-600 dark:bg-blue-600 w-[300px] shrink-0 border-r border-blue-700/50 relative",
+          "h-full px-4 py-4 hidden md:flex md:flex-col bg-blue-600 dark:bg-blue-600 shrink-0 border-r border-blue-700/50 relative overflow-hidden select-none",
           className
         )}
         animate={{
           width: animate ? (open ? "300px" : "85px") : "300px",
         }}
+        transition={{
+          duration: 0.32,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
         {...props}
       >
-        <div
-           onClick={() => setOpen(!open)}
-           className="absolute -right-3 top-6 bg-blue-700 text-white w-6 h-6 rounded-full cursor-pointer z-50 border border-blue-500 shadow-md flex items-center justify-center hover:bg-blue-600 transition"
-        >
-           <span className="material-symbols-outlined text-[14px]">
-              {open ? "chevron_left" : "chevron_right"}
-           </span>
-        </div>
         {children}
       </motion.div>
     </>
@@ -125,7 +123,7 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-10 px-4 py-4 flex flex-row md:hidden  items-center justify-between bg-blue-600 dark:bg-blue-600 w-full border-b border-blue-700/50"
+          "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-blue-600 dark:bg-blue-600 w-full border-b border-blue-700/50"
         )}
         {...props}
       >
@@ -142,8 +140,8 @@ export const MobileSidebar = ({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "-100%", opacity: 0 }}
               transition={{
-                duration: 0.3,
-                ease: "easeInOut",
+                duration: 0.25,
+                ease: [0.32, 0.72, 0, 1],
               }}
               className={cn(
                 "fixed h-full w-full inset-0 bg-blue-600 dark:bg-blue-600 p-10 z-[100] flex flex-col justify-between",
@@ -182,28 +180,34 @@ export const SidebarLink = ({
     <a
       href={link.href}
       className={cn(
-        "flex items-center gap-2 group/sidebar py-2 px-3 rounded-xl transition-all duration-150 hover:bg-white/5",
-        isActive ? "bg-white/10 text-white font-medium" : "text-blue-100",
+        "flex items-center gap-3 group/sidebar py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-white/10 active:scale-98",
+        isActive ? "bg-white/15 text-white font-semibold shadow-xs" : "text-blue-100",
         open ? "justify-start" : "justify-center w-full",
         className
       )}
       {...props}
     >
       <span className={cn(
-        "transition-colors duration-150 shrink-0 flex items-center justify-center",
+        "transition-colors duration-150 shrink-0 flex items-center justify-center w-6 h-6",
         isActive ? "text-white [&>span]:text-white [&>svg]:text-white [&>img]:border-white" : "text-blue-100 group-hover/sidebar:text-white [&>span]:text-blue-100 [&>span]:group-hover/sidebar:text-white [&>svg]:text-blue-100 [&>svg]:group-hover/sidebar:text-white"
       )}>
         {link.icon}
       </span>
 
       <motion.span
+        initial={false}
         animate={{
           display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
+          x: animate ? (open ? 0 : -8) : 0,
+        }}
+        transition={{
+          duration: 0.25,
+          ease: [0.16, 1, 0.3, 1],
         }}
         className={cn(
-          "text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0",
-          isActive ? "text-white font-medium" : "text-blue-100 group-hover/sidebar:text-white"
+          "text-sm group-hover/sidebar:translate-x-1 transition-transform duration-150 whitespace-nowrap inline-block font-medium select-none",
+          isActive ? "text-white font-semibold" : "text-blue-100 group-hover/sidebar:text-white"
         )}
       >
         {link.label}

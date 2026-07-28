@@ -21,22 +21,33 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const url = new URL(req.url);
+    const activeChatId = url.searchParams.get("activeChatUserId");
+
+    let whereClause: any;
+
+    if (activeChatId && activeChatId !== "null" && activeChatId !== "undefined") {
+      // Private 1-on-1 chat strictly between loggedInUser and activeChatId (Sender - Receiver only)
+      whereClause = {
+        OR: [
+          { userId: loggedInUser.id, recipientId: activeChatId },
+          { userId: activeChatId, recipientId: loggedInUser.id },
+        ],
+      };
+    } else {
+      // Public chat hub (messages broadcasted to all users where recipientId is null)
+      whereClause = {
+        recipientId: null,
+      };
+    }
+
     const messages = await prisma.message.findMany({
       take: 200,
-      where: {
-        OR: [
-          { recipientId: null },
-          { userId: loggedInUser.id },
-          { recipientId: loggedInUser.id },
-        ],
-      },
+      where: whereClause,
       orderBy: {
         createdAt: "asc",
       },
     });
-
-    const url = new URL(req.url);
-    const activeChatId = url.searchParams.get("activeChatUserId");
 
     const messagesToMarkSeen = messages.filter((msg) => {
       const isInActiveChat =

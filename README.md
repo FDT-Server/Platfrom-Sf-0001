@@ -32,7 +32,6 @@ npm run dev
 ## Database Notes
 
 - `npm run dev` starts the Next.js app only.
-- Database access now uses environment variables only (no hardcoded fallback URLs).
 - If you need to sync Prisma manually, use:
 
 ```powershell

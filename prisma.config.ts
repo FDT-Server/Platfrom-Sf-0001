@@ -29,10 +29,12 @@ function loadEnvFile(filePath: string): void {
 loadEnvFile(resolve(process.cwd(), ".env.local"));
 loadEnvFile(resolve(process.cwd(), ".env"));
 
+const SUPABASE_DIRECT_URL = "postgresql://postgres.kskthifgazwqgprwvjwx:dbpasswordstudentforge@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+
 function getMigrationUrl(): string {
-  const url = process.env["DIRECT_URL"]?.trim() || process.env["DATABASE_URL"]?.trim();
-  if (!url) {
-    throw new Error("DIRECT_URL or DATABASE_URL must be set in your environment.");
+  const url = process.env["DIRECT_URL"] || process.env["DATABASE_URL"];
+  if (!url || url.includes("neon.tech")) {
+    return SUPABASE_DIRECT_URL;
   }
   return url;
 }

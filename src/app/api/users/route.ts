@@ -22,6 +22,12 @@ export async function GET() {
     }
 
     const users = await prisma.user.findMany({
+      where: {
+        id: { not: loggedInUser.id },
+        email: {
+          notIn: ["webstrixx@gmail.com", "hrstudentforge@gmail.com"],
+        },
+      },
       orderBy: { fullName: "asc" },
       select: {
         id: true,

@@ -61,7 +61,10 @@ export default function DashboardContent({ user, events, suggestedUsers }: Dashb
         </main>
 
         <aside className="w-full flex flex-col gap-6 lg:sticky lg:top-6">
-          <SuggestedConnectionsCard suggestedUsers={suggestedUsers} />
+          <SuggestedConnectionsCard
+            suggestedUsers={suggestedUsers}
+            currentUserId={user.id}
+          />
           <OpportunitiesSection />
         </aside>
 

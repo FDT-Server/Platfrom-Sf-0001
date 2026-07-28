@@ -238,6 +238,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   const [requests, setRequests] = useState<ConnectionRequestItem[]>(initialDefaultRequests);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -349,7 +350,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   }, [activeChatUserId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages.length, activeChatUserId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -397,7 +403,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   };
 
   const directoryUsers = allUsers.filter((u) => u.id !== user.id);
-  const pendingRequests = requests.filter((r) => r.status === "PENDING");
+  const pendingRequests = requests.filter((r) => r.status === "PENDING" && r.incoming !== false);
   const acceptedFriends = requests.filter((r) => r.status === "ACCEPTED");
 
   const filteredDiscoverUsers = directoryUsers.filter((u) => {
@@ -662,7 +668,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/30 space-y-3.5">
+                <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/30 space-y-3.5 custom-scrollbar">
                   {loading ? (
                     <div className="flex flex-col items-center justify-center h-full gap-2">
                       <div className="w-7 h-7 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
