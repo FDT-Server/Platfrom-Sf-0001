@@ -18,11 +18,13 @@ function getActiveDbUrl(): string {
 
 function createPrismaClient(): PrismaClient {
   const connectionString = getActiveDbUrl();
+  const needsSsl =
+    connectionString.includes("supabase.com") ||
+    connectionString.includes("neon.tech") ||
+    connectionString.includes("sslmode=");
   const pool = new Pool({
     connectionString,
-    ssl: connectionString.includes("sslmode=verify-full")
-      ? { rejectUnauthorized: false }
-      : undefined,
+    ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
   });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
