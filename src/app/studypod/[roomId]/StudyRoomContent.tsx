@@ -176,6 +176,8 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [copiedLink, setCopiedLink] = useState(false);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(0);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -227,9 +229,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   };
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    const container = chatScrollRef.current;
+    if (!container) return;
+
+    const previousCount = prevMessageCountRef.current;
+    const nextCount = messages.length;
+    const isFirstLoad = previousCount === 0 && nextCount > 0;
+    const hasNewMessages = nextCount > previousCount;
+    prevMessageCountRef.current = nextCount;
+
+    if (!isFirstLoad && !hasNewMessages) return;
+
+    // Scroll only inside the chat panel — never the whole page.
+    container.scrollTop = container.scrollHeight;
   }, [messages]);
 
   useEffect(() => {
@@ -902,7 +914,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4">
+          <div
+            ref={chatScrollRef}
+            className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4"
+          >
             {workspaceLoading ? (
               <div className="flex flex-col items-center justify-center h-full gap-2">
                 <div className="w-6 h-6 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>

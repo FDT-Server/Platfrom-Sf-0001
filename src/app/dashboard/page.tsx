@@ -75,7 +75,7 @@ export default async function DashboardPage() {
         notIn: ["webstrixx@gmail.com", "hrstudentforge@gmail.com"]
       }
     },
-    take: 5,
+    take: 3,
     select: {
       id: true,
       fullName: true,

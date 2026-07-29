@@ -127,7 +127,8 @@ export default function SuggestedConnectionsCard({
     }
   }, []);
 
-  const usersToDisplay = usersList;
+  // Keep dashboard sidebar compact; full list lives on Discover.
+  const usersToDisplay = usersList.slice(0, 3);
 
   const handleConnect = (targetUser: SuggestedUser) => {
     if (!connectedIds.includes(targetUser.id)) {
@@ -176,7 +177,7 @@ export default function SuggestedConnectionsCard({
 
         <button
           type="button"
-          onClick={() => router.push("/networking")}
+          onClick={() => router.push("/networking?tab=discover")}
           className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 transition cursor-pointer"
         >
           <span>View All</span>

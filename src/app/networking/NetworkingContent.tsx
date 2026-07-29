@@ -243,6 +243,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "discover" || tab === "friends" || tab === "requests" || tab === "chat") {
+        setActiveTab(tab);
+      }
+
       const chatTarget = params.get("chatWith");
       if (chatTarget) {
         const target = allUsers.find(
