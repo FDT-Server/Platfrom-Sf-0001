@@ -21,6 +21,7 @@ export default async function ProfilePage() {
       otherRoleText: true,
       goals: true,
       profileImage: true,
+      avatarImage: true,
       collegeStudying: true,
       branch: true,
       year: true,

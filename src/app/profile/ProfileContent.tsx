@@ -21,6 +21,7 @@ import {
   IconShare,
   IconUsers,
   IconWorld,
+  IconUser,
 } from "@tabler/icons-react";
 
 interface UserProfile {
@@ -31,6 +32,7 @@ interface UserProfile {
   otherRoleText: string;
   goals: string[];
   profileImage: string;
+  avatarImage: string;
   collegeStudying: string;
   branch: string;
   year: string;
@@ -40,6 +42,7 @@ interface UserProfile {
   about: string;
   shareWithNetworking: boolean;
   isPremium: boolean;
+  avatarImage: string;
 }
 
 interface ProfileStats {
@@ -121,6 +124,31 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
   const [connectionItems, setConnectionItems] = useState<
     { id: string; fullName: string; selectedRole: string; profileImage: string | null }[]
   >([]);
+
+  // Avatar Designer State
+  const [showAvatarDesigner, setShowAvatarDesigner] = useState(false);
+  const [avatarProps, setAvatarProps] = useState({
+    seed: user.fullName || "Avatar",
+    hair: "default",
+    hairColor: "2c1b18",
+    skinColor: "d08b5b",
+    clothing: "blazerAndShirt",
+    eyes: "default",
+    mouth: "default",
+  });
+
+  useEffect(() => {
+    if (showAvatarDesigner) {
+      const url = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+        avatarProps.seed
+      )}&top=${avatarProps.hair}&hairColor=${avatarProps.hairColor}&skinColor=${
+        avatarProps.skinColor
+      }&clothing=${avatarProps.clothing}&eyes=${avatarProps.eyes}&mouth=${
+        avatarProps.mouth
+      }`;
+      setFormData((prev) => ({ ...prev, avatarImage: url }));
+    }
+  }, [avatarProps, showAvatarDesigner]);
 
   const getInitials = (name: string) =>
     name
@@ -289,32 +317,146 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
               <h3 className="text-xl font-bold text-slate-800">Edit Your Profile</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center p-6 border border-slate-100 rounded-2xl bg-slate-50/50">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-blue-100 mb-4">
-                  {formData.profileImage ? (
-                    <img
-                      src={formData.profileImage}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl font-extrabold text-blue-600">
-                      {getInitials(formData.fullName)}
-                    </span>
-                  )}
+              <div className="flex flex-col items-center p-5 border border-slate-100 rounded-2xl bg-slate-50/50">
+                <div className="flex items-center justify-center gap-4 sm:gap-6 w-full">
+                  {/* Photo Side */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-slate-200">
+                      {formData.profileImage && !formData.profileImage.includes("dicebear") ? (
+                        <img
+                          src={formData.profileImage}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <IconUser className="w-10 h-10 text-slate-400" />
+                      )}
+                    </div>
+                    <label className="mt-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold shadow-sm cursor-pointer transition">
+                      Upload Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="w-px h-20 bg-slate-200"></div>
+
+                  {/* Avatar Side */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white shadow-sm flex items-center justify-center bg-indigo-50">
+                      {formData.avatarImage || (formData.profileImage && formData.profileImage.includes("dicebear")) ? (
+                        <img
+                          src={formData.avatarImage || formData.profileImage!}
+                          alt="Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <IconUser className="w-10 h-10 text-indigo-300" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAvatarDesigner(!showAvatarDesigner)}
+                      className="mt-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-600 px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold shadow-sm cursor-pointer transition"
+                    >
+                      {showAvatarDesigner ? "Done Designing" : "Design Avatar"}
+                    </button>
+                  </div>
                 </div>
-                <label className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold shadow-sm cursor-pointer transition">
-                  Upload Photo
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-                <p className="text-[10px] text-slate-500 mt-2 text-center">
-                  Max size: 2MB. Supports PNG, JPG, or GIF.
-                </p>
+
+                {showAvatarDesigner && (
+                  <div className="w-full mt-4 p-4 bg-white border border-slate-200 rounded-xl space-y-3">
+                    <div className="text-[11px] font-bold text-slate-700 mb-2">Avatar Designer</div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-[10px]">
+                      <div>
+                        <label className="block text-slate-500 font-medium mb-1">Hair</label>
+                        <select 
+                          value={avatarProps.hair}
+                          onChange={(e) => setAvatarProps(p => ({...p, hair: e.target.value}))}
+                          className="w-full border border-slate-200 rounded-lg p-1.5 text-slate-700 outline-none focus:border-indigo-500"
+                        >
+                          <option value="default">Default</option>
+                          <option value="shortFlat">Short Flat</option>
+                          <option value="straight01">Long Straight</option>
+                          <option value="curly">Long Curly</option>
+                          <option value="dreads">Dreads</option>
+                          <option value="bun">Bun</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-slate-500 font-medium mb-1">Hair Color</label>
+                        <select 
+                          value={avatarProps.hairColor}
+                          onChange={(e) => setAvatarProps(p => ({...p, hairColor: e.target.value}))}
+                          className="w-full border border-slate-200 rounded-lg p-1.5 text-slate-700 outline-none focus:border-indigo-500"
+                        >
+                          <option value="2c1b18">Black</option>
+                          <option value="4a312c">Dark Brown</option>
+                          <option value="a55728">Brown</option>
+                          <option value="d6b370">Blonde</option>
+                          <option value="c93305">Red</option>
+                          <option value="e8e1e1">Platinum</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-slate-500 font-medium mb-1">Skin Tone</label>
+                        <select 
+                          value={avatarProps.skinColor}
+                          onChange={(e) => setAvatarProps(p => ({...p, skinColor: e.target.value}))}
+                          className="w-full border border-slate-200 rounded-lg p-1.5 text-slate-700 outline-none focus:border-indigo-500"
+                        >
+                          <option value="ffdbb4">Light</option>
+                          <option value="d08b5b">Medium</option>
+                          <option value="614335">Dark</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-slate-500 font-medium mb-1">Eyes</label>
+                        <select 
+                          value={avatarProps.eyes}
+                          onChange={(e) => setAvatarProps(p => ({...p, eyes: e.target.value}))}
+                          className="w-full border border-slate-200 rounded-lg p-1.5 text-slate-700 outline-none focus:border-indigo-500"
+                        >
+                          <option value="default">Default</option>
+                          <option value="happy">Happy</option>
+                          <option value="wink">Wink</option>
+                          <option value="hearts">Hearts</option>
+                          <option value="surprised">Surprised</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-slate-500 font-medium mb-1">Mouth</label>
+                        <select 
+                          value={avatarProps.mouth}
+                          onChange={(e) => setAvatarProps(p => ({...p, mouth: e.target.value}))}
+                          className="w-full border border-slate-200 rounded-lg p-1.5 text-slate-700 outline-none focus:border-indigo-500"
+                        >
+                          <option value="default">Default</option>
+                          <option value="smile">Smile</option>
+                          <option value="twinkle">Twinkle</option>
+                          <option value="sad">Sad</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setAvatarProps(p => ({...p, seed: Math.random().toString(36).substring(7)}))}
+                      className="w-full mt-2 text-[10px] font-bold text-indigo-600 bg-indigo-50 py-1.5 rounded border border-indigo-100 hover:bg-indigo-100 transition"
+                    >
+                      Randomize Base
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="md:col-span-2 space-y-4">
@@ -531,29 +673,57 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
                 </div>
               </div>
 
-              <div className="relative px-4 md:px-6 pb-5">
-                <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12 md:-mt-14">
-                  <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-md bg-blue-100 flex items-center justify-center shrink-0">
-                    {user.profileImage ? (
-                      <img
-                        src={user.profileImage}
-                        alt={user.fullName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-3xl font-extrabold text-blue-600">
-                        {getInitials(user.fullName)}
-                      </span>
-                    )}
+              <div className="relative px-4 md:px-8 pb-6">
+                <div className="flex flex-col md:flex-row md:items-start gap-5 md:gap-6">
+                  {/* Profile Image with 3D Flip (Instagram style) */}
+                  <div className="group relative -mt-8 md:-mt-10 w-28 h-28 md:w-36 md:h-36 shrink-0 z-10 [perspective:1000px]">
+                    <div className="w-full h-full relative transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] cursor-pointer">
+                      
+                      {/* Front Side: Real Photo or Default Icon */}
+                      <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg bg-slate-100 flex items-center justify-center [backface-visibility:hidden]">
+                        {user.profileImage && !user.profileImage.includes('dicebear') ? (
+                          <img
+                            src={user.profileImage}
+                            alt={user.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img 
+                            src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" 
+                            alt="Default profile"
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+
+                      {/* Back Side: Custom Avatar */}
+                      <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg bg-indigo-50 flex items-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                        {user.avatarImage || (user.profileImage && user.profileImage.includes('dicebear')) ? (
+                          <img
+                            src={user.avatarImage || user.profileImage!}
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.fullName}`}
+                            alt="Default Avatar"
+                            className="w-full h-full object-cover opacity-90"
+                          />
+                        )}
+                      </div>
+
+                    </div>
                   </div>
 
-                  <div className="flex-1 min-w-0 pt-2 md:pt-0 md:pb-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <h1 className="text-xl md:text-2xl font-bold text-slate-900 truncate">
+                  {/* User Info Container - Added top padding to create space above name */}
+                  <div className="flex-1 min-w-0 pt-2 md:pt-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight truncate">
                         {user.fullName}
                       </h1>
                       <svg
-                        className="w-5 h-5 shrink-0"
+                        className="w-6 h-6 shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         aria-hidden
@@ -573,17 +743,21 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-600 mt-0.5">{tagline}</p>
-                    <p className="text-xs text-blue-600 font-medium mt-1 truncate">
-                      email: {user.email}
-                    </p>
+                    <p className="text-base text-slate-700 mt-1 font-medium">{tagline}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-semibold">
+                        <IconMail className="w-3.5 h-3.5" />
+                        {user.email}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 md:pb-1 shrink-0">
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-2.5 pt-2 md:pt-4 shrink-0">
                     <button
                       type="button"
                       onClick={() => router.push("/networking")}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 cursor-pointer shadow-sm transition"
                     >
                       <IconMessageCircle className="w-4 h-4" />
                       Message
@@ -591,7 +765,7 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
                     <button
                       type="button"
                       onClick={() => setIsEditing(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm cursor-pointer transition"
                     >
                       <IconEdit className="w-4 h-4" />
                       Edit profile

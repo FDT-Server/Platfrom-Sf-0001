@@ -29,7 +29,7 @@ function loadEnvFile(filePath: string): void {
 loadEnvFile(resolve(process.cwd(), ".env.local"));
 loadEnvFile(resolve(process.cwd(), ".env"));
 
-const SUPABASE_DIRECT_URL = "postgresql://postgres.kskthifgazwqgprwvjwx:dbpasswordstudentforge@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
+const SUPABASE_DIRECT_URL = "postgresql://postgres:dbpasswordstudentforge@db.kskthifgazwqgprwvjwx.supabase.co:5432/postgres";
 
 function getMigrationUrl(): string {
   const url = process.env["DIRECT_URL"] || process.env["DATABASE_URL"];

@@ -28,6 +28,7 @@ model User {
   otpExpiry           DateTime?
   shareWithNetworking Boolean            @default(false)
   isPremium           Boolean            @default(false)
+  avatarImage         String?            @default("")
   courseEnrollments   CourseEnrollment[]
   Resume              Resume[]
 }
@@ -242,4 +243,3 @@ model Post {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
-
