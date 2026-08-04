@@ -38,7 +38,9 @@ interface UserCompact {
 
 interface ConnectionRequestItem {
   id: string;
+  requestId?: string;
   fullName: string;
+  email?: string;
   selectedRole: string;
   profileImage: string | null;
   collegeStudying?: string | null;
@@ -266,57 +268,99 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   }, [allUsers]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("sf_connection_requests");
-      if (stored) {
-        try {
-          const parsed: ConnectionRequestItem[] = JSON.parse(stored);
-          const validRealRequests = parsed.filter((item) => allUsers.some((u) => u.id === item.id));
-          setRequests(validRealRequests);
-          localStorage.setItem("sf_connection_requests", JSON.stringify(validRealRequests));
-        } catch (e) {
-          console.error(e);
+    const fetchConns = async () => {
+      try {
+        const res = await fetch("/api/connections");
+        if (res.ok) {
+          const data = await res.json();
+          const allReqs: ConnectionRequestItem[] = [
+            ...data.friends.map((f: any) => ({ ...f, incoming: f.toUserId === user.id })),
+            ...data.pendingIncoming.map((f: any) => ({ ...f, incoming: true })),
+            ...data.pendingOutgoing.map((f: any) => ({ ...f, incoming: false })),
+          ];
+          setRequests(allReqs);
         }
-      } else {
-        setRequests([]);
+      } catch (e) {
+        console.error(e);
       }
+    };
+    fetchConns();
+  }, [user.id]);
+
+  const handleAcceptRequest = async (reqId: string, name: string) => {
+    const reqItem = requests.find(r => r.id === reqId);
+    if (!reqItem || !reqItem.requestId) return;
+    
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "accept", requestId: reqItem.requestId })
+      });
+      if (res.ok) {
+        setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: "ACCEPTED" } : r));
+        toast.success(`You and ${name} are now connected friends!`);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to accept request.");
+      }
+    } catch(e) {
+      toast.error("Network error.");
     }
-  }, [allUsers]);
+  };
 
-  const saveRequests = (updatedList: ConnectionRequestItem[]) => {
-    setRequests(updatedList);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sf_connection_requests", JSON.stringify(updatedList));
+  const handleDeclineRequest = async (reqId: string) => {
+    const reqItem = requests.find(r => r.id === reqId);
+    if (!reqItem || !reqItem.requestId) return;
+
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "decline", requestId: reqItem.requestId })
+      });
+      if (res.ok) {
+        setRequests(prev => prev.filter(r => r.id !== reqId));
+        toast.info("Connection request declined.");
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to decline request.");
+      }
+    } catch(e) {
+      toast.error("Network error.");
     }
   };
 
-  const handleAcceptRequest = (reqId: string, name: string) => {
-    const updated = requests.map((r) => (r.id === reqId ? { ...r, status: "ACCEPTED" as const } : r));
-    saveRequests(updated);
-    toast.success(`You and ${name} are now connected friends!`);
-  };
-
-  const handleDeclineRequest = (reqId: string) => {
-    const updated = requests.filter((r) => r.id !== reqId);
-    saveRequests(updated);
-    toast.info("Connection request declined.");
-  };
-
-  const handleConnectDiscover = (targetUser: UserCompact) => {
-    if (!requests.some((r) => r.id === targetUser.id)) {
-      const newReq: ConnectionRequestItem = {
-        id: targetUser.id,
-        fullName: targetUser.fullName,
-        selectedRole: targetUser.selectedRole || "Student Member",
-        profileImage: targetUser.profileImage || null,
-        collegeStudying: targetUser.collegeStudying || "Computer Science",
-        status: "PENDING",
-        sentAt: "Just now",
-        incoming: false,
-      };
-      const updated = [newReq, ...requests];
-      saveRequests(updated);
-      toast.success(`Connection request sent to ${targetUser.fullName}!`);
+  const handleConnectDiscover = async (targetUser: UserCompact) => {
+    if (requests.some((r) => r.id === targetUser.id)) return;
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send", toUserId: targetUser.id })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newReq: ConnectionRequestItem = {
+          id: targetUser.id,
+          requestId: data.request.id,
+          fullName: targetUser.fullName,
+          email: targetUser.email,
+          selectedRole: targetUser.selectedRole || "Student Member",
+          profileImage: targetUser.profileImage || null,
+          collegeStudying: targetUser.collegeStudying || "Computer Science",
+          status: "PENDING",
+          sentAt: "Just now",
+          incoming: false,
+        };
+        setRequests(prev => [newReq, ...prev]);
+        toast.success(`Connection request sent to ${targetUser.fullName}!`);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to send request.");
+      }
+    } catch (e) {
+      toast.error("Network error.");
     }
   };
 
@@ -537,13 +581,13 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       <IconMessageCircle className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">Public Chat Hub</p>
+                      <p className="text-xs font-bold truncate">Community Chat</p>
                       <p
                         className={`text-[10px] mt-0.5 ${
                           activeChatUserId === null ? "text-blue-100" : "text-slate-400"
                         }`}
                       >
-                        Everyone in academy
+                        Admin Announcements
                       </p>
                     </div>
                   </button>
@@ -556,9 +600,9 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     <span className="h-[1px] bg-slate-200 flex-1"></span>
                   </div>
 
-                  {directoryUsers.map((u) => {
+                  {(isAdminEmail(user.email) ? directoryUsers : acceptedFriends).map((u) => {
                     const isSelected = activeChatUserId === u.id;
-                    const isUserAdmin = isAdminEmail(u.email);
+                    const isUserAdmin = u.email ? isAdminEmail(u.email) : false;
                     const userColor = getUserColor(u.id);
 
                     return (
@@ -648,7 +692,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     <div>
                       <h3 className="text-xs font-extrabold text-slate-900 leading-tight flex items-center gap-1.5">
                         {activeChatUserId === null ? (
-                          "Public Chat Hub"
+                          "Community Chat"
                         ) : (
                           <>
                             {activeUserObj?.fullName}
@@ -660,7 +704,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       </h3>
                       <p className="text-[10px] text-slate-500 font-medium mt-0.5">
                         {activeChatUserId === null
-                          ? "Share ideas and project queries with all trainees"
+                          ? "Official announcements from platform admins"
                           : "Click to view member profile & training details"}
                       </p>
                     </div>
@@ -757,28 +801,30 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       {error}
                     </div>
                   )}
-                  <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={newMessageText}
-                      onChange={(e) => setNewMessageText(e.target.value)}
-                      placeholder={
-                        activeChatUserId === null
-                          ? "Type a message to share with everyone..."
-                          : `Send private message to ${activeUserObj?.fullName}...`
-                      }
-                      maxLength={500}
-                      required
-                      className="flex-1 px-4 py-2.5 border border-slate-200 focus:border-blue-600 focus:outline-none rounded-xl text-slate-800 text-xs transition placeholder-slate-400"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newMessageText.trim() || sending}
-                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow-xs shrink-0"
-                    >
-                      <IconSend className="w-4 h-4" />
-                    </button>
-                  </form>
+                  {activeChatUserId === null && !isAdminEmail(user.email) ? null : (
+                    <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={newMessageText}
+                        onChange={(e) => setNewMessageText(e.target.value)}
+                        placeholder={
+                          activeChatUserId === null
+                            ? "Type an announcement to share with everyone..."
+                            : `Send private message to ${activeUserObj?.fullName}...`
+                        }
+                        maxLength={500}
+                        required
+                        className="flex-1 px-4 py-2.5 border border-slate-200 focus:border-blue-600 focus:outline-none rounded-xl text-slate-800 text-xs transition placeholder-slate-400"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newMessageText.trim() || sending}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow-xs shrink-0"
+                      >
+                        <IconSend className="w-4 h-4" />
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             </div>

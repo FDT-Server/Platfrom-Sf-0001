@@ -14,11 +14,11 @@ export default function PrivacyPage() {
         
         <div className="flex items-center justify-between border-b border-slate-100 pb-6 mb-8">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 px-3 py-1.5 rounded-lg"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Back to Dashboard
+            Back to Home
           </Link>
 
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-xs font-semibold text-slate-400 mb-8">
-          Effective Date: July 27, 2026 | Operator: Studentforge
+          Effective Date: July 27, 2026 | Operator: STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED
         </p>
 
         <div className="space-y-8 text-sm leading-relaxed text-slate-700">
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
               1. Information We Collect
             </h2>
             <p>
-              When you use Studentforge Platform, we collect personal information necessary to deliver our online learning services, process transactions, and personalize your experience:
+              When you use Studentforge Platform, operated by <strong>STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED</strong>, we collect personal information necessary to deliver our online learning services, process transactions, and personalize your experience:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-slate-600 text-xs">
               <li><strong>Account Information:</strong> Full name, email address, phone number, password, and profile preferences.</li>
@@ -53,13 +53,13 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
-              2. Instamojo Payment Gateway Security & Data Handling
+              2. Razorpay & HDFC Collect Now Payment Security & Data Handling
             </h2>
             <p>
               We prioritize financial security. We do not store sensitive payment instrument details such as credit/debit card numbers, CVVs, or NetBanking passwords on our servers.
             </p>
             <p className="text-xs text-slate-600">
-              All electronic checkout transactions are handled securely by our licensed payment partner <strong>Instamojo Technologies Pvt. Ltd.</strong>, which complies with <strong>PCI-DSS (Payment Card Industry Data Security Standard)</strong> and Reserve Bank of India (RBI) directives.
+              All electronic checkout transactions are handled securely by our licensed payment processing partner <strong>Razorpay Software Private Limited / HDFC Bank Collect Now</strong>, which complies with <strong>PCI-DSS (Payment Card Industry Data Security Standard) Level 1</strong> and Reserve Bank of India (RBI) directives.
             </p>
           </section>
 

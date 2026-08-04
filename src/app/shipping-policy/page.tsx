@@ -14,15 +14,15 @@ export default function ShippingPolicyPage() {
         
         <div className="flex items-center justify-between border-b border-slate-100 pb-6 mb-8">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 px-3 py-1.5 rounded-lg"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Back to Dashboard
+            Back to Home
           </Link>
 
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Instamojo Gateway Compliant
+            Razorpay & HDFC Gateway Compliant
           </span>
         </div>
 
@@ -36,7 +36,7 @@ export default function ShippingPolicyPage() {
         </div>
 
         <p className="text-xs font-semibold text-slate-400 mb-8">
-          Effective Date: July 27, 2026 | Operator: Studentforge / Redlix Pro Wing
+          Effective Date: July 27, 2026 | Operator: STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED
         </p>
 
         <div className="space-y-8 text-sm leading-relaxed text-slate-700">
@@ -47,7 +47,7 @@ export default function ShippingPolicyPage() {
               1. Electronic & Digital Service Nature
             </h2>
             <p>
-              Studentforge Platform (operated by <strong>Redlix Pro Wing</strong>) is an online educational software-as-a-service (SaaS) platform. We do not sell or dispatch physical tangible goods or physical merchandise. Therefore, physical shipping and logistics shipping charges do not apply to any purchases made on our platform.
+              Studentforge Platform (operated by <strong>STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED</strong>) is an online educational software-as-a-service (SaaS) platform. We do not sell or dispatch physical tangible goods or physical merchandise. Therefore, physical shipping and logistics shipping charges do not apply to any purchases made on our platform.
             </p>
           </section>
 
@@ -57,7 +57,7 @@ export default function ShippingPolicyPage() {
               2. Instant Digital Delivery & Access Fulfillment
             </h2>
             <p>
-              Upon successful payment authorization via our payment gateway partner <strong>Instamojo</strong>, your service access is delivered electronically immediately:
+              Upon successful payment authorization via our payment gateway partner <strong>Razorpay / HDFC Bank Collect Now</strong>, your service access is delivered electronically immediately:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-slate-600 text-xs">
               <li><strong>Premium Membership Access:</strong> Activated instantly on your Studentforge user account dashboard.</li>
@@ -73,7 +73,7 @@ export default function ShippingPolicyPage() {
               3. Confirmation & Invoicing
             </h2>
             <p>
-              An automated email payment receipt containing your transaction reference ID and access instructions will be sent to your registered email address within <strong>5 minutes</strong> of completing payment on Instamojo.
+              An automated email payment receipt containing your transaction reference ID and access instructions will be sent to your registered email address within <strong>5 minutes</strong> of completing payment on Razorpay.
             </p>
           </section>
 

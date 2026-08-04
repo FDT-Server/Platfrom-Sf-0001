@@ -14,15 +14,15 @@ export default function RefundPolicyPage() {
         
         <div className="flex items-center justify-between border-b border-slate-100 pb-6 mb-8">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 px-3 py-1.5 rounded-lg"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Back to Dashboard
+            Back to Home
           </Link>
 
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Instamojo Gateway Compliant
+            Razorpay & HDFC Gateway Compliant
           </span>
         </div>
 
@@ -36,7 +36,7 @@ export default function RefundPolicyPage() {
         </div>
 
         <p className="text-xs font-semibold text-slate-400 mb-8">
-          Effective Date: July 27, 2026 | Operator: Studentforge / Redlix Pro Wing
+          Effective Date: July 27, 2026 | Operator: STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED
         </p>
 
         <div className="space-y-8 text-sm leading-relaxed text-slate-700">
@@ -47,7 +47,7 @@ export default function RefundPolicyPage() {
               1. Overview & Satisfaction Commitment
             </h2>
             <p>
-              At Studentforge Platform (operated by <strong>Redlix Pro Wing</strong>), we strive to deliver high-quality educational courses, video lectures, and mentorship tracks. We recognize that occasional issues may arise, and we have established this transparent Refund & Cancellation Policy for all payments processed through <strong>Instamojo Payment Gateway</strong>.
+              At Studentforge Platform (operated by <strong>STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED</strong>), we strive to deliver high-quality educational courses, video lectures, and mentorship tracks. We recognize that occasional issues may arise, and we have established this transparent Refund & Cancellation Policy for all payments processed through <strong>Razorpay / HDFC Bank Collect Now Payment Gateway</strong>.
             </p>
           </section>
 
@@ -91,7 +91,7 @@ export default function RefundPolicyPage() {
           <section className="space-y-2">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-              5. Refund Request Process & Instamojo Settlement Timeframe
+              5. Refund Request Process & Payment Settlement Timeframe
             </h2>
             <p>To request a refund, follow these simple steps:</p>
             <ol className="list-decimal pl-5 space-y-2 text-xs text-slate-600">
@@ -102,10 +102,10 @@ export default function RefundPolicyPage() {
                 </a>{" "}
                 with the subject line <strong>&quot;Refund Request - [Your Registered Email]&quot;</strong>.
               </li>
-              <li>Include your Payment Reference ID, Instamojo Transaction ID, and reason for the request.</li>
+              <li>Include your Payment Reference ID, Razorpay Order/Payment ID, and reason for the request.</li>
               <li>Our finance team will verify your account details within <strong>24 to 48 business hours</strong>.</li>
               <li>
-                Approved refunds will be credited back via Instamojo to your original payment method (UPI account, Credit/Debit Card, or Bank Account) within <strong>5 to 7 business days</strong>.
+                Approved refunds will be credited back via Razorpay to your original payment method (UPI account, Credit/Debit Card, or Bank Account) within <strong>5 to 7 business days</strong>.
               </li>
             </ol>
           </section>

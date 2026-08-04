@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
+import { getConnectionExclusionIds } from "@/lib/connections";
 import DashboardContent from "./DashboardContent";
 
 export const dynamic = "force-dynamic";
@@ -68,22 +69,26 @@ export default async function DashboardPage() {
     },
   });
 
+  const { excludedIds } = await getConnectionExclusionIds(user.id);
+
   const suggestedUsers = await prisma.user.findMany({
     where: {
-      id: { not: sessionToken },
+      id: { notIn: [user.id, ...Array.from(excludedIds)] },
       email: {
-        notIn: ["webstrixx@gmail.com", "hrstudentforge@gmail.com"]
-      }
+        notIn: ["webstrixx@gmail.com", "hrstudentforge@gmail.com"],
+      },
     },
     take: 3,
+    orderBy: { fullName: "asc" },
     select: {
       id: true,
       fullName: true,
       email: true,
       selectedRole: true,
       profileImage: true,
+      collegeStudying: true,
     },
   });
 
-  return <DashboardContent user={user} events={events} suggestedUsers={suggestedUsers} />;
+  return <DashboardContent user={user as any} events={events} suggestedUsers={suggestedUsers} />;
 }

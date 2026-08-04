@@ -39,13 +39,6 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
       if (res.ok) {
         const dbPosts = await res.json();
         if (Array.isArray(dbPosts)) {
-          let localBookmarks: string[] = [];
-          if (typeof window !== "undefined") {
-            try {
-              localBookmarks = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
-            } catch (e) {}
-          }
-
           setPosts((prevPosts) => {
             const prevMap = new Map(prevPosts.map((p) => [p.id, p]));
             return dbPosts.map((p: any) => {
@@ -55,8 +48,8 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
               const lUserIds = Array.isArray(p.likedUserIds) ? p.likedUserIds : [];
               const comms = Array.isArray(p.comments) ? p.comments : [];
 
-              let isLiked = prev ? prev.liked : false;
-              let isBookmarked = prev ? prev.bookmarked : localBookmarks.includes(p.id);
+              let isLiked = prev ? prev.liked : lUserIds.includes(user.id);
+              let isBookmarked = prev ? prev.bookmarked : bUserIds.includes(user.id);
 
               if (user && user.id) {
                 if (lUserIds.includes(user.id)) isLiked = true;
@@ -136,20 +129,6 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
         if (p.id === postId) {
           const nextBookmarked = !p.bookmarked;
           if (nextBookmarked) toast.success("Post saved to profile bookmarks!");
-
-          if (typeof window !== "undefined") {
-            try {
-              const currentSaved: string[] = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
-              if (nextBookmarked) {
-                if (!currentSaved.includes(postId)) currentSaved.push(postId);
-              } else {
-                const idx = currentSaved.indexOf(postId);
-                if (idx > -1) currentSaved.splice(idx, 1);
-              }
-              localStorage.setItem("sf_saved_posts", JSON.stringify(currentSaved));
-            } catch (e) {}
-          }
-
           return { ...p, bookmarked: nextBookmarked };
         }
         return p;

@@ -14,15 +14,15 @@ export default function TermsPage() {
         
         <div className="flex items-center justify-between border-b border-slate-100 pb-6 mb-8">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 px-3 py-1.5 rounded-lg"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Back to Dashboard
+            Back to Home
           </Link>
 
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Instamojo Gateway Compliant
+            Razorpay & HDFC Gateway Compliant
           </span>
         </div>
 
@@ -30,7 +30,7 @@ export default function TermsPage() {
           Terms & Conditions
         </h1>
         <p className="text-xs font-semibold text-slate-400 mb-8">
-          Effective Date: July 27, 2026 | Operator: Studentforge
+          Effective Date: July 27, 2026 | Operator: STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED
         </p>
 
         <div className="space-y-8 text-sm leading-relaxed text-slate-700">
@@ -41,7 +41,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing, registering, or purchasing subscriptions on Studentforge Platform (&quot;Platform&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;), operated by <strong>Studentforge</strong>, you agree to be legally bound by these Terms & Conditions. If you do not agree with any portion of these terms, you must not use our website or purchase any digital services.
+              By accessing, registering, or purchasing subscriptions on Studentforge Platform (&quot;Platform&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;), operated by <strong>STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED</strong>, you agree to be legally bound by these Terms & Conditions. If you do not agree with any portion of these terms, you must not use our website or purchase any digital services.
             </p>
           </section>
 

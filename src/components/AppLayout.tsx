@@ -15,7 +15,7 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
+      router.push("/");
       router.refresh();
     } catch (err) {
       console.error("Logout failed:", err);

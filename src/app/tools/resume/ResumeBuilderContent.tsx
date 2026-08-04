@@ -113,23 +113,41 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
   }, [data, scale, mobileTab]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("sf-resume-draft");
-    if (saved) {
+    const loadDraft = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed.personalDetails) {
-          setData(parsed);
+        const res = await fetch("/api/tools/resume/draft");
+        if (res.ok) {
+          const draft = await res.json();
+          if (draft && draft.personalDetails && draft.personalDetails.name) {
+            setData(draft);
+          }
         }
-      } catch (e) {
+      } catch(e) {
         console.error("Failed to parse resume draft:", e);
       }
-    }
+    };
+    loadDraft();
   }, []);
+
+  const saveToDb = async (mergedData: ResumeData) => {
+    try {
+      await fetch("/api/tools/resume/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mergedData)
+      });
+    } catch(e) {}
+  };
 
   const updateData = (newData: Partial<ResumeData>) => {
     setData((prev) => {
       const merged = { ...prev, ...newData };
-      localStorage.setItem("sf-resume-draft", JSON.stringify(merged));
+      if (typeof window !== "undefined") {
+        clearTimeout((window as any)._sf_resume_timeout);
+        (window as any)._sf_resume_timeout = setTimeout(() => {
+          saveToDb(merged);
+        }, 1500);
+      }
       return merged;
     });
   };
@@ -137,7 +155,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset your resume to default template data?")) {
       setData(initialResumeData);
-      localStorage.setItem("sf-resume-draft", JSON.stringify(initialResumeData));
+      saveToDb(initialResumeData);
       toast.success("Resume reset to default template.");
     }
   };
@@ -154,8 +172,8 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
     }, 400);
   };
 
-  const handleSaveDraftExplicitly = () => {
-    localStorage.setItem("sf-resume-draft", JSON.stringify(data));
+  const handleSaveDraftExplicitly = async () => {
+    await saveToDb(data);
     toast.success("Resume progress draft saved successfully!");
   };
 

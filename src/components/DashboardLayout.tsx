@@ -1,12 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  link?: string | null;
+  createdAt: string;
+}
 
 export const Logo = () => (
   <a href="/dashboard" className="relative z-20 flex items-center gap-2 py-1">
@@ -37,6 +48,8 @@ interface DashboardLayoutProps {
     email: string;
     profileImage?: string | null;
     isPremium?: boolean;
+    credits?: number;
+    streak?: number;
   };
 }
 
@@ -44,6 +57,82 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isCreatePopoverOpen, setIsCreatePopoverOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isViewAllNotifsOpen, setIsViewAllNotifsOpen] = useState(false);
+  
+  // Search State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ users: any[], courses: any[], posts: any[], events: any[], resources: any[], studyPods: any[], opportunities: any[], certificates: any[], features: any[] }>({ users: [], courses: [], posts: [], events: [], resources: [], studyPods: [], opportunities: [], certificates: [], features: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  
+  const searchRef = useRef<HTMLDivElement>(null);
+  
+  const createPostRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (createPostRef.current && !createPostRef.current.contains(event.target as Node)) {
+        setIsCreatePopoverOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const PLATFORM_FEATURES = [
+    { id: 'f1', title: 'Dashboard', link: '/dashboard', icon: 'dashboard', category: 'Page' },
+    { id: 'f2', title: 'Networking', link: '/networking', icon: 'forum', category: 'Page' },
+    { id: 'f3', title: 'Study Pods', link: '/studypod', icon: 'groups', category: 'Page' },
+    { id: 'f4', title: 'Video Lectures', link: '/lectures', icon: 'ondemand_video', category: 'Page' },
+    { id: 'f5', title: 'Resources', link: '/resources', icon: 'menu_book', category: 'Page' },
+    { id: 'f6', title: 'Courses', link: '/courses', icon: 'school', category: 'Page' },
+    { id: 'f7', title: 'Certificates', link: '/certificates', icon: 'workspace_premium', category: 'Page' },
+    { id: 'f8', title: 'Opportunities', link: '/opportunities', icon: 'work', category: 'Page' },
+    { id: 'f9', title: 'Events', link: '/events', icon: 'event', category: 'Page' },
+    { id: 'f10', title: 'Tools', link: '/tools', icon: 'construction', category: 'Page' },
+    { id: 'f11', title: 'Profile', link: '/profile', icon: 'person', category: 'Page' },
+    { id: 'f12', title: 'Resume Builder', link: '/tools/resume', icon: 'description', category: 'Tool' },
+  ];
+
+  // Debounced Global Search Effect
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults({ users: [], courses: [], posts: [], events: [], resources: [], studyPods: [], opportunities: [], certificates: [], features: [] });
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const q = searchQuery.toLowerCase();
+          const localFeatures = PLATFORM_FEATURES.filter(f => f.title.toLowerCase().includes(q) || f.category.toLowerCase().includes(q));
+          setSearchResults({ ...data, features: localFeatures });
+        }
+      } catch (error) {
+        console.error("Search error", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const unreadNotifsCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     const isNetworkingPage = typeof window !== "undefined" && window.location.pathname === "/networking";
@@ -91,6 +180,40 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
 
     return () => clearInterval(interval);
   }, [user.email]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`/api/notifications?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data.notifications || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const res = await fetch('/api/notifications/read-all', { method: 'PUT' });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -447,12 +570,523 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
         </SidebarBody>
       </Sidebar>
 
-      <div className="flex flex-1 w-full flex-col justify-between overflow-y-auto scroll-smooth custom-scrollbar bg-slate-50 p-3 sm:p-5 md:p-6 space-y-6">
-        <div className="w-full flex-1">
-          {children}
+      <div className="flex flex-1 w-full flex-col overflow-y-auto scroll-smooth custom-scrollbar bg-slate-50 relative">
+        {/* Top Header / Nav Bar */}
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 w-full">
+          {/* Global Search Bar */}
+          <div className="flex-1 max-w-xl hidden sm:flex" ref={searchRef}>
+            <div className="relative w-full group">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px] group-focus-within:text-blue-500 transition-colors pointer-events-none">
+                search
+              </span>
+              <input 
+                type="text" 
+                placeholder="Search courses, users, posts..." 
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                onFocus={() => setIsSearchOpen(true)}
+                className="w-full bg-slate-100/50 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-blue-500/30 rounded-full pl-10 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400 outline-none transition-all focus:ring-4 focus:ring-blue-500/10 shadow-sm focus:shadow"
+              />
+              
+              {/* Search Dropdown Overlay */}
+              {isSearchOpen && searchQuery.trim() !== "" && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 max-h-[70vh] overflow-y-auto z-50 flex flex-col p-2 animate-scaleIn origin-top">
+                  {isSearching ? (
+                    <div className="p-8 text-center text-slate-400 flex flex-col items-center gap-2">
+                       <span className="material-symbols-outlined animate-spin text-2xl text-blue-500">progress_activity</span>
+                       <span className="text-sm font-medium">Searching...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {searchResults.users?.length === 0 && searchResults.courses?.length === 0 && searchResults.posts?.length === 0 && searchResults.events?.length === 0 && searchResults.resources?.length === 0 && searchResults.studyPods?.length === 0 && searchResults.opportunities?.length === 0 && searchResults.certificates?.length === 0 && searchResults.features?.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                          <span className="material-symbols-outlined text-4xl opacity-20">search_off</span>
+                          <span className="text-sm">No results found for "{searchQuery}"</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-4 p-1">
+                          {/* Platform Features / Tools */}
+                          {searchResults.features?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">apps</span>
+                                Platform Features
+                              </h3>
+                              {searchResults.features.map((f: any) => (
+                                <Link 
+                                  href={f.link} 
+                                  key={f.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100/50">
+                                    <span className="material-symbols-outlined text-[16px] text-indigo-500">{f.icon}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800">{f.title}</span>
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-widest">{f.category}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Users */}
+                          {searchResults.users?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className={`text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 flex items-center gap-1.5 ${searchResults.features?.length > 0 ? "pt-2 border-t border-slate-50" : ""}`}>
+                                <span className="material-symbols-outlined text-[14px]">group</span>
+                                Users
+                              </h3>
+                              {searchResults.users.map((u: any) => (
+                                <Link 
+                                  href="/networking" 
+                                  key={u.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  {u.profileImage ? (
+                                    <img src={u.profileImage} alt="" className="w-8 h-8 rounded-full object-cover border border-slate-100" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/50">
+                                      <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800">{u.fullName}</span>
+                                    <span className="text-xs text-slate-500">{u.selectedRole}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Courses */}
+                          {searchResults.courses?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">school</span>
+                                Courses
+                              </h3>
+                              {searchResults.courses.map((c: any) => (
+                                <Link 
+                                  href={`/courses/${c.id}`} 
+                                  key={c.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group"
+                                >
+                                  {c.imageUrl ? (
+                                    <img src={c.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-100" />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100/50">
+                                      <span className="material-symbols-outlined text-[20px] text-indigo-500">school</span>
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col flex-1">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">{c.title}</span>
+                                    <span className="text-xs text-slate-500 line-clamp-1">{c.instructor}</span>
+                                  </div>
+                                  <div>
+                                    {c.isEnrolled ? (
+                                      <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase tracking-wider">Enrolled</span>
+                                    ) : (
+                                      <span className="px-2 py-1 bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors text-[10px] font-bold rounded uppercase tracking-wider">View</span>
+                                    )}
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Posts */}
+                          {searchResults.posts?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">article</span>
+                                Posts
+                              </h3>
+                              {searchResults.posts.map((p: any) => (
+                                <Link 
+                                  href={`/dashboard/post/${p.id}`} 
+                                  key={p.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100/50">
+                                    <span className="material-symbols-outlined text-[16px] text-blue-500">post</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">
+                                      {p.title || p.content}
+                                    </span>
+                                    <span className="text-xs text-slate-500">By {p.userName} in {p.category}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Events */}
+                          {searchResults.events?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">event</span>
+                                Events
+                              </h3>
+                              {searchResults.events.map((e: any) => (
+                                <Link 
+                                  href="/events" 
+                                  key={e.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  {e.imageUrl ? (
+                                    <img src={e.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-100" />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center shrink-0 border border-rose-100/50">
+                                      <span className="material-symbols-outlined text-[20px] text-rose-500">calendar_month</span>
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">{e.title}</span>
+                                    <span className="text-xs text-slate-500 line-clamp-1">{e.speakerName} • {e.category}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Resources */}
+                          {searchResults.resources?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">menu_book</span>
+                                Resources
+                              </h3>
+                              {searchResults.resources.map((r: any) => (
+                                <a 
+                                  href={r.link} 
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  key={r.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100/50">
+                                    <span className="material-symbols-outlined text-[20px] text-emerald-500">book</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">{r.title}</span>
+                                    <span className="text-xs text-slate-500 line-clamp-1">{r.category}</span>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Study Pods */}
+                          {searchResults.studyPods?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">groups</span>
+                                Study Pods
+                              </h3>
+                              {searchResults.studyPods.map((sp: any) => (
+                                <Link 
+                                  href="/studypod" 
+                                  key={sp.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100/50">
+                                    <span className="material-symbols-outlined text-[20px] text-indigo-500">hub</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">{sp.name}</span>
+                                    <span className="text-xs text-slate-500 line-clamp-1">Created by {sp.creatorName}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Opportunities */}
+                          {searchResults.opportunities?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">work</span>
+                                Opportunities
+                              </h3>
+                              {searchResults.opportunities.map((opp: any) => (
+                                <Link 
+                                  href="/opportunities" 
+                                  key={opp.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100/50">
+                                    <span className="material-symbols-outlined text-[20px] text-orange-500">work</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">{opp.title}</span>
+                                    <span className="text-xs text-slate-500 line-clamp-1">{opp.company} • {opp.type}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Certificates */}
+                          {searchResults.certificates?.length > 0 && (
+                            <div className="flex flex-col">
+                              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 pt-2 border-t border-slate-50 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[14px]">workspace_premium</span>
+                                Certificates
+                              </h3>
+                              {searchResults.certificates.map((cert: any) => (
+                                <Link 
+                                  href="/certificates" 
+                                  key={cert.id} 
+                                  onClick={() => setIsSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                                >
+                                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100/50">
+                                    <span className="material-symbols-outlined text-[20px] text-amber-500">workspace_premium</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-800 line-clamp-1">{cert.title}</span>
+                                    <span className="text-xs text-slate-500 line-clamp-1">Issued by {cert.issuedBy}</span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Side Actions / Stats */}
+          <div className="flex items-center gap-2.5 sm:gap-4 ml-auto">
+            {/* Create Post Button (Desktop only) */}
+            <div className="relative hidden md:block" ref={createPostRef}>
+              <button 
+                onClick={() => setIsCreatePopoverOpen(!isCreatePopoverOpen)}
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors shadow-sm hover:shadow-md cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Create Post
+              </button>
+              
+              {/* Create Post Popover */}
+              {isCreatePopoverOpen && (
+                <>
+                  <div className="absolute top-full mt-3 right-0 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-200 p-4 z-50 animate-scaleIn origin-top-right">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-slate-800 text-sm">Create a post</h3>
+                      <button onClick={() => setIsCreatePopoverOpen(false)} className="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => { setIsCreatePopoverOpen(false); window.dispatchEvent(new CustomEvent('open-compose', { detail: { category: 'Project' } })); }} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50/80 hover:bg-blue-100/90 text-blue-600 font-semibold text-sm transition-colors border border-blue-100">
+                        <span className="material-symbols-outlined text-[18px]">code</span>
+                        Project
+                      </button>
+                      <button onClick={() => { setIsCreatePopoverOpen(false); window.dispatchEvent(new CustomEvent('open-compose', { detail: { category: 'Achievement' } })); }} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50/80 hover:bg-amber-100/90 text-amber-600 font-semibold text-sm transition-colors border border-amber-100">
+                        <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+                        Achievement
+                      </button>
+                      <button onClick={() => { setIsCreatePopoverOpen(false); window.dispatchEvent(new CustomEvent('open-compose', { detail: { category: 'Question' } })); }} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50/80 hover:bg-purple-100/90 text-purple-600 font-semibold text-sm transition-colors border border-purple-100">
+                        <span className="material-symbols-outlined text-[18px]">help_outline</span>
+                        Question
+                      </button>
+                      <button onClick={() => { setIsCreatePopoverOpen(false); window.dispatchEvent(new CustomEvent('open-compose', { detail: { category: 'General' } })); }} className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/90 text-emerald-600 font-semibold text-sm transition-colors border border-emerald-100">
+                        <span className="material-symbols-outlined text-[18px]">image</span>
+                        Image
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Chat/Messages */}
+            <Link href="/networking" className="relative hidden sm:flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
+              <span className="material-symbols-outlined text-[22px]">chat_bubble_outline</span>
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[9px] font-bold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Notifications */}
+            <div className="relative hidden sm:block" ref={notifRef}>
+              <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="relative flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
+                <span className="material-symbols-outlined text-[22px]">notifications</span>
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[9px] font-bold text-white">
+                    {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
+                  </span>
+                )}
+              </button>
+              
+              {isNotifOpen && (
+                <>
+                  <div className="absolute top-full mt-3 right-0 w-80 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-200 p-0 z-50 animate-scaleIn origin-top-right overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <h3 className="font-bold text-slate-800 text-sm">Notifications</h3>
+                      <button onClick={() => { handleMarkAllAsRead(); }} className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">Mark all as read</button>
+                    </div>
+                    
+                    <div className="max-h-[360px] overflow-y-auto custom-scrollbar flex flex-col">
+                      {notifications.length === 0 ? (
+                         <div className="p-8 text-center text-slate-400 text-sm">No notifications yet.</div>
+                      ) : (
+                        notifications.slice(0, 5).map((notif) => {
+                          let icon = "notifications";
+                          let bgClass = "bg-slate-50 border-slate-100 text-slate-500";
+                          if (notif.type === "EVENT") { icon = "event"; bgClass = "bg-blue-50 border-blue-100 text-blue-500"; }
+                          else if (notif.type === "COURSE") { icon = "school"; bgClass = "bg-emerald-50 border-emerald-100 text-emerald-500"; }
+                          else if (notif.type === "PREMIUM") { icon = "workspace_premium"; bgClass = "bg-amber-50 border-amber-100 text-amber-500"; }
+
+                          return (
+                            <div key={notif.id} className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors border-b border-slate-50 cursor-pointer ${notif.read ? 'opacity-70' : 'bg-slate-50/30'}`} onClick={() => setIsNotifOpen(false)}>
+                              <div className={`w-10 h-10 rounded-full border flex items-center justify-center shrink-0 ${bgClass}`}>
+                                <span className="material-symbols-outlined text-[20px]">{icon}</span>
+                              </div>
+                              <div className="flex flex-col gap-1 flex-1">
+                                <p className="text-xs text-slate-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: notif.message }} />
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  {new Date(notif.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </span>
+                              </div>
+                              {!notif.read && <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0"></div>}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <div className="p-3 border-t border-slate-100 text-center bg-slate-50/50">
+                      <button onClick={() => { setIsNotifOpen(false); setIsViewAllNotifsOpen(true); }} className="text-[12px] font-semibold text-slate-500 hover:text-slate-800 transition-colors">View all notifications</button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="w-[1px] h-6 bg-slate-200 hidden sm:block mx-1"></div>
+
+            {/* Streak */}
+            {user.streak !== undefined && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 text-orange-600 rounded-full border border-orange-200/60 shadow-sm transition-all cursor-default select-none" title="Daily Streak">
+                <span className="material-symbols-outlined text-[18px] text-orange-500">local_fire_department</span>
+                <span className="text-sm font-bold">{user.streak}</span>
+              </div>
+            )}
+            
+            {/* Credits */}
+            {user.credits !== undefined && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 text-amber-600 rounded-full border border-amber-200/60 shadow-sm transition-all cursor-default select-none" title="Available Credits">
+                <span className="material-symbols-outlined text-[18px] text-amber-500">monetization_on</span>
+                <span className="text-sm font-bold">{user.credits}</span>
+              </div>
+            )}
+            
+            <div className="w-[1px] h-6 bg-slate-200 hidden sm:block mx-1"></div>
+
+            {/* Avatar Dropdown */}
+            <Link href="/profile" className="flex items-center gap-2 group cursor-pointer pl-1">
+              <div className="relative">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt="Profile" className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm group-hover:border-indigo-100 transition-colors" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm group-hover:border-indigo-100 transition-colors">
+                    <span className="material-symbols-outlined text-indigo-500 text-[18px]">person</span>
+                  </div>
+                )}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+              </div>
+            </Link>
+          </div>
         </div>
-        <Footer variant="dashboard" />
+
+        <div className="flex-1 w-full flex-col justify-between p-3 sm:p-5 md:p-6 space-y-6">
+          <div className="w-full flex-1">
+            {children}
+          </div>
+          <Footer variant="dashboard" />
+        </div>
       </div>
+
+      {/* View All Notifications Modal */}
+      {isViewAllNotifsOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsViewAllNotifsOpen(false)}></div>
+          <div className="bg-white rounded-2xl border border-slate-200 flex flex-col w-full max-w-3xl h-[80vh] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] relative z-10 animate-scaleIn">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-500">notifications</span>
+                All Notifications
+              </h2>
+              <div className="flex items-center gap-4">
+                <button onClick={handleMarkAllAsRead} className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">Mark all as read</button>
+                <button onClick={() => setIsViewAllNotifsOpen(false)} className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-rose-500 transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+            </div>
+            
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+              {notifications.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                  <span className="material-symbols-outlined text-6xl mb-4 opacity-20">notifications_off</span>
+                  <p>You have no notifications.</p>
+                </div>
+              ) : (
+                notifications.map((notif) => {
+                  let icon = "notifications";
+                  let bgClass = "bg-slate-50 border-slate-100 text-slate-500";
+                  if (notif.type === "EVENT") { icon = "event"; bgClass = "bg-blue-50 border-blue-100 text-blue-500"; }
+                  else if (notif.type === "COURSE") { icon = "school"; bgClass = "bg-emerald-50 border-emerald-100 text-emerald-500"; }
+                  else if (notif.type === "PREMIUM") { icon = "workspace_premium"; bgClass = "bg-amber-50 border-amber-100 text-amber-500"; }
+
+                  return (
+                    <div key={notif.id} className={`flex gap-4 p-5 hover:bg-slate-50 transition-colors border-b border-slate-50 ${notif.read ? 'opacity-70' : 'bg-blue-50/10'}`}>
+                      <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${bgClass}`}>
+                        <span className="material-symbols-outlined text-[24px]">{icon}</span>
+                      </div>
+                      <div className="flex flex-col gap-1.5 flex-1 justify-center">
+                        <p className="text-sm text-slate-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: notif.message }} />
+                        <span className="text-xs text-slate-400 font-medium">
+                          {new Date(notif.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {!notif.read && (
+                        <div className="flex items-center">
+                           <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm"></div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

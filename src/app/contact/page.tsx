@@ -25,11 +25,11 @@ export default function ContactPage() {
         
         <div className="flex items-center justify-between border-b border-slate-100 pb-6">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition bg-indigo-50 px-3 py-1.5 rounded-lg"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Back to Dashboard
+            Back to Home
           </Link>
 
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -80,8 +80,8 @@ export default function ContactPage() {
               <span className="material-symbols-outlined text-[20px]">corporate_fare</span>
             </div>
             <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Business Entity</h3>
-            <p className="text-sm font-extrabold text-slate-800">Studentforge</p>
-            <p className="text-[11px] text-slate-500">Operating in India</p>
+            <p className="text-sm font-extrabold text-slate-800">STUDENT FORGE TECHNOLOGIES PRIVATE LIMITED</p>
+            <p className="text-[11px] text-slate-500">Registered Corporate Entity in India</p>
           </div>
 
         </div>

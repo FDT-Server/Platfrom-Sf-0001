@@ -148,19 +148,12 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
         const allPosts = await res.json();
         if (!Array.isArray(allPosts)) return;
 
-        let localBookmarks: string[] = [];
-        try {
-          localBookmarks = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
-        } catch {
-          localBookmarks = [];
-        }
-
         const mine = allPosts.filter((p: FeedPost) => p.userId === user.id);
         setOwnPosts(mine);
 
         const filtered = allPosts.filter((p: FeedPost) => {
           const bArr = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
-          return (user?.id && bArr.includes(user.id)) || localBookmarks.includes(p.id);
+          return user?.id && bArr.includes(user.id);
         });
         setSavedPosts(filtered);
       } catch (err) {
@@ -172,32 +165,27 @@ export default function ProfileContent({ user, stats }: ProfileContentProps) {
   }, [user]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const accepted: string[] = JSON.parse(localStorage.getItem("sf_connections") || "[]");
-      const requests = JSON.parse(localStorage.getItem("sf_connection_requests") || "[]");
-      const acceptedFromRequests = Array.isArray(requests)
-        ? requests.filter((r: any) => r.status === "ACCEPTED")
-        : [];
-      const mergedIds = Array.from(
-        new Set([
-          ...accepted,
-          ...acceptedFromRequests.map((r: any) => r.id).filter(Boolean),
-        ])
-      );
-      setConnectionsCount(mergedIds.length || stats.networkSize);
-      setConnectionItems(
-        acceptedFromRequests.map((r: any) => ({
-          id: r.id,
-          fullName: r.fullName || "Connection",
-          selectedRole: r.selectedRole || "Student Member",
-          profileImage: r.profileImage || null,
-        }))
-      );
-    } catch {
-      setConnectionsCount(stats.networkSize);
-    }
-  }, [stats.networkSize]);
+    const loadConnections = async () => {
+      try {
+        const res = await fetch(`/api/connections?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+        setConnectionsCount((data.friends || []).length);
+        setConnectionItems(
+          (data.friends || []).map((r: any) => ({
+            id: r.id,
+            fullName: r.fullName || "Connection",
+            selectedRole: r.selectedRole || "Student Member",
+            profileImage: r.profileImage || null,
+          }))
+        );
+      } catch {
+        setConnectionsCount(0);
+      }
+    };
+    loadConnections();
+  }, []);
 
   const handleLogout = async () => {
     try {

@@ -77,18 +77,7 @@ export default function ReactionBar({
     setIsBookmarked(next);
     toast.success(next ? "Post saved to profile bookmarks!" : "Removed from bookmarks");
 
-    if (typeof window !== "undefined") {
-      try {
-        const currentSaved: string[] = JSON.parse(localStorage.getItem("sf_saved_posts") || "[]");
-        if (next) {
-          if (!currentSaved.includes(postId)) currentSaved.push(postId);
-        } else {
-          const idx = currentSaved.indexOf(postId);
-          if (idx > -1) currentSaved.splice(idx, 1);
-        }
-        localStorage.setItem("sf_saved_posts", JSON.stringify(currentSaved));
-      } catch (e) {}
-    }
+    // Removed local storage logic
 
     try {
       await fetch(`/api/posts/${postId}`, {
