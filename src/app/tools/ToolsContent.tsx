@@ -275,10 +275,12 @@ export default function ToolsContent({ user }: ToolsContentProps) {
                   {isReadOnly ? (
                     <button
                       disabled
-                      className="w-full bg-slate-100 text-slate-400 rounded-xl py-2.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-not-allowed border-0"
+                      className={`w-full text-white rounded-xl py-2.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-not-allowed opacity-60 border-0 ${
+                        tool.launchUrl ? "bg-indigo-600" : "bg-slate-900"
+                      }`}
                     >
                       Launch Tool
-                      <IconLock className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                      <IconLock className="w-3.5 h-3.5 shrink-0" />
                     </button>
                   ) : tool.launchUrl ? (
                     <Link
