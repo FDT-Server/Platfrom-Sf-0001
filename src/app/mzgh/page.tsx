@@ -16,7 +16,7 @@ export default async function MZGHPage() {
     select: { email: true, fullName: true },
   });
 
-  if (!user || user.email !== "jaswanth@gmail.com") {
+  if (!user) {
     redirect("/login");
   }
 
