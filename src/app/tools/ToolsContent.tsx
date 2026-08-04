@@ -277,7 +277,7 @@ export default function ToolsContent({ user }: ToolsContentProps) {
                       disabled
                       className="w-full bg-slate-100 text-slate-400 rounded-xl py-2.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-not-allowed border-0"
                     >
-                      Locked (Read-Only)
+                      Launch Tool
                       <IconLock className="w-3.5 h-3.5 shrink-0 opacity-60" />
                     </button>
                   ) : tool.launchUrl ? (

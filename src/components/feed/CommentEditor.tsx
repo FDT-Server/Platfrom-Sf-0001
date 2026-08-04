@@ -254,7 +254,7 @@ export default function CommentEditor({
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold text-xs rounded-xl px-4 py-1.5 transition duration-150 shadow-2xs flex items-center gap-1 cursor-pointer"
           >
             <IconSend className="w-3.5 h-3.5" />
-            <span>{isReadOnly ? "Read Only" : buttonLabel}</span>
+            <span>{buttonLabel}</span>
           </button>
         </div>
       </div>

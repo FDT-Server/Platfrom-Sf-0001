@@ -136,7 +136,7 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
                   className="bg-slate-950 hover:bg-slate-900 disabled:bg-slate-100 disabled:text-slate-400 text-white font-medium px-5 py-2.5 rounded-lg text-xs shadow-xs transition duration-150 cursor-pointer flex items-center gap-1.5 disabled:cursor-not-allowed"
                 >
                   <IconUsersPlus className="w-4.5 h-4.5" />
-                  {isReadOnly ? "Read Only" : (creating ? "Creating Room..." : "Create Room")}
+                  {creating ? "Creating Room..." : "Create Room"}
                 </button>
               </div>
             </form>

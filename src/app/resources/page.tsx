@@ -11,6 +11,7 @@ import {
   IconBrandReact,
   IconBrandTypescript,
   IconDatabase,
+  IconBrandCss3,
   IconBook,
   IconLock
 } from "@tabler/icons-react";

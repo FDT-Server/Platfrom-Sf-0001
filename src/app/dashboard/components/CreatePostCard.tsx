@@ -299,7 +299,7 @@ export default function CreatePostCard({ user, onPostCreated, onClose }: CreateP
                     className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 px-6 py-2.5 rounded-full transition duration-150 shadow-2xs flex items-center gap-1.5 cursor-pointer"
                   >
                     <IconSend className="w-4 h-4" />
-                    {isReadOnly ? "Read Only" : "Post"}
+                    {"Post"}
                   </button>
                 </div>
               </div>
