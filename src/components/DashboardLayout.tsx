@@ -399,31 +399,41 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
         ),
       },
       {
-        label: "Video Lectures",
-        href: "/lectures",
+        label: "Learnings",
         icon: (
           <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-            books_movies_and_music
+            menu_book
           </span>
         ),
-      },
-      {
-        label: "Resources",
-        href: "/resources",
-        icon: (
-          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-            library_books
-          </span>
-        ),
-      },
-      {
-        label: "Courses",
-        href: "/courses",
-        icon: (
-          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-            school
-          </span>
-        ),
+        subLinks: [
+          {
+            label: "Courses",
+            href: "/courses",
+            icon: (
+              <span className="material-symbols-outlined shrink-0 text-[18px]">
+                school
+              </span>
+            ),
+          },
+          {
+            label: "Video Lectures",
+            href: "/lectures",
+            icon: (
+              <span className="material-symbols-outlined shrink-0 text-[18px]">
+                books_movies_and_music
+              </span>
+            ),
+          },
+          {
+            label: "Resources",
+            href: "/resources",
+            icon: (
+              <span className="material-symbols-outlined shrink-0 text-[18px]">
+                library_books
+              </span>
+            ),
+          },
+        ]
       },
       {
         label: "Certificates",

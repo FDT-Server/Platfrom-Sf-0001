@@ -1,14 +1,15 @@
 "use client";
 import { cn } from "@/lib/utils";
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 
 interface Links {
   label: string;
-  href: string;
+  href?: string;
   icon: React.JSX.Element | React.ReactNode;
+  subLinks?: { label: string; href: string; icon: React.JSX.Element | React.ReactNode }[];
 }
 
 interface SidebarContextProps {
@@ -171,47 +172,110 @@ export const SidebarLink = ({
   link: Links;
   className?: string;
 } & React.ComponentPropsWithoutRef<"a">) => {
-  const { open, animate } = useSidebar();
+  const { open, setOpen, animate } = useSidebar();
   const pathname = usePathname();
+  const [expanded, setExpanded] = useState(false);
 
-  const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
+  const isActive = link.href ? (pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href))) : false;
+  const hasSubLinks = link.subLinks && link.subLinks.length > 0;
+  
+  const isChildActive = hasSubLinks ? link.subLinks!.some(sub => pathname === sub.href || pathname.startsWith(sub.href)) : false;
+  const isEffectivelyActive = isActive || isChildActive;
+
+  useEffect(() => {
+    if (isChildActive && !expanded) {
+      setExpanded(true);
+    }
+  }, [isChildActive]);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (hasSubLinks) {
+      e.preventDefault();
+      setExpanded(!expanded);
+      if (!open) {
+        setOpen(true);
+      }
+    }
+  };
 
   return (
-    <a
-      href={link.href}
-      className={cn(
-        "flex items-center gap-3 group/sidebar py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-white/10 active:scale-98",
-        isActive ? "bg-white/15 text-white font-semibold shadow-xs" : "text-blue-100",
-        open ? "justify-start" : "justify-center w-full",
-        className
-      )}
-      {...props}
-    >
-      <span className={cn(
-        "transition-colors duration-150 shrink-0 flex items-center justify-center w-6 h-6",
-        isActive ? "text-white [&>span]:text-white [&>svg]:text-white [&>img]:border-white" : "text-blue-100 group-hover/sidebar:text-white [&>span]:text-blue-100 [&>span]:group-hover/sidebar:text-white [&>svg]:text-blue-100 [&>svg]:group-hover/sidebar:text-white"
-      )}>
-        {link.icon}
-      </span>
-
-      <motion.span
-        initial={false}
-        animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
-          opacity: animate ? (open ? 1 : 0) : 1,
-          x: animate ? (open ? 0 : -8) : 0,
-        }}
-        transition={{
-          duration: 0.25,
-          ease: [0.16, 1, 0.3, 1],
-        }}
+    <div className="flex flex-col gap-1 w-full">
+      <a
+        href={link.href || "#"}
+        onClick={handleClick}
         className={cn(
-          "text-sm group-hover/sidebar:translate-x-1 transition-transform duration-150 whitespace-nowrap inline-block font-medium select-none",
-          isActive ? "text-white font-semibold" : "text-blue-100 group-hover/sidebar:text-white"
+          "flex items-center gap-3 group/sidebar py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-white/10 active:scale-98",
+          isEffectivelyActive ? "bg-white/15 text-white font-semibold shadow-xs" : "text-blue-100",
+          open ? "justify-start" : "justify-center w-full",
+          className
         )}
+        {...props}
       >
-        {link.label}
-      </motion.span>
-    </a>
+        <span className={cn(
+          "transition-colors duration-150 shrink-0 flex items-center justify-center w-6 h-6",
+          isEffectivelyActive ? "text-white [&>span]:text-white [&>svg]:text-white [&>img]:border-white" : "text-blue-100 group-hover/sidebar:text-white [&>span]:text-blue-100 [&>span]:group-hover/sidebar:text-white [&>svg]:text-blue-100 [&>svg]:group-hover/sidebar:text-white"
+        )}>
+          {link.icon}
+        </span>
+
+        <motion.span
+          initial={false}
+          animate={{
+            display: animate ? (open ? "flex" : "none") : "flex",
+            opacity: animate ? (open ? 1 : 0) : 1,
+            x: animate ? (open ? 0 : -8) : 0,
+          }}
+          transition={{
+            duration: 0.25,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+          className={cn(
+            "text-sm group-hover/sidebar:translate-x-1 transition-transform duration-150 whitespace-nowrap items-center justify-between w-full font-medium select-none",
+            isEffectivelyActive ? "text-white font-semibold" : "text-blue-100 group-hover/sidebar:text-white"
+          )}
+        >
+          <span>{link.label}</span>
+          {hasSubLinks && (
+            <span className={cn("material-symbols-outlined text-[18px] transition-transform duration-200", expanded ? "rotate-180" : "")}>
+              expand_more
+            </span>
+          )}
+        </motion.span>
+      </a>
+
+      {/* SubLinks */}
+      <AnimatePresence>
+        {hasSubLinks && expanded && open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex flex-col gap-1 pl-11 pr-2 overflow-hidden"
+          >
+            {link.subLinks!.map((subLink, idx) => {
+              const isSubActive = pathname === subLink.href || pathname.startsWith(subLink.href);
+              return (
+                <a
+                  key={idx}
+                  href={subLink.href}
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-3 rounded-xl transition-all duration-200 hover:bg-white/10 active:scale-98",
+                    isSubActive ? "bg-white/10 text-white font-semibold shadow-xs" : "text-blue-200"
+                  )}
+                >
+                  <span className={cn(
+                    "shrink-0 flex items-center justify-center",
+                    isSubActive ? "text-white" : "text-blue-200"
+                  )}>
+                    {subLink.icon}
+                  </span>
+                  <span className="text-xs whitespace-nowrap">{subLink.label}</span>
+                </a>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
