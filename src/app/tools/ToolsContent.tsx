@@ -272,7 +272,7 @@ export default function ToolsContent({ user }: ToolsContentProps) {
 
                 {/* Launch Button */}
                 <div className="mt-6 pt-4 border-t border-dashed border-slate-100">
-                  {isReadOnly && tool.category === "AI" ? (
+                  {isReadOnly ? (
                     <button
                       disabled
                       className="w-full bg-slate-100 text-slate-400 rounded-xl py-2.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-not-allowed border-0"
