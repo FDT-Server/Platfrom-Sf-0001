@@ -27,6 +27,11 @@ export default async function ResumeBuilderPage() {
     redirect("/login");
   }
 
+  // Redirect read-only users away
+  if (user.email !== "jaswanth@gmail.com") {
+    redirect("/dashboard");
+  }
+
   if (user.email.trim().toLowerCase() === "webstrixx@gmail.com") {
     redirect("/admin");
   }
