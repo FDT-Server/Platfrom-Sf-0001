@@ -37,7 +37,7 @@ export default async function StudyPodPage() {
     if (user.email === "jaswanth@gmail.com" || user.email === "webstrixx@gmail.com") return true;
 
     let approved: string[] = [];
-    let waiting: string[] = [];
+    let waiting: any[] = [];
 
     try {
       approved = typeof pod.approvedUserIds === "string" ? JSON.parse(pod.approvedUserIds) : (pod.approvedUserIds || []);
@@ -47,7 +47,9 @@ export default async function StudyPodPage() {
       waiting = typeof pod.waitingUserIds === "string" ? JSON.parse(pod.waitingUserIds) : (pod.waitingUserIds || []);
     } catch {}
 
-    return approved.includes(user.id) || waiting.includes(user.id);
+    const isWaiting = waiting.some((w) => w === user.id || w?.id === user.id);
+
+    return approved.includes(user.id) || isWaiting;
   });
 
   const podIds = initialPods.map((p) => p.id);

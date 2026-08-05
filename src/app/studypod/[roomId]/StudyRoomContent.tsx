@@ -22,6 +22,7 @@ import {
   IconMoodSmile,
   IconPhoto,
   IconPaperclip,
+  IconSearch,
 } from "@tabler/icons-react";
 import { useUserPermissions } from "@/context/UserPermissionsContext";
 
@@ -90,6 +91,62 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [roomPod, setRoomPod] = useState<StudyPod>(studyPod);
   const [showParticipantsDrawer, setShowParticipantsDrawer] = useState(false);
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+
+  // New states for the invite modal
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [invitingUserId, setInvitingUserId] = useState<string | null>(null);
+  const [participantTab, setParticipantTab] = useState<"members" | "invite">("members");
+
+  const isHost = user && user.id === roomPod.creatorId;
+
+  useEffect(() => {
+    if (showParticipantsDrawer && isHost && allUsers.length === 0) {
+      const fetchUsers = async () => {
+        setUsersLoading(true);
+        try {
+          const res = await fetch("/api/users");
+          if (res.ok) {
+            const data = await res.json();
+            setAllUsers(data.users || []);
+          }
+        } catch (err) {
+          console.error("Error fetching users:", err);
+        } finally {
+          setUsersLoading(false);
+        }
+      };
+      fetchUsers();
+    }
+  }, [showParticipantsDrawer, isHost]);
+
+  const handleInviteUser = async (targetUserId: string) => {
+    setInvitingUserId(targetUserId);
+    try {
+      const res = await fetch(`/api/studypods/${roomId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRoomPod((prev) => ({
+          ...prev,
+          approvedUserIds: data.approvedUserIds,
+        }));
+        alert("User invited successfully!");
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to invite user");
+      }
+    } catch (err) {
+      console.error("Invite error:", err);
+      alert("Error inviting user");
+    } finally {
+      setInvitingUserId(null);
+    }
+  };
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -673,7 +730,6 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   }
 
-  const isHost = user && user.id === roomPod.creatorId;
   const waitingUserCount = waitingList.length;
 
   if (lobbyStatus === "waiting" && !isHost) {
@@ -1318,135 +1374,205 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
         {showParticipantsDrawer && (
           <>
-
             <div
-              className="fixed inset-0 z-40 bg-slate-900/10 lg:bg-transparent"
+              className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-all"
               onClick={() => setShowParticipantsDrawer(false)}
             />
-
-            <div className="absolute lg:relative top-0 right-0 h-full w-80 z-50 bg-white border-l border-slate-200 flex flex-col shrink-0 animate-slideLeft shadow-lg lg:shadow-none">
-
-              <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 select-none">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">group</span>
-                  Room Members
-                </h3>
-                <button
-                  onClick={() => setShowParticipantsDrawer(false)}
-                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-full hover:bg-slate-100 transition shrink-0"
-                >
-                  <IconX className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-5">
-
-                <div className="space-y-1.5">
-                  <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
-                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-650 text-white flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
-                      {roomPod.creatorName.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate leading-none">
-                        {roomPod.creatorName}
-                      </p>
-                      <span className="inline-block text-[8px] font-extrabold bg-indigo-50 text-indigo-750 px-1.5 py-0.5 rounded mt-1.5 select-none border border-indigo-100">
-                        Host
-                      </span>
-                    </div>
-                  </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col pointer-events-auto overflow-hidden animate-fadeIn relative">
+                
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+                  <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 select-none">
+                    <span className="material-symbols-outlined text-[20px] text-indigo-500">group</span>
+                    Study Pod Members
+                  </h3>
+                  <button
+                    onClick={() => setShowParticipantsDrawer(false)}
+                    className="text-slate-400 hover:text-slate-600 cursor-pointer p-1 rounded-full hover:bg-slate-200 transition shrink-0"
+                  >
+                    <IconX className="w-5 h-5" />
+                  </button>
                 </div>
 
                 {isHost && (
-                  <div className="space-y-2">
-                    <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
-                      Waiting Room Requests ({waitingList.length})
-                    </span>
-                    {waitingList.length === 0 ? (
-                      <p className="text-[10px] text-slate-400 italic pl-1.5 font-medium">
-                        No pending join requests
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {waitingList.map((w: any) => (
-                          <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
-                            <div className="flex items-center gap-2">
-                              {w.profileImage ? (
-                                <img
-                                  src={w.profileImage}
-                                  alt={w.fullName}
-                                  className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
-                                />
-                              ) : (
-                                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
-                                  {w.fullName.substring(0, 2).toUpperCase()}
-                                </div>
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
-                                <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <button
-                                disabled={approvingUserId !== null}
-                                onClick={() => handleApproveUser(w.id, "accept")}
-                                className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
-                              >
-                                {approvingUserId === w.id ? "..." : "Accept"}
-                              </button>
-                              <button
-                                disabled={approvingUserId !== null}
-                                onClick={() => handleApproveUser(w.id, "decline")}
-                                className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="flex bg-slate-100 p-1 mx-4 mt-4 rounded-xl shrink-0">
+                    <button
+                      onClick={() => setParticipantTab("members")}
+                      className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition ${
+                        participantTab === "members"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Current Members
+                    </button>
+                    <button
+                      onClick={() => setParticipantTab("invite")}
+                      className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition ${
+                        participantTab === "invite"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Invite Friends
+                    </button>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
-                    Joined Members ({participants.length})
-                  </span>
-                  <div className="space-y-1.5">
-
-                    <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
-                      <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
-                        Me
+                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                  {(!isHost || participantTab === "members") ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
+                        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-650 text-white flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                            {roomPod.creatorName.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate leading-none">
+                              {roomPod.creatorName}
+                            </p>
+                            <span className="inline-block text-[8px] font-extrabold bg-indigo-50 text-indigo-750 px-1.5 py-0.5 rounded mt-1.5 select-none border border-indigo-100">
+                              Host
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate leading-none">{user?.fullName}</p>
-                        <p className="text-[9px] text-slate-400 truncate leading-none mt-1">{user?.selectedRole || "Academy Learner"}</p>
-                      </div>
-                    </div>
 
-                    {participants
-                      .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
-                      .map((p) => {
-                        const colorStyle = getParticipantColor(p.email);
-                        return (
-                          <div key={p.email} className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
-                            <div className={`w-6.5 h-6.5 rounded flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0 border ${colorStyle.bg}`}>
-                              {p.fullName.substring(0, 2).toUpperCase()}
+                      {isHost && (
+                        <div className="space-y-2">
+                          <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
+                            Waiting Room Requests ({waitingList.length})
+                          </span>
+                          {waitingList.length === 0 ? (
+                            <p className="text-[10px] text-slate-400 italic pl-1.5 font-medium">
+                              No pending join requests
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {waitingList.map((w: any) => (
+                                <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
+                                  <div className="flex items-center gap-2">
+                                    {w.profileImage ? (
+                                      <img src={w.profileImage} alt={w.fullName} className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0" />
+                                    ) : (
+                                      <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                                        {w.fullName.substring(0, 2).toUpperCase()}
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
+                                      <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <button
+                                      disabled={approvingUserId !== null}
+                                      onClick={() => handleApproveUser(w.id, "accept")}
+                                      className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                                    >
+                                      {approvingUserId === w.id ? "..." : "Accept"}
+                                    </button>
+                                    <button
+                                      disabled={approvingUserId !== null}
+                                      onClick={() => handleApproveUser(w.id, "decline")}
+                                      className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                                    >
+                                      Decline
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
+                          Joined Members ({participants.length})
+                        </span>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
+                            <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
+                              Me
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-805 truncate leading-none">{p.fullName}</p>
-                              <p className="text-[9px] text-slate-400 truncate leading-none mt-1">Joined member</p>
+                              <p className="text-xs font-bold text-slate-800 truncate leading-none">{user?.fullName}</p>
+                              <p className="text-[9px] text-slate-400 truncate leading-none mt-1">{user?.selectedRole || "Academy Learner"}</p>
                             </div>
                           </div>
-                        );
-                      })}
-                  </div>
-                </div>
 
+                          {participants
+                            .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
+                            .map((p) => {
+                              const colorStyle = getParticipantColor(p.email);
+                              return (
+                                <div key={p.email} className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
+                                  <div className={`w-6.5 h-6.5 rounded flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0 border ${colorStyle.bg}`}>
+                                    {p.fullName.substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-805 truncate leading-none">{p.fullName}</p>
+                                    <p className="text-[9px] text-slate-400 truncate leading-none mt-1">Joined member</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search users to invite..."
+                          value={inviteSearch}
+                          onChange={(e) => setInviteSearch(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                        />
+                      </div>
+                      
+                      {usersLoading ? (
+                        <div className="text-center py-8 text-xs text-slate-400 font-medium">Loading users...</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {allUsers
+                            .filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id)
+                            .slice(0, 20)
+                            .map(u => (
+                              <div key={u.id} className="flex items-center justify-between p-2 rounded-xl border border-slate-100 hover:border-slate-200 bg-white shadow-2xs">
+                                <div className="flex items-center gap-2.5">
+                                  {u.profileImage ? (
+                                    <img src={u.profileImage} alt={u.fullName} className="w-8 h-8 rounded-lg object-cover" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-xs">{u.fullName.substring(0, 2).toUpperCase()}</div>
+                                  )}
+                                  <div>
+                                    <p className="text-xs font-bold text-slate-800 leading-none">{u.fullName}</p>
+                                    <p className="text-[9px] text-slate-400 mt-1">{u.selectedRole}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  disabled={invitingUserId === u.id || approvedList.length >= 3}
+                                  onClick={() => handleInviteUser(u.id)}
+                                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-[10px] font-bold rounded-lg transition cursor-pointer"
+                                >
+                                  {invitingUserId === u.id ? "..." : approvedList.length >= 3 ? "Full" : "Invite"}
+                                </button>
+                              </div>
+                            ))}
+                          {allUsers.filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id).length === 0 && (
+                            <p className="text-xs text-slate-400 text-center py-4">No users found.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
