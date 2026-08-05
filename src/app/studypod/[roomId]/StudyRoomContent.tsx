@@ -97,7 +97,6 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [usersLoading, setUsersLoading] = useState(false);
   const [inviteSearch, setInviteSearch] = useState("");
   const [invitingUserId, setInvitingUserId] = useState<string | null>(null);
-  const [participantTab, setParticipantTab] = useState<"members" | "invite">("members");
 
   const isHost = user && user.id === roomPod.creatorId;
 
@@ -1394,137 +1393,118 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   </button>
                 </div>
 
-                {isHost && (
-                  <div className="flex bg-slate-100 p-1 mx-4 mt-4 rounded-xl shrink-0">
-                    <button
-                      onClick={() => setParticipantTab("members")}
-                      className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition ${
-                        participantTab === "members"
-                          ? "bg-white text-slate-900 shadow-xs"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      Current Members
-                    </button>
-                    <button
-                      onClick={() => setParticipantTab("invite")}
-                      className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition ${
-                        participantTab === "invite"
-                          ? "bg-white text-slate-900 shadow-xs"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      Invite Friends
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                  {(!isHost || participantTab === "members") ? (
-                    <>
-                      <div className="space-y-1.5">
-                        <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
-                        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-650 text-white flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
-                            {roomPod.creatorName.substring(0, 2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate leading-none">
-                              {roomPod.creatorName}
-                            </p>
-                            <span className="inline-block text-[8px] font-extrabold bg-indigo-50 text-indigo-750 px-1.5 py-0.5 rounded mt-1.5 select-none border border-indigo-100">
-                              Host
-                            </span>
-                          </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                  {/* Joined Members & Waiting List Section */}
+                  <div className="space-y-5">
+                    <div className="space-y-1.5">
+                      <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
+                      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-650 text-white flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                          {roomPod.creatorName.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate leading-none">
+                            {roomPod.creatorName}
+                          </p>
+                          <span className="inline-block text-[8px] font-extrabold bg-indigo-50 text-indigo-750 px-1.5 py-0.5 rounded mt-1.5 select-none border border-indigo-100">
+                            Host
+                          </span>
                         </div>
                       </div>
+                    </div>
 
-                      {isHost && (
-                        <div className="space-y-2">
-                          <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
-                            Waiting Room Requests ({waitingList.length})
-                          </span>
-                          {waitingList.length === 0 ? (
-                            <p className="text-[10px] text-slate-400 italic pl-1.5 font-medium">
-                              No pending join requests
-                            </p>
-                          ) : (
-                            <div className="space-y-2">
-                              {waitingList.map((w: any) => (
-                                <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
-                                  <div className="flex items-center gap-2">
-                                    {w.profileImage ? (
-                                      <img src={w.profileImage} alt={w.fullName} className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0" />
-                                    ) : (
-                                      <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
-                                        {w.fullName.substring(0, 2).toUpperCase()}
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
-                                      <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-1.5 mt-0.5">
-                                    <button
-                                      disabled={approvingUserId !== null}
-                                      onClick={() => handleApproveUser(w.id, "accept")}
-                                      className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
-                                    >
-                                      {approvingUserId === w.id ? "..." : "Accept"}
-                                    </button>
-                                    <button
-                                      disabled={approvingUserId !== null}
-                                      onClick={() => handleApproveUser(w.id, "decline")}
-                                      className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
-                                    >
-                                      Decline
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
+                    {isHost && (
                       <div className="space-y-2">
                         <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
-                          Joined Members ({participants.length})
+                          Waiting Room Requests ({waitingList.length})
                         </span>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
-                            <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
-                              Me
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-800 truncate leading-none">{user?.fullName}</p>
-                              <p className="text-[9px] text-slate-400 truncate leading-none mt-1">{user?.selectedRole || "Academy Learner"}</p>
-                            </div>
-                          </div>
-
-                          {participants
-                            .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
-                            .map((p) => {
-                              const colorStyle = getParticipantColor(p.email);
-                              return (
-                                <div key={p.email} className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
-                                  <div className={`w-6.5 h-6.5 rounded flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0 border ${colorStyle.bg}`}>
-                                    {p.fullName.substring(0, 2).toUpperCase()}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-bold text-slate-805 truncate leading-none">{p.fullName}</p>
-                                    <p className="text-[9px] text-slate-400 truncate leading-none mt-1">Joined member</p>
+                        {waitingList.length === 0 ? (
+                          <p className="text-[10px] text-slate-400 italic pl-1.5 font-medium">
+                            No pending join requests
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {waitingList.map((w: any) => (
+                              <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
+                                <div className="flex items-center gap-2">
+                                  {w.profileImage ? (
+                                    <img src={w.profileImage} alt={w.fullName} className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0" />
+                                  ) : (
+                                    <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                                      {w.fullName.substring(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
+                                    <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
                                   </div>
                                 </div>
-                              );
-                            })}
-                        </div>
+
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <button
+                                    disabled={approvingUserId !== null}
+                                    onClick={() => handleApproveUser(w.id, "accept")}
+                                    className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                                  >
+                                    {approvingUserId === w.id ? "..." : "Accept"}
+                                  </button>
+                                  <button
+                                    disabled={approvingUserId !== null}
+                                    onClick={() => handleApproveUser(w.id, "decline")}
+                                    className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                                  >
+                                    Decline
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </>
-                  ) : (
-                    <div className="space-y-4">
+                    )}
+
+                    <div className="space-y-2">
+                      <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
+                        Joined Members ({participants.length})
+                      </span>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
+                          <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
+                            Me
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate leading-none">{user?.fullName}</p>
+                            <p className="text-[9px] text-slate-400 truncate leading-none mt-1">{user?.selectedRole || "Academy Learner"}</p>
+                          </div>
+                        </div>
+
+                        {participants
+                          .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
+                          .map((p) => {
+                            const colorStyle = getParticipantColor(p.email);
+                            return (
+                              <div key={p.email} className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
+                                <div className={`w-6.5 h-6.5 rounded flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0 border ${colorStyle.bg}`}>
+                                  {p.fullName.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-805 truncate leading-none">{p.fullName}</p>
+                                  <p className="text-[9px] text-slate-400 truncate leading-none mt-1">Joined member</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Invite Friends Section (Host Only) */}
+                  {isHost && (
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                      <span className="block text-[10px] text-indigo-500 font-extrabold uppercase tracking-wider pl-0.5">
+                        Invite Friends
+                      </span>
+                      
                       <div className="relative">
                         <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
