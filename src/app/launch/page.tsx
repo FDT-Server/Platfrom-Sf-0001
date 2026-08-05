@@ -6,6 +6,7 @@ import Link from "next/link";
 import NumberFlow from "@number-flow/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Rocket } from "lucide-react";
+import confetti from "canvas-confetti";
 
 export default function LaunchPage() {
   const router = useRouter();
@@ -26,15 +27,41 @@ export default function LaunchPage() {
     return () => clearInterval(id);
   }, [isCounting, isPaused]);
 
-  // When count hits 0 → wait 3s → white fade → redirect
+  // When count hits 0 → show confetti for 10s → white fade → redirect
   useEffect(() => {
     if (!isCounting || count !== 0) return;
 
-    // After 3 seconds, start white fade
-    const fadeId = setTimeout(() => setIsFading(true), 3000);
+    const duration = 10 * 1000;
+    const end = Date.now() + duration;
 
-    // After 3.7 seconds, redirect to main page
-    const navId = setTimeout(() => router.push("/"), 3700);
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        zIndex: 100,
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        zIndex: 100,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+
+    frame();
+
+    // After 10 seconds, start white fade
+    const fadeId = setTimeout(() => setIsFading(true), 10000);
+
+    // After 10.7 seconds, redirect to main page
+    const navId = setTimeout(() => router.push("/"), 10700);
 
     return () => {
       clearTimeout(fadeId);
