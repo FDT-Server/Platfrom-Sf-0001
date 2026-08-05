@@ -132,7 +132,7 @@ export async function POST(req: Request) {
         userId: sender.id,
         fullName: sender.fullName,
         email: sender.email,
-        role: sender.email.trim().toLowerCase() === "webstrixx@gmail.com" ? "Admin" : sender.selectedRole,
+        role: (sender.email.trim().toLowerCase() === "webstrixx@gmail.com" || sender.email.trim().toLowerCase() === "jaswanth@gmail.com") ? "Admin" : sender.selectedRole,
         recipientId: recipientId || null,
       },
     });

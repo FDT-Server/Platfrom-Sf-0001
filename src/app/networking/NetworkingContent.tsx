@@ -465,7 +465,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   });
 
   const activeUserObj = allUsers.find((u) => u.id === activeChatUserId);
-  const isAdminEmail = (email: string) => email.trim().toLowerCase() === "webstrixx@gmail.com";
+  const isAdminEmail = (email: string) => {
+    const lowerEmail = email.trim().toLowerCase();
+    return lowerEmail === "webstrixx@gmail.com" || lowerEmail === "jaswanth@gmail.com";
+  };
 
   return (
     <DashboardLayout user={user}>
