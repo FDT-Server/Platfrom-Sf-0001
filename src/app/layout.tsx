@@ -144,6 +144,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900">
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <Toaster position="top-center" richColors />
         <SessionValidator isSessionValid={isSessionValid} />
         <AutoLogoutProvider>
