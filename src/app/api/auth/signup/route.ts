@@ -7,11 +7,11 @@ import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   try {
-    const { email, password, fullName, selectedRole, otherRoleText, goals } = await req.json();
+    const { email, password, fullName, selectedRole, otherRoleText, goals, otp } = await req.json();
 
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !otp) {
       return NextResponse.json(
-        { error: "Missing required fields. Please fill in your name, email, and password." },
+        { error: "Missing required fields. Please ensure all details and OTP are provided." },
         { status: 400 }
       );
     }
@@ -37,6 +37,30 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Verify OTP
+    const registrationOtp = await prisma.registrationOtp.findUnique({
+      where: { email: trimmedEmail },
+    });
+
+    if (!registrationOtp || registrationOtp.otpCode !== otp.trim()) {
+      return NextResponse.json(
+        { error: "Invalid OTP verification code. Please check and try again." },
+        { status: 400 }
+      );
+    }
+
+    if (new Date() > registrationOtp.otpExpiry) {
+      return NextResponse.json(
+        { error: "OTP code has expired. Please request a new one." },
+        { status: 400 }
+      );
+    }
+
+    // Delete OTP after successful verification
+    await prisma.registrationOtp.delete({
+      where: { email: trimmedEmail },
+    });
 
     const hashedPassword = hashPassword(password);
 
