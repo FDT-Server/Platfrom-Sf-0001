@@ -28,8 +28,26 @@ export default async function StudyPodPage() {
     redirect("/login");
   }
 
-  const initialPods = await prisma.studyPod.findMany({
+  const allPods = await prisma.studyPod.findMany({
     orderBy: { createdAt: "desc" },
+  });
+
+  const initialPods = allPods.filter((pod) => {
+    if (pod.creatorId === user.id) return true;
+    if (user.email === "jaswanth@gmail.com" || user.email === "webstrixx@gmail.com") return true;
+
+    let approved: string[] = [];
+    let waiting: string[] = [];
+
+    try {
+      approved = typeof pod.approvedUserIds === "string" ? JSON.parse(pod.approvedUserIds) : (pod.approvedUserIds || []);
+    } catch {}
+
+    try {
+      waiting = typeof pod.waitingUserIds === "string" ? JSON.parse(pod.waitingUserIds) : (pod.waitingUserIds || []);
+    } catch {}
+
+    return approved.includes(user.id) || waiting.includes(user.id);
   });
 
   const podIds = initialPods.map((p) => p.id);

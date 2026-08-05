@@ -976,7 +976,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 select-none pt-16 pb-12">
                 <div className="w-72 h-72 mb-4 pointer-events-none overflow-hidden">
                   <DotLottieReact
-                    src="/empty-chat.lottie"
+                    src="/study-discussion.lottie"
                     loop
                     autoplay
                     className="w-full h-full bg-transparent"
