@@ -451,7 +451,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       .toUpperCase();
   };
 
-  const directoryUsers = allUsers.filter((u) => u.id !== user.id);
+  const rawDirectoryUsers = allUsers.filter((u) => u.id !== user.id);
+  const directoryUsers = rawDirectoryUsers.filter((u, index, self) =>
+    index === self.findIndex((t) => t.fullName.toLowerCase() === u.fullName.toLowerCase())
+  );
   const pendingRequests = requests.filter((r) => r.status === "PENDING" && r.incoming !== false);
   const acceptedFriends = requests.filter((r) => r.status === "ACCEPTED");
 
