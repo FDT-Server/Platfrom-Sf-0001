@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       select: { email: true },
     });
 
-    if (!user || user.email !== "jaswanth@gmail.com") {
+    if (!user || (user.email !== "jaswanth@gmail.com" && user.email !== "d@gmail.com")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
