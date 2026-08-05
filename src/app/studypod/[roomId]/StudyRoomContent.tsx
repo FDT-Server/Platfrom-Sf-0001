@@ -96,6 +96,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [usersLoading, setUsersLoading] = useState(false);
   const [inviteSearch, setInviteSearch] = useState("");
   const [invitingUserId, setInvitingUserId] = useState<string | null>(null);
+  const [showInvitePopover, setShowInvitePopover] = useState(false);
 
   const isHost = user && user.id === roomPod.creatorId;
 
@@ -785,7 +786,76 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             <span className="text-slate-800 font-semibold">{roomPod.name}</span>
           </div>
 
+          <div className="relative">
+            {isHost && (
+              <button
+                onClick={() => setShowInvitePopover(!showInvitePopover)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-semibold transition hover:scale-102 active:scale-98 text-[10px] cursor-pointer bg-indigo-600 hover:bg-indigo-750 shadow-[0_0_15px_rgba(79,70,229,0.4)] border-t border-indigo-500/25"
+              >
+                <span className="material-symbols-outlined text-[15px] text-white select-none">person_add</span>
+                Add Participants
+              </button>
+            )}
 
+            {showInvitePopover && isHost && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-slate-200 p-4 z-50 animate-fadeIn">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="block text-[10px] text-indigo-500 font-extrabold uppercase tracking-wider pl-0.5">
+                    Invite Friends
+                  </span>
+                  <button onClick={() => setShowInvitePopover(false)} className="text-slate-400 hover:text-slate-600 transition">
+                    <IconX className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={inviteSearch}
+                    onChange={(e) => setInviteSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-3xs"
+                  />
+                </div>
+                
+                {usersLoading ? (
+                  <div className="text-center py-4 text-[10px] text-slate-400 font-medium">Loading users...</div>
+                ) : (
+                  <div className="space-y-1.5 mt-3 max-h-60 overflow-y-auto">
+                    {allUsers
+                      .filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id)
+                      .slice(0, 10)
+                      .map(u => (
+                        <div key={u.id} className="flex items-center justify-between p-1.5 rounded-lg border border-slate-100 hover:border-slate-200 bg-white shadow-3xs transition">
+                          <div className="flex items-center gap-2">
+                            {u.profileImage ? (
+                              <img src={u.profileImage} alt={u.fullName} className="w-6 h-6 rounded-md object-cover" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-[9px]">{u.fullName.substring(0, 2).toUpperCase()}</div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-bold text-slate-800 leading-none truncate">{u.fullName}</p>
+                              <p className="text-[8px] text-slate-400 mt-0.5 truncate">{u.selectedRole}</p>
+                            </div>
+                          </div>
+                          <button
+                            disabled={invitingUserId === u.id || approvedList.length >= 3}
+                            onClick={() => handleInviteUser(u.id)}
+                            className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-[8px] font-bold rounded flex items-center justify-center transition cursor-pointer shrink-0 ml-2"
+                          >
+                            {invitingUserId === u.id ? "..." : approvedList.length >= 3 ? "Full" : "Invite"}
+                          </button>
+                        </div>
+                      ))}
+                    {allUsers.filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id).length === 0 && (
+                      <p className="text-[10px] text-slate-400 text-center py-2">No users found.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex lg:hidden border-b border-slate-200 bg-white p-2 shrink-0 gap-1.5 shadow-2xs">
@@ -947,60 +1017,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               </div>
             )}
 
-            {/* Invite Friends Section (Host Only) */}
-            {isHost && (
-              <div className="pt-4 space-y-3 border-t border-slate-200/50 mt-4">
-                <span className="block text-[8px] text-indigo-500 font-extrabold uppercase tracking-wider select-none pl-0.5">
-                  Invite Friends
-                </span>
-                
-                <div className="relative">
-                  <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={inviteSearch}
-                    onChange={(e) => setInviteSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-3xs"
-                  />
-                </div>
-                
-                {usersLoading ? (
-                  <div className="text-center py-4 text-[10px] text-slate-400 font-medium">Loading users...</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {allUsers
-                      .filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id)
-                      .slice(0, 10)
-                      .map(u => (
-                        <div key={u.id} className="flex items-center justify-between p-1.5 rounded-lg border border-slate-100 hover:border-slate-200 bg-white shadow-3xs transition">
-                          <div className="flex items-center gap-2">
-                            {u.profileImage ? (
-                              <img src={u.profileImage} alt={u.fullName} className="w-6 h-6 rounded-md object-cover" />
-                            ) : (
-                              <div className="w-6 h-6 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-[9px]">{u.fullName.substring(0, 2).toUpperCase()}</div>
-                            )}
-                            <div className="min-w-0">
-                              <p className="text-[10px] font-bold text-slate-800 leading-none truncate">{u.fullName}</p>
-                              <p className="text-[8px] text-slate-400 mt-0.5 truncate">{u.selectedRole}</p>
-                            </div>
-                          </div>
-                          <button
-                            disabled={invitingUserId === u.id || approvedList.length >= 3}
-                            onClick={() => handleInviteUser(u.id)}
-                            className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-[8px] font-bold rounded flex items-center justify-center transition cursor-pointer shrink-0 ml-2"
-                          >
-                            {invitingUserId === u.id ? "..." : approvedList.length >= 3 ? "Full" : "Invite"}
-                          </button>
-                        </div>
-                      ))}
-                    {allUsers.filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id).length === 0 && (
-                      <p className="text-[10px] text-slate-400 text-center py-2">No users found.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+
           </div>
 
           <div className="p-4 border-t border-slate-200/85 bg-white space-y-2 shrink-0">
