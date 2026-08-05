@@ -6,7 +6,10 @@ import Link from "next/link";
 import NumberFlow from "@number-flow/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Rocket } from "lucide-react";
-import { Confetti, type ConfettiRef } from "@/components/magicui/confetti";
+import { Confetti, ConfettiRef } from "@/components/ui/confetti";
+import confettiModule from "canvas-confetti";
+
+const fireConfetti = typeof confettiModule === "function" ? confettiModule : (confettiModule as any)?.default || confettiModule;
 
 export default function LaunchPage() {
   const router = useRouter();
@@ -28,43 +31,64 @@ export default function LaunchPage() {
     return () => clearInterval(id);
   }, [isCounting, isPaused]);
 
-  // When count hits 0 → show confetti for 10s → white fade → redirect
+  // When count hits 0 → trigger continuous 5-second confetti effect → fade → redirect to main page
   useEffect(() => {
     if (!isCounting || count !== 0) return;
 
-    const duration = 10 * 1000;
-    const end = Date.now() + duration;
+    const colors = ["#4F46E5", "#6366F1", "#EC4899", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#FF007F"];
 
-    const frame = () => {
-      confettiRef.current?.fire({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"]
-      });
-      confettiRef.current?.fire({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"]
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
+    const triggerBurst = () => {
+      if (typeof fireConfetti === "function") {
+        fireConfetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 70,
+          origin: { x: 0, y: 0.7 },
+          colors: colors,
+          zIndex: 99999,
+        });
+        fireConfetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 70,
+          origin: { x: 1, y: 0.7 },
+          colors: colors,
+          zIndex: 99999,
+        });
       }
+
+      confettiRef.current?.fire({
+        particleCount: 40,
+        spread: 90,
+        origin: { y: 0.6 },
+      });
     };
 
-    frame();
+    // 1. Initial burst as soon as countdown hits 0
+    triggerBurst();
 
-    // After 10 seconds, start white fade
-    const fadeId = setTimeout(() => setIsFading(true), 10000);
+    // 2. Continuous cannons for 5 seconds
+    const duration = 5 * 1000;
+    const end = Date.now() + duration;
 
-    // After 10.7 seconds, redirect to main page
-    const navId = setTimeout(() => router.push("/"), 10700);
+    const interval: NodeJS.Timeout = setInterval(() => {
+      if (Date.now() > end) {
+        clearInterval(interval);
+        return;
+      }
+      triggerBurst();
+    }, 300);
+
+    // 3. Start white fade out transition at 4.3s
+    const fadeId = setTimeout(() => setIsFading(true), 4300);
+
+    // 4. Redirect to main page after 5s confetti effect (5.2s)
+    const navId = setTimeout(() => {
+      router.push("/");
+    }, 5200);
 
     return () => {
+      clearInterval(interval);
       clearTimeout(fadeId);
       clearTimeout(navId);
     };
@@ -80,17 +104,17 @@ export default function LaunchPage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans flex flex-col justify-between relative overflow-hidden selection:bg-indigo-600 selection:text-white">
-      
-      {/* Confetti Canvas */}
-      <Confetti
-        ref={confettiRef}
-        className="fixed inset-0 z-[100] pointer-events-none w-full h-full"
-        manualstart={true}
-      />
 
       {/* White fade overlay */}
       <div
-        className={`fixed inset-0 bg-white pointer-events-none z-50 transition-opacity duration-700 ease-in-out ${isFading ? "opacity-100" : "opacity-0"}`}
+        className={`fixed inset-0 bg-white pointer-events-none z-[100000] transition-opacity duration-700 ease-in-out ${isFading ? "opacity-100" : "opacity-0"}`}
+      />
+
+      {/* Magic UI Confetti canvas overlay */}
+      <Confetti
+        ref={confettiRef}
+        manualstart
+        className="fixed inset-0 pointer-events-none z-[9999] w-full h-full"
       />
 
       {/* Header */}
@@ -113,8 +137,6 @@ export default function LaunchPage() {
         {/* IDLE — Launch Button & Prominent Logo Showcase */}
         {!isCounting && (
           <div className="space-y-8 flex flex-col items-center">
-            
-            {/* Clean Hero Logo */}
             <div className="mb-1 transition-transform hover:scale-105 duration-300">
               <img
                 src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858"

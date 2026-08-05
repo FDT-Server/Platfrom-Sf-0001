@@ -29,9 +29,8 @@ function TypewriterText({ text, speed = 40 }: { text: string; speed?: number }) 
     <span>
       {displayedText}
       <span
-        className={`inline-block w-[3px] h-[0.85em] bg-indigo-600 ml-1.5 align-middle rounded-xs ${
-          isComplete ? "animate-sharpBlink" : "opacity-100"
-        }`}
+        className={`inline-block w-[3px] h-[0.85em] bg-indigo-600 ml-1.5 align-middle rounded-xs ${isComplete ? "animate-sharpBlink" : "opacity-100"
+          }`}
       />
     </span>
   );
@@ -129,13 +128,13 @@ const announcementsData = [
     badge: "Platform Launch",
     text: "Student Forge Platform Launch — Explore the official launch event!",
     linkText: "Join Launch Event →",
-    href: "https://events.studentforge.in/events/cmsbpnls8000004lfw3bvf1a7",
+    href: "https://events.podtem.co.in/events/cmsbpnls8000004lfw3bvf1a7",
   },
   {
     badge: "Live Event",
     text: "Incept Edition - 01 — Join the official Studentforge event!",
     linkText: "Register Now →",
-    href: "https://events.studentforge.in/events/cmsdaqzpr000004kyklwexkkb",
+    href: "https://events.podtem.co.in/events/cmsdaqzpr000004kyklwexkkb",
   },
   {
     badge: "New Cohort",
@@ -285,14 +284,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col justify-between selection:bg-indigo-600 selection:text-white">
-      
+
       {/* Top Announcement Bar Carousel */}
       <AnnouncementBar items={announcementsData} />
 
       {/* Main Navigation Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          
+
           <Link href="/" className="flex items-center gap-2.5">
             <span className="text-xs sm:text-sm font-bold tracking-tight select-none text-[#011E3B]">
               Platform
@@ -341,9 +340,9 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="bg-white border-b border-slate-200 pt-12 sm:pt-20 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
+
           <div className="lg:col-span-7 space-y-6 text-left">
-            
+
             <h1 className="text-3xl sm:text-5xl font-semibold text-slate-900 leading-tight tracking-tight min-h-[2.5em] sm:min-h-[2.4em]">
               <TypewriterText text="Transform Your Tech Career with Industry-Grade Engineering Skills" />
             </h1>
@@ -465,7 +464,7 @@ export default function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-          
+
           {/* Monthly Plan */}
           <div className="group bg-white rounded-3xl p-8 border border-slate-200 hover:border-indigo-500/80 shadow-2xs hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 ease-out hover:-translate-y-2 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
@@ -474,11 +473,11 @@ export default function LandingPage() {
               </span>
               <h4 className="text-xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors duration-200">Monthly Membership</h4>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-slate-900">₹49</span>
+                <span className="text-4xl font-black text-slate-900">₹199</span>
                 <span className="text-xs text-slate-500 font-bold">/ month</span>
               </div>
               <p className="text-xs text-slate-600 font-medium">Ideal for short-term project preparation and module access.</p>
-              
+
               <div className="border-t border-slate-100 pt-4 space-y-2.5 text-xs text-slate-700 font-medium">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-emerald-600">check</span>
@@ -515,11 +514,11 @@ export default function LandingPage() {
               </span>
               <h4 className="text-xl font-extrabold text-white group-hover:text-indigo-300 transition-colors duration-200">Yearly Membership</h4>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-indigo-400">₹499</span>
+                <span className="text-4xl font-black text-indigo-400">₹999</span>
                 <span className="text-xs text-slate-400 font-bold">/ year</span>
               </div>
               <p className="text-xs text-slate-300 font-medium">Save 15% on full annual access, project reviews, and certificates.</p>
-              
+
               <div className="border-t border-slate-800 pt-4 space-y-2.5 text-xs text-slate-200 font-medium">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px] text-emerald-400">check</span>
