@@ -176,6 +176,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   };
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [activeTab, setActiveTab] = useState<"tasks" | "ideas">("tasks");
@@ -321,6 +322,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             setRoomPod(data.studyPod);
             if (data.status === "approved") {
               setMessages(data.messages || []);
+              setParticipants(data.participants || []);
               setTodos(data.todos || []);
               setIdeas(data.ideas || []);
             }
@@ -554,19 +556,6 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const getUniqueParticipants = () => {
-    const participants = new Map<string, { fullName: string; email: string; profileImage?: string | null }>();
-    messages.forEach((msg) => {
-      if (!participants.has(msg.email)) {
-        participants.set(msg.email, {
-          fullName: msg.fullName,
-          email: msg.email,
-          profileImage: msg.profileImage || null
-        });
-      }
-    });
-    return Array.from(participants.values());
-  };
 
   if (!user) {
     return (
@@ -704,7 +693,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     );
   }
 
-  const participants = getUniqueParticipants();
+
 
   let approvedList: string[] = [];
   try {

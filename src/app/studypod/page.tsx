@@ -64,8 +64,14 @@ export default async function StudyPodPage() {
   });
 
   const creatorIds = Array.from(new Set(initialPods.map((pod) => pod.creatorId)));
-  const participantIds = Array.from(new Set(podMessages.map((msg) => msg.userId)));
-  const allUserIds = Array.from(new Set([...creatorIds, ...participantIds]));
+  const allApprovedUserIds = initialPods.flatMap(pod => {
+    try {
+      return typeof pod.approvedUserIds === "string" ? JSON.parse(pod.approvedUserIds) : (pod.approvedUserIds || []);
+    } catch {
+      return [];
+    }
+  });
+  const allUserIds = Array.from(new Set([...creatorIds, ...allApprovedUserIds]));
 
   const dbUsers = await prisma.user.findMany({
     where: { id: { in: allUserIds } },
@@ -83,10 +89,12 @@ export default async function StudyPodPage() {
   const studyPods = initialPods.map((pod) => {
     const creatorInfo = userMap.get(pod.creatorId);
 
-    const activeMsgSenders = podMessages.filter((m) => m.studyPodId === pod.id && m.userId !== pod.creatorId);
-    const uniqueSenderIds = Array.from(new Set(activeMsgSenders.map((m) => m.userId)));
+    let approved: string[] = [];
+    try {
+      approved = typeof pod.approvedUserIds === "string" ? JSON.parse(pod.approvedUserIds) : (pod.approvedUserIds || []);
+    } catch {}
 
-    const participantsList = uniqueSenderIds
+    const participantsList = approved
       .map((uid) => userMap.get(uid))
       .filter((u): u is NonNullable<typeof u> => !!u)
       .map((u) => ({
