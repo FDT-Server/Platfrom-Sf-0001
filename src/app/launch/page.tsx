@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NumberFlow from "@number-flow/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Rocket } from "lucide-react";
-import confetti from "canvas-confetti";
+import { Confetti, type ConfettiRef } from "@/components/magicui/confetti";
 
 export default function LaunchPage() {
   const router = useRouter();
@@ -14,6 +14,7 @@ export default function LaunchPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [count, setCount] = useState(10);
   const [isFading, setIsFading] = useState(false);
+  const confettiRef = useRef<ConfettiRef>(null);
 
   // 10-second countdown
   useEffect(() => {
@@ -35,19 +36,19 @@ export default function LaunchPage() {
     const end = Date.now() + duration;
 
     const frame = () => {
-      confetti({
+      confettiRef.current?.fire({
         particleCount: 5,
         angle: 60,
         spread: 55,
         origin: { x: 0 },
-        zIndex: 100,
+        colors: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"]
       });
-      confetti({
+      confettiRef.current?.fire({
         particleCount: 5,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
-        zIndex: 100,
+        colors: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"]
       });
 
       if (Date.now() < end) {
@@ -79,6 +80,13 @@ export default function LaunchPage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans flex flex-col justify-between relative overflow-hidden selection:bg-indigo-600 selection:text-white">
+      
+      {/* Confetti Canvas */}
+      <Confetti
+        ref={confettiRef}
+        className="fixed inset-0 z-[100] pointer-events-none w-full h-full"
+        manualstart={true}
+      />
 
       {/* White fade overlay */}
       <div
