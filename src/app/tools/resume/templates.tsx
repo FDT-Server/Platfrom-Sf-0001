@@ -5,14 +5,14 @@ export const initialResumeData: ResumeData = {
   title: "My Professional Resume",
   template: "modern",
   personalDetails: {
-    name: "John Doe",
+    name: "",
     title: "Software Engineer",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 019-2834",
-    address: "San Francisco, CA",
-    portfolio: "https://johndoe.dev",
-    linkedin: "https://linkedin.com/in/johndoe",
-    github: "https://github.com/johndoe",
+    email: "",
+    phone: "+91 98765 43210",
+    address: "Bengaluru, India",
+    portfolio: "https://myportfolio.dev",
+    linkedin: "https://linkedin.com/in/profile",
+    github: "https://github.com/profile",
   },
   summary: "A passionate Software Engineer with 3+ years of experience building modern web applications. Specialized in TypeScript, React, Next.js, and serverless architectures. Proven track record of delivering clean, scalable, and user-centric features.",
   experience: [
@@ -21,7 +21,7 @@ export const initialResumeData: ResumeData = {
       company: "TechForge Solutions",
       role: "Software Engineer",
       duration: "2024 - Present",
-      location: "San Francisco, CA",
+      location: "Bengaluru, India",
       description: "Designed and implemented several high-traffic features using Next.js 15, React 19, and TailwindCSS. Optimized database queries using Prisma, leading to a 35% reduction in API response times.",
       achievements: [
         "Led a team of 3 developers to migrate a legacy app to App Router.",
@@ -113,9 +113,9 @@ export const ModernTemplate: React.FC<{ data: ResumeData }> = ({ data }) => {
   const { personalDetails, summary, experience, education, projects, skills, languages, certifications, awards, achievements, interests, references, customSections } = data;
 
   return (
-    <div className="w-full text-slate-800 font-sans p-8 flex flex-col md:flex-row gap-6 bg-white min-h-[29.7cm] box-border text-[11px] leading-relaxed">
+    <div className="w-full text-slate-800 font-sans p-8 flex flex-row gap-6 bg-white min-h-[29.7cm] box-border text-[11px] leading-relaxed">
       {/* Left Sidebar */}
-      <div className="w-full md:w-[35%] flex flex-col gap-5 border-b md:border-b-0 md:border-r border-slate-200 md:pr-6 shrink-0 print:w-[35%] print:border-r print:border-b-0 print:pr-6">
+      <div className="w-[35%] flex flex-col gap-5 border-r border-slate-200 pr-6 shrink-0">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">{personalDetails.name || "Your Name"}</h1>
           <p className="text-xs text-indigo-650 font-bold mt-1">{personalDetails.title || "Software Engineer"}</p>
@@ -195,7 +195,7 @@ export const ModernTemplate: React.FC<{ data: ResumeData }> = ({ data }) => {
       </div>
 
       {/* Main Panel */}
-      <div className="flex-1 flex flex-col gap-5 print:flex-1">
+      <div className="flex-1 flex flex-col gap-5">
         {/* Profile Summary */}
         {summary && (
           <div className="flex flex-col gap-2">
@@ -546,7 +546,7 @@ export const MinimalTemplate: React.FC<{ data: ResumeData }> = ({ data }) => {
   return (
     <div className="w-full text-slate-800 font-sans p-10 bg-white min-h-[29.7cm] box-border text-[10.5px] leading-relaxed">
       {/* Contact header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-end pb-5 border-b border-slate-100">
+      <div className="flex flex-row justify-between items-end pb-5 border-b border-slate-100">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-slate-900 uppercase">{personalDetails.name || "Your Name"}</h1>
           <p className="text-xs text-slate-500 mt-0.5">{personalDetails.title || "Software Engineer"}</p>

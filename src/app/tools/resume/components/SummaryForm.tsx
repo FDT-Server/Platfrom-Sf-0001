@@ -22,20 +22,14 @@ export default function SummaryForm({ data, onChange }: SummaryFormProps) {
     mode: "onChange",
   });
 
-  const values = watch();
-
   useEffect(() => {
-    const nextVal = values.summary || "";
-    if (nextVal !== data.summary) {
-      onChange({ summary: nextVal });
-    }
-  }, [values, onChange, data.summary]);
-
-  useEffect(() => {
-    if (data.summary !== (values.summary || "")) {
-      reset({ summary: data.summary });
-    }
-  }, [data.summary, reset]);
+    const subscription = watch((val) => {
+      if (typeof val.summary === "string") {
+        onChange({ summary: val.summary });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
 
   const handleAISuggestion = () => {
     toast.info("AI Writing Assistant integration ready!", {

@@ -15,6 +15,7 @@ import {
   IconShieldCheck,
   IconBulb,
   IconCpu,
+  IconFileText,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -110,7 +111,15 @@ export default function ResumeAnalyzerContent({ user }: ResumeAnalyzerContentPro
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <Link
+              href="/tools/resume"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-xl border border-indigo-200 transition cursor-pointer"
+            >
+              <IconFileText className="w-4 h-4 text-indigo-600" />
+              <span>Open Resume Builder</span>
+            </Link>
+
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
               <IconCpu className="w-4 h-4 text-indigo-600" />
               Engine: Gemini / Rule-Based Parser
             </span>
