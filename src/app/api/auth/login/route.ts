@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/db";
-import { hashPassword } from "@/lib/crypto";
+import { verifyPassword } from "@/lib/crypto";
+import { sanitizeInput, isValidEmail } from "@/lib/security/sanitizer";
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +15,17 @@ export async function POST(req: Request) {
       );
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!isValidEmail(cleanEmail)) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address." },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: cleanEmail },
     });
 
     if (!user) {
@@ -25,18 +35,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const hashedPassword = hashPassword(password);
-    if (user.password !== hashedPassword) {
+    if (!verifyPassword(password, user.password)) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
       );
     }
 
+    const newSessionId = crypto.randomUUID();
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { currentSessionId: newSessionId },
+    });
+
     const cookieStore = await cookies();
     cookieStore.set({
       name: "session",
       value: user.id,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+      sameSite: "lax",
+    });
+
+    cookieStore.set({
+      name: "sessionId",
+      value: newSessionId,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,

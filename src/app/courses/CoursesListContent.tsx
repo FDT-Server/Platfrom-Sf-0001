@@ -9,7 +9,9 @@ import {
   IconClock,
   IconArrowUpRight,
   IconCurrencyRupee,
+  IconLock,
 } from "@tabler/icons-react";
+import { useUserPermissions } from "@/context/UserPermissionsContext";
 
 interface CourseCard {
   id: string;
@@ -27,6 +29,24 @@ interface CoursesListContentProps {
 }
 
 export default function CoursesListContent({ user, courses }: CoursesListContentProps) {
+  const { isReadOnly } = useUserPermissions();
+
+  if (isReadOnly) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="w-full h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mb-4 border border-slate-200">
+            <IconLock className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800">Content Locked</h2>
+          <p className="text-sm text-slate-500 max-w-md mt-2">
+            You are currently in Read-Only mode. Premium content such as courses are restricted to administrators.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout user={user}>
       <div className="w-full flex flex-col gap-8">

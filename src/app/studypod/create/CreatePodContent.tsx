@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { IconUsers, IconUsersPlus } from "@tabler/icons-react";
+import { useUserPermissions } from "@/context/UserPermissionsContext";
+import { toast } from "sonner";
 
 interface CreatePodContentProps {
   user: {
@@ -21,11 +23,16 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
   const [newPodName, setNewPodName] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const { isReadOnly } = useUserPermissions();
 
   const isLimitReached = !user.isPremium && user.createdPodsCount >= 1;
 
   const handleCreatePod = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      toast.error("Read-Only Mode: You cannot create study pods.");
+      return;
+    }
     if (!newPodName.trim() || creating) return;
 
     setCreating(true);
@@ -106,10 +113,10 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
                 <input
                   type="text"
                   required
-                  disabled={isLimitReached}
+                  disabled={isLimitReached || isReadOnly}
                   value={newPodName}
                   onChange={(e) => setNewPodName(e.target.value)}
-                  placeholder={isLimitReached ? "Creation disabled — Upgrade to Premium" : "e.g. AI System Design Pod"}
+                  placeholder={isReadOnly ? "Read-Only Mode active." : (isLimitReached ? "Creation disabled — Upgrade to Premium" : "e.g. AI System Design Pod")}
                   className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition text-slate-800 disabled:bg-slate-50 disabled:text-slate-405 disabled:cursor-not-allowed"
                   maxLength={100}
                 />
@@ -125,7 +132,7 @@ export default function CreatePodContent({ user }: CreatePodContentProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={creating || isLimitReached || !newPodName.trim()}
+                  disabled={creating || isLimitReached || !newPodName.trim() || isReadOnly}
                   className="bg-slate-950 hover:bg-slate-900 disabled:bg-slate-100 disabled:text-slate-400 text-white font-medium px-5 py-2.5 rounded-lg text-xs shadow-xs transition duration-150 cursor-pointer flex items-center gap-1.5 disabled:cursor-not-allowed"
                 >
                   <IconUsersPlus className="w-4.5 h-4.5" />

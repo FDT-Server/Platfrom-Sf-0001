@@ -22,12 +22,18 @@ model User {
   linkedinLink        String?            @default("")
   portfolioLink       String?            @default("")
   profileImage        String?
+  avatarImage         String?
   year                String?            @default("")
   about               String?            @default("")
   otpCode             String?
   otpExpiry           DateTime?
   shareWithNetworking Boolean            @default(false)
   isPremium           Boolean            @default(false)
+  credits             Int                @default(0)
+  streak              Int                @default(0)
+  lastLoginDate       DateTime?
+  lastNotificationReadAt DateTime?
+  currentSessionId    String?
   courseEnrollments   CourseEnrollment[]
   Resume              Resume[]
 }
@@ -223,19 +229,54 @@ model Resume {
 }
 
 model Post {
-  id          String   @id @default(uuid())
-  title       String?  @default("")
-  content     String
-  category    String   @default("General")
-  imageUrl    String?  @default("")
-  tags        String?  @default("")
-  userId      String
-  userName    String
-  userRole    String?  @default("")
-  userImage   String?  @default("")
-  likesCount  Int      @default(0)
-  sharesCount Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(uuid())
+  title             String?  @default("")
+  content           String
+  category          String   @default("General")
+  imageUrl          String?  @default("")
+  link              String?  @default("")
+  tags              String?  @default("")
+  userId            String
+  userName          String
+  userRole          String?  @default("")
+  userImage         String?  @default("")
+  likesCount        Int      @default(0)
+  sharesCount       Int      @default(0)
+  viewsCount        Int      @default(0)
+  likedUserIds      Json?    @default("[]")
+  bookmarkedUserIds Json?    @default("[]")
+  comments          Json?    @default("[]")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
+model ConnectionRequest {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fromUserId, toUserId])
+}
+
+model UserCertificate {
+  id           String   @id @default(uuid())
+  userId       String
+  title        String
+  issuer       String?  @default("")
+  issueDate    String?  @default("")
+  credentialId String?  @default("")
+  url          String?  @default("")
+  imageUrl     String?  @default("")
+  type         String   @default("CERTIFICATE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model RegistrationOtp {
+  email     String   @id
+  otpCode   String
+  otpExpiry DateTime
+}

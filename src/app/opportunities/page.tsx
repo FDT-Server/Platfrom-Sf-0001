@@ -14,7 +14,7 @@ export default async function OpportunitiesPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: sessionToken },
-    select: { fullName: true, email: true, profileImage: true },
+    select: { fullName: true, email: true, profileImage: true, isPremium: true, credits: true, streak: true },
   });
 
   if (!user) redirect("/login");

@@ -19,6 +19,7 @@ export async function GET() {
         fullName: true,
         isPremium: true,
         profileImage: true,
+        avatarImage: true,
       },
     });
 
@@ -45,6 +46,7 @@ export async function PUT(req: Request) {
     const {
       fullName,
       profileImage,
+      avatarImage,
       collegeStudying,
       branch,
       year,
@@ -64,6 +66,7 @@ export async function PUT(req: Request) {
       data: {
         fullName,
         profileImage,
+        avatarImage,
         collegeStudying: collegeStudying || "",
         branch: branch || "",
         year: year || "",
@@ -81,6 +84,7 @@ export async function PUT(req: Request) {
         fullName: updatedUser.fullName,
         email: updatedUser.email,
         profileImage: updatedUser.profileImage,
+        avatarImage: updatedUser.avatarImage,
         collegeStudying: updatedUser.collegeStudying,
         branch: updatedUser.branch,
         year: updatedUser.year,

@@ -20,7 +20,7 @@ export default async function SFAdminCoursesPage() {
       fullName: true,
       email: true,
       profileImage: true,
-    },
+     isPremium: true, credits: true, streak: true,},
   });
 
   if (!adminUser) {

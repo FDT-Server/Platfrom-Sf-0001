@@ -39,12 +39,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://ik.imagekit.io https://unpkg.com https://cdn.jsdelivr.net https://lottie.host",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://ik.imagekit.io https://unpkg.com https://cdn.jsdelivr.net https://lottie.host https://checkout.razorpay.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://ik.imagekit.io https://images.unsplash.com https://lh3.googleusercontent.com https://lottie.host https://ui-avatars.com https://api.dicebear.com https://i.pravatar.cc https://unavatar.io https://avatar.iran.liara.run",
               "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
-              "connect-src 'self' https://ik.imagekit.io https://lottie.host https://unpkg.com https://cdn.jsdelivr.net https://ui-avatars.com https://api.dicebear.com",
-              "frame-src 'self' https://lottie.host",
+              "connect-src 'self' https://ik.imagekit.io https://lottie.host https://unpkg.com https://cdn.jsdelivr.net https://ui-avatars.com https://api.dicebear.com https://checkout.razorpay.com",
+              "frame-src 'self' https://lottie.host https://api.razorpay.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -62,6 +62,10 @@ const nextConfig: NextConfig = {
           {
             key: "Cross-Origin-Resource-Policy",
             value: "same-site",
+          },
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=10, stale-while-revalidate=60",
           },
         ],
       },

@@ -38,7 +38,9 @@ interface UserCompact {
 
 interface ConnectionRequestItem {
   id: string;
+  requestId?: string;
   fullName: string;
+  email?: string;
   selectedRole: string;
   profileImage: string | null;
   collegeStudying?: string | null;
@@ -238,59 +240,127 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   const [requests, setRequests] = useState<ConnectionRequestItem[]>(initialDefaultRequests);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("sf_connection_requests");
-      if (stored) {
-        try {
-          const parsed: ConnectionRequestItem[] = JSON.parse(stored);
-          const validRealRequests = parsed.filter((item) => allUsers.some((u) => u.id === item.id));
-          setRequests(validRealRequests);
-          localStorage.setItem("sf_connection_requests", JSON.stringify(validRealRequests));
-        } catch (e) {
-          console.error(e);
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "discover" || tab === "friends" || tab === "requests" || tab === "chat") {
+        setActiveTab(tab);
+      }
+
+      const chatTarget = params.get("chatWith");
+      if (chatTarget) {
+        const target = allUsers.find(
+          (u) =>
+            u.id === chatTarget ||
+            u.fullName.toLowerCase().includes(chatTarget.toLowerCase())
+        );
+        if (target) {
+          setActiveTab("chat");
+          setActiveChatUserId(target.id);
+        } else {
+          setActiveTab("chat");
         }
-      } else {
-        setRequests([]);
       }
     }
   }, [allUsers]);
 
-  const saveRequests = (updatedList: ConnectionRequestItem[]) => {
-    setRequests(updatedList);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sf_connection_requests", JSON.stringify(updatedList));
+  useEffect(() => {
+    const fetchConns = async () => {
+      try {
+        const res = await fetch("/api/connections");
+        if (res.ok) {
+          const data = await res.json();
+          const allReqs: ConnectionRequestItem[] = [
+            ...data.friends.map((f: any) => ({ ...f, incoming: f.toUserId === user.id })),
+            ...data.pendingIncoming.map((f: any) => ({ ...f, incoming: true })),
+            ...data.pendingOutgoing.map((f: any) => ({ ...f, incoming: false })),
+          ];
+          setRequests(allReqs);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchConns();
+  }, [user.id]);
+
+  const handleAcceptRequest = async (reqId: string, name: string) => {
+    const reqItem = requests.find(r => r.id === reqId);
+    if (!reqItem || !reqItem.requestId) return;
+    
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "accept", requestId: reqItem.requestId })
+      });
+      if (res.ok) {
+        setRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: "ACCEPTED" } : r));
+        toast.success(`You and ${name} are now connected friends!`);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to accept request.");
+      }
+    } catch(e) {
+      toast.error("Network error.");
     }
   };
 
-  const handleAcceptRequest = (reqId: string, name: string) => {
-    const updated = requests.map((r) => (r.id === reqId ? { ...r, status: "ACCEPTED" as const } : r));
-    saveRequests(updated);
-    toast.success(`You and ${name} are now connected friends!`);
+  const handleDeclineRequest = async (reqId: string) => {
+    const reqItem = requests.find(r => r.id === reqId);
+    if (!reqItem || !reqItem.requestId) return;
+
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "decline", requestId: reqItem.requestId })
+      });
+      if (res.ok) {
+        setRequests(prev => prev.filter(r => r.id !== reqId));
+        toast.info("Connection request declined.");
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to decline request.");
+      }
+    } catch(e) {
+      toast.error("Network error.");
+    }
   };
 
-  const handleDeclineRequest = (reqId: string) => {
-    const updated = requests.filter((r) => r.id !== reqId);
-    saveRequests(updated);
-    toast.info("Connection request declined.");
-  };
-
-  const handleConnectDiscover = (targetUser: UserCompact) => {
-    if (!requests.some((r) => r.id === targetUser.id)) {
-      const newReq: ConnectionRequestItem = {
-        id: targetUser.id,
-        fullName: targetUser.fullName,
-        selectedRole: targetUser.selectedRole || "Student Member",
-        profileImage: targetUser.profileImage || null,
-        collegeStudying: targetUser.collegeStudying || "Computer Science",
-        status: "PENDING",
-        sentAt: "Just now",
-        incoming: false,
-      };
-      const updated = [newReq, ...requests];
-      saveRequests(updated);
-      toast.success(`Connection request sent to ${targetUser.fullName}!`);
+  const handleConnectDiscover = async (targetUser: UserCompact) => {
+    if (requests.some((r) => r.id === targetUser.id)) return;
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send", toUserId: targetUser.id })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newReq: ConnectionRequestItem = {
+          id: targetUser.id,
+          requestId: data.request.id,
+          fullName: targetUser.fullName,
+          email: targetUser.email,
+          selectedRole: targetUser.selectedRole || "Student Member",
+          profileImage: targetUser.profileImage || null,
+          collegeStudying: targetUser.collegeStudying || "Computer Science",
+          status: "PENDING",
+          sentAt: "Just now",
+          incoming: false,
+        };
+        setRequests(prev => [newReq, ...prev]);
+        toast.success(`Connection request sent to ${targetUser.fullName}!`);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to send request.");
+      }
+    } catch (e) {
+      toast.error("Network error.");
     }
   };
 
@@ -329,7 +399,12 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   }, [activeChatUserId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages.length, activeChatUserId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -376,8 +451,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
       .toUpperCase();
   };
 
-  const directoryUsers = allUsers.filter((u) => u.id !== user.id);
-  const pendingRequests = requests.filter((r) => r.status === "PENDING");
+  const rawDirectoryUsers = allUsers.filter((u) => u.id !== user.id);
+  const directoryUsers = rawDirectoryUsers.filter((u, index, self) =>
+    index === self.findIndex((t) => t.fullName.toLowerCase() === u.fullName.toLowerCase())
+  );
+  const pendingRequests = requests.filter((r) => r.status === "PENDING" && r.incoming !== false);
   const acceptedFriends = requests.filter((r) => r.status === "ACCEPTED");
 
   const filteredDiscoverUsers = directoryUsers.filter((u) => {
@@ -390,7 +468,10 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
   });
 
   const activeUserObj = allUsers.find((u) => u.id === activeChatUserId);
-  const isAdminEmail = (email: string) => email.trim().toLowerCase() === "webstrixx@gmail.com";
+  const isAdminEmail = (email: string) => {
+    const lowerEmail = email.trim().toLowerCase();
+    return lowerEmail === "webstrixx@gmail.com" || lowerEmail === "jaswanth@gmail.com";
+  };
 
   return (
     <DashboardLayout user={user}>
@@ -506,13 +587,13 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       <IconMessageCircle className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">Public Chat Hub</p>
+                      <p className="text-xs font-bold truncate">Community Hub</p>
                       <p
                         className={`text-[10px] mt-0.5 ${
                           activeChatUserId === null ? "text-blue-100" : "text-slate-400"
                         }`}
                       >
-                        Everyone in academy
+                        Admin Announcements
                       </p>
                     </div>
                   </button>
@@ -525,9 +606,9 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     <span className="h-[1px] bg-slate-200 flex-1"></span>
                   </div>
 
-                  {directoryUsers.map((u) => {
+                  {(isAdminEmail(user.email) ? directoryUsers : acceptedFriends).map((u) => {
                     const isSelected = activeChatUserId === u.id;
-                    const isUserAdmin = isAdminEmail(u.email);
+                    const isUserAdmin = u.email ? isAdminEmail(u.email) : false;
                     const userColor = getUserColor(u.id);
 
                     return (
@@ -617,7 +698,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                     <div>
                       <h3 className="text-xs font-extrabold text-slate-900 leading-tight flex items-center gap-1.5">
                         {activeChatUserId === null ? (
-                          "Public Chat Hub"
+                          "Community Hub"
                         ) : (
                           <>
                             {activeUserObj?.fullName}
@@ -629,7 +710,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       </h3>
                       <p className="text-[10px] text-slate-500 font-medium mt-0.5">
                         {activeChatUserId === null
-                          ? "Share ideas and project queries with all trainees"
+                          ? "Official announcements from platform admins"
                           : "Click to view member profile & training details"}
                       </p>
                     </div>
@@ -642,7 +723,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/30 space-y-3.5">
+                <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/30 space-y-3.5 custom-scrollbar">
                   {loading ? (
                     <div className="flex flex-col items-center justify-center h-full gap-2">
                       <div className="w-7 h-7 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -706,7 +787,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       <img
                         src="/images/no-messages.png"
                         alt="No messages illustration"
-                        className="w-44 h-auto object-contain mb-2 max-h-36"
+                        className="w-64 sm:w-80 h-auto object-contain mb-3 max-h-56 sm:max-h-64 drop-shadow-xs transition-transform duration-300 hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
                         }}
@@ -726,28 +807,28 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       {error}
                     </div>
                   )}
-                  <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={newMessageText}
-                      onChange={(e) => setNewMessageText(e.target.value)}
-                      placeholder={
-                        activeChatUserId === null
-                          ? "Type a message to share with everyone..."
-                          : `Send private message to ${activeUserObj?.fullName}...`
-                      }
-                      maxLength={500}
-                      required
-                      className="flex-1 px-4 py-2.5 border border-slate-200 focus:border-blue-600 focus:outline-none rounded-xl text-slate-800 text-xs transition placeholder-slate-400"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newMessageText.trim() || sending}
-                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow-xs shrink-0"
-                    >
-                      <IconSend className="w-4 h-4" />
-                    </button>
-                  </form>
+                    <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={newMessageText}
+                        onChange={(e) => setNewMessageText(e.target.value)}
+                        placeholder={
+                          activeChatUserId === null
+                            ? "Type a message to share with everyone..."
+                            : `Send private message to ${activeUserObj?.fullName}...`
+                        }
+                        maxLength={500}
+                        required
+                        className="flex-1 px-4 py-2.5 border border-slate-200 focus:border-blue-600 focus:outline-none rounded-xl text-slate-800 text-xs transition placeholder-slate-400"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newMessageText.trim() || sending}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow-xs shrink-0"
+                      >
+                        <IconSend className="w-4 h-4" />
+                      </button>
+                    </form>
                 </div>
               </div>
             </div>
@@ -794,11 +875,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center select-none">
+                <div className="flex flex-col items-center justify-center py-10 text-center select-none">
                   <img
                     src="/images/no-messages.png"
                     alt="No pending requests illustration"
-                    className="w-48 h-auto object-contain mb-2 max-h-40"
+                    className="w-64 sm:w-80 h-auto object-contain mb-3 max-h-56 sm:max-h-64 drop-shadow-xs transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
                     }}
@@ -855,11 +936,11 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center select-none">
+                <div className="flex flex-col items-center justify-center py-10 text-center select-none">
                   <img
                     src="/images/no-messages.png"
                     alt="No connected friends illustration"
-                    className="w-48 h-auto object-contain mb-2 max-h-40"
+                    className="w-64 sm:w-80 h-auto object-contain mb-3 max-h-56 sm:max-h-64 drop-shadow-xs transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "https://cdni.iconscout.com/illustration/premium/thumb/no-messages-illustration-svg-download-png-7973910.png";
                     }}

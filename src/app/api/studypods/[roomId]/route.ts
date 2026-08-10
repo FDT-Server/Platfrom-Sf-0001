@@ -119,22 +119,33 @@ export async function GET(
     ]);
 
     const userIds = Array.from(new Set(messages.map((m) => m.userId)));
+    
+    // Collect all participant IDs (creator + approved)
+    const participantIds = Array.from(new Set([studyPod.creatorId, ...approvedList]));
+    const allUserIdsToFetch = Array.from(new Set([...userIds, ...participantIds]));
+
     const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, profileImage: true },
+      where: { id: { in: allUserIdsToFetch } },
+      select: { id: true, profileImage: true, fullName: true, email: true, selectedRole: true },
     });
 
     const userProfileMap = new Map(users.map((u) => [u.id, u.profileImage]));
+    const userMap = new Map(users.map((u) => [u.id, u]));
 
     const messagesWithProfiles = messages.map((m) => ({
       ...m,
       profileImage: userProfileMap.get(m.userId) || null,
     }));
 
+    const participants = participantIds
+      .map(id => userMap.get(id))
+      .filter((u): u is NonNullable<typeof u> => !!u);
+
     return NextResponse.json({
       authenticated: true,
       status: "approved",
       studyPod,
+      participants,
       messages: messagesWithProfiles,
       todos,
       ideas,

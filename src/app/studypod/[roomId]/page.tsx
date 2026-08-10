@@ -41,7 +41,7 @@ export default async function StudyRoomPage(
       email: true,
       profileImage: true,
       selectedRole: true,
-    },
+     isPremium: true, credits: true, streak: true,},
   });
 
   if (!user) {

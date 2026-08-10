@@ -25,12 +25,14 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
       email: true,
       profileImage: true,
       isPremium: true,
-    },
+     credits: true, streak: true,},
   });
 
   if (!user) {
     redirect("/login");
   }
+
+
 
   const { plan } = await searchParams;
   const planString = typeof plan === "string" ? plan : "monthly";

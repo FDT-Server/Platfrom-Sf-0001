@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import AppLayout from "@/components/AppLayout";
@@ -21,7 +22,9 @@ import {
   IconMoodSmile,
   IconPhoto,
   IconPaperclip,
+  IconSearch,
 } from "@tabler/icons-react";
+import { useUserPermissions } from "@/context/UserPermissionsContext";
 
 interface StudyPod {
   id: string;
@@ -72,6 +75,7 @@ interface StudyRoomContentProps {
 
 export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomContentProps) {
   const router = useRouter();
+  const { isReadOnly } = useUserPermissions();
 
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [loginEmail, setLoginEmail] = useState("");
@@ -85,8 +89,63 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   const [lobbyStatus, setLobbyStatus] = useState<"loading" | "waiting" | "approved">("loading");
   const [roomPod, setRoomPod] = useState<StudyPod>(studyPod);
-  const [showParticipantsDrawer, setShowParticipantsDrawer] = useState(false);
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+
+  // New states for the invite modal
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [invitingUserId, setInvitingUserId] = useState<string | null>(null);
+  const [showInvitePopover, setShowInvitePopover] = useState(false);
+
+  const isHost = user && user.id === roomPod.creatorId;
+
+  useEffect(() => {
+    if (isHost && allUsers.length === 0) {
+      const fetchUsers = async () => {
+        setUsersLoading(true);
+        try {
+          const res = await fetch("/api/users");
+          if (res.ok) {
+            const data = await res.json();
+            setAllUsers(data.users || []);
+          }
+        } catch (err) {
+          console.error("Error fetching users:", err);
+        } finally {
+          setUsersLoading(false);
+        }
+      };
+      fetchUsers();
+    }
+  }, [isHost]);
+
+  const handleInviteUser = async (targetUserId: string) => {
+    setInvitingUserId(targetUserId);
+    try {
+      const res = await fetch(`/api/studypods/${roomId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRoomPod((prev) => ({
+          ...prev,
+          approvedUserIds: data.approvedUserIds,
+        }));
+        alert("User invited successfully!");
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to invite user");
+      }
+    } catch (err) {
+      console.error("Invite error:", err);
+      alert("Error inviting user");
+    } finally {
+      setInvitingUserId(null);
+    }
+  };
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -118,6 +177,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   };
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [activeTab, setActiveTab] = useState<"tasks" | "ideas">("tasks");
@@ -176,6 +236,8 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [copiedLink, setCopiedLink] = useState(false);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(0);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -227,9 +289,19 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   };
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    const container = chatScrollRef.current;
+    if (!container) return;
+
+    const previousCount = prevMessageCountRef.current;
+    const nextCount = messages.length;
+    const isFirstLoad = previousCount === 0 && nextCount > 0;
+    const hasNewMessages = nextCount > previousCount;
+    prevMessageCountRef.current = nextCount;
+
+    if (!isFirstLoad && !hasNewMessages) return;
+
+    // Scroll only inside the chat panel — never the whole page.
+    container.scrollTop = container.scrollHeight;
   }, [messages]);
 
   useEffect(() => {
@@ -251,6 +323,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             setRoomPod(data.studyPod);
             if (data.status === "approved") {
               setMessages(data.messages || []);
+              setParticipants(data.participants || []);
               setTodos(data.todos || []);
               setIdeas(data.ideas || []);
             }
@@ -342,6 +415,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     const hasAttachment = selectedFile || selectedImage;
     if ((!chatText.trim() && !hasAttachment) || submittingChat) return;
 
@@ -381,6 +455,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     if (!todoText.trim() || submittingTodo) return;
 
     setSubmittingTodo(true);
@@ -440,6 +515,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   const handleAddIdea = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     if (!ideaTitle.trim() || !ideaDesc.trim() || submittingIdea) return;
 
     setSubmittingIdea(true);
@@ -481,19 +557,6 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const getUniqueParticipants = () => {
-    const participants = new Map<string, { fullName: string; email: string; profileImage?: string | null }>();
-    messages.forEach((msg) => {
-      if (!participants.has(msg.email)) {
-        participants.set(msg.email, {
-          fullName: msg.fullName,
-          email: msg.email,
-          profileImage: msg.profileImage || null
-        });
-      }
-    });
-    return Array.from(participants.values());
-  };
 
   if (!user) {
     return (
@@ -631,7 +694,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     );
   }
 
-  const participants = getUniqueParticipants();
+
 
   let approvedList: string[] = [];
   try {
@@ -655,7 +718,6 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
   }
 
-  const isHost = user && user.id === roomPod.creatorId;
   const waitingUserCount = waitingList.length;
 
   if (lobbyStatus === "waiting" && !isHost) {
@@ -664,10 +726,11 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
         <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-6 text-center animate-fadeIn">
 
           <div className="w-64 h-64 pointer-events-none overflow-hidden select-none">
-            <iframe
-              src="https://lottie.host/embed/029367a4-ed8a-4196-a11d-9b436b202595/DzlCazBv2F.lottie"
-              className="w-full h-full border-0 bg-transparent"
-              title="Waiting animation"
+            <DotLottieReact
+              src="/waiting-room.lottie"
+              loop
+              autoplay
+              className="w-full h-full bg-transparent"
             />
           </div>
 
@@ -723,18 +786,76 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             <span className="text-slate-800 font-semibold">{roomPod.name}</span>
           </div>
 
-          <button
-            onClick={() => setShowParticipantsDrawer(!showParticipantsDrawer)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-semibold transition hover:scale-102 active:scale-98 text-[10px] cursor-pointer bg-indigo-600 hover:bg-indigo-750 shadow-[0_0_15px_rgba(79,70,229,0.4)] border-t border-indigo-500/25"
-          >
-            <span className="material-symbols-outlined text-[15px] text-white select-none">group</span>
-            Participants
-            {isHost && waitingUserCount > 0 && (
-              <span className="h-4 min-w-4 bg-white text-indigo-750 rounded-full flex items-center justify-center text-[8px] font-extrabold px-1">
-                {waitingUserCount}
-              </span>
+          <div className="relative">
+            {isHost && (
+              <button
+                onClick={() => setShowInvitePopover(!showInvitePopover)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-semibold transition hover:scale-102 active:scale-98 text-[10px] cursor-pointer bg-indigo-600 hover:bg-indigo-750 shadow-[0_0_15px_rgba(79,70,229,0.4)] border-t border-indigo-500/25"
+              >
+                <span className="material-symbols-outlined text-[15px] text-white select-none">person_add</span>
+                Add Participants
+              </button>
             )}
-          </button>
+
+            {showInvitePopover && isHost && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-slate-200 p-4 z-50 animate-fadeIn">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="block text-[10px] text-indigo-500 font-extrabold uppercase tracking-wider pl-0.5">
+                    Invite Friends
+                  </span>
+                  <button onClick={() => setShowInvitePopover(false)} className="text-slate-400 hover:text-slate-600 transition">
+                    <IconX className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={inviteSearch}
+                    onChange={(e) => setInviteSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-3xs"
+                  />
+                </div>
+                
+                {usersLoading ? (
+                  <div className="text-center py-4 text-[10px] text-slate-400 font-medium">Loading users...</div>
+                ) : (
+                  <div className="space-y-1.5 mt-3 max-h-60 overflow-y-auto">
+                    {allUsers
+                      .filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id)
+                      .slice(0, 10)
+                      .map(u => (
+                        <div key={u.id} className="flex items-center justify-between p-1.5 rounded-lg border border-slate-100 hover:border-slate-200 bg-white shadow-3xs transition">
+                          <div className="flex items-center gap-2">
+                            {u.profileImage ? (
+                              <img src={u.profileImage} alt={u.fullName} className="w-6 h-6 rounded-md object-cover" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-[9px]">{u.fullName.substring(0, 2).toUpperCase()}</div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-bold text-slate-800 leading-none truncate">{u.fullName}</p>
+                              <p className="text-[8px] text-slate-400 mt-0.5 truncate">{u.selectedRole}</p>
+                            </div>
+                          </div>
+                          <button
+                            disabled={invitingUserId === u.id || approvedList.length >= 3}
+                            onClick={() => handleInviteUser(u.id)}
+                            className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-[8px] font-bold rounded flex items-center justify-center transition cursor-pointer shrink-0 ml-2"
+                          >
+                            {invitingUserId === u.id ? "..." : approvedList.length >= 3 ? "Full" : "Invite"}
+                          </button>
+                        </div>
+                      ))}
+                    {allUsers.filter(u => u.fullName.toLowerCase().includes(inviteSearch.toLowerCase()) && !approvedList.includes(u.id) && u.id !== user?.id).length === 0 && (
+                      <p className="text-[10px] text-slate-400 text-center py-2">No users found.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex lg:hidden border-b border-slate-200 bg-white p-2 shrink-0 gap-1.5 shadow-2xs">
@@ -851,6 +972,52 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   })}
               </div>
             </div>
+
+            {/* Waiting Room Requests (Host Only) */}
+            {isHost && waitingList.length > 0 && (
+              <div className="pt-4 space-y-2 border-t border-slate-200/50 mt-4">
+                <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider select-none pl-0.5">
+                  Waiting Requests ({waitingList.length})
+                </span>
+                <div className="space-y-2">
+                  {waitingList.map((w: any) => (
+                    <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
+                      <div className="flex items-center gap-2">
+                        {w.profileImage ? (
+                          <img src={w.profileImage} alt={w.fullName} className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
+                            {w.fullName.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
+                          <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <button
+                          disabled={approvingUserId !== null}
+                          onClick={() => handleApproveUser(w.id, "accept")}
+                          className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                        >
+                          {approvingUserId === w.id ? "..." : "Accept"}
+                        </button>
+                        <button
+                          disabled={approvingUserId !== null}
+                          onClick={() => handleApproveUser(w.id, "decline")}
+                          className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
           </div>
 
           <div className="p-4 border-t border-slate-200/85 bg-white space-y-2 shrink-0">
@@ -902,7 +1069,10 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4">
+          <div
+            ref={chatScrollRef}
+            className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-4"
+          >
             {workspaceLoading ? (
               <div className="flex flex-col items-center justify-center h-full gap-2">
                 <div className="w-6 h-6 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -953,10 +1123,11 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 select-none pt-16 pb-12">
                 <div className="w-72 h-72 mb-4 pointer-events-none overflow-hidden">
-                  <iframe
-                    src="https://lottie.host/embed/ea8bc4c7-442b-48c1-95b4-c7d02afd2cca/ebPEadNeIk.lottie"
-                    className="w-full h-full border-0 bg-transparent"
-                    title="Empty state animation"
+                  <DotLottieReact
+                    src="/study-discussion.lottie"
+                    loop
+                    autoplay
+                    className="w-full h-full bg-transparent"
                   />
                 </div>
                 <h4 className="text-xs font-semibold text-slate-800 mt-2">Workspace chat active</h4>
@@ -1031,8 +1202,9 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
               <button
                 type="button"
+                disabled={isReadOnly}
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 ${
+                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                   showEmojiPicker ? "bg-slate-50 border-indigo-200 text-indigo-650" : "border-slate-200"
                 }`}
                 title="Add emoji"
@@ -1042,8 +1214,9 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
               <button
                 type="button"
+                disabled={isReadOnly}
                 onClick={() => imageInputRef.current?.click()}
-                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 ${
+                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                   selectedImage ? "bg-indigo-50 border-indigo-200 text-indigo-650" : "border-slate-200"
                 }`}
                 title="Share image"
@@ -1053,8 +1226,9 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
               <button
                 type="button"
+                disabled={isReadOnly}
                 onClick={() => fileInputRef.current?.click()}
-                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 ${
+                className={`p-2.5 rounded-xl border text-slate-450 hover:bg-slate-50 hover:text-slate-700 transition cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                   selectedFile ? "bg-indigo-50 border-indigo-200 text-indigo-650" : "border-slate-200"
                 }`}
                 title="Share file attachment"
@@ -1065,17 +1239,18 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
               <input
                 type="text"
                 value={chatText}
+                disabled={isReadOnly}
                 onChange={(e) => setChatText(e.target.value)}
-                placeholder="Type a message to share..."
+                placeholder={isReadOnly ? "Read-Only Mode active." : "Type a message to share..."}
                 required={!selectedFile && !selectedImage}
                 maxLength={400}
-                className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs transition"
+                className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200"
               />
 
               <button
                 type="submit"
-                disabled={(!chatText.trim() && !selectedFile && !selectedImage) || submittingChat}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition duration-150 cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 shadow-2xs"
+                disabled={isReadOnly || (!chatText.trim() && !selectedFile && !selectedImage) || submittingChat}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 text-white p-2.5 rounded-xl transition duration-150 cursor-pointer shrink-0 flex items-center justify-center h-9.5 w-9.5 shadow-2xs disabled:cursor-not-allowed"
               >
                 <IconSend className="w-4.5 h-4.5" />
               </button>
@@ -1130,16 +1305,17 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   <input
                     type="text"
                     required
+                    disabled={isReadOnly}
                     value={todoText}
                     onChange={(e) => setTodoText(e.target.value)}
-                    placeholder="Create a shared task..."
+                    placeholder={isReadOnly ? "Read-Only Mode active." : "Create a shared task..."}
                     maxLength={100}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs bg-white transition shadow-3xs"
+                    className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs bg-white transition shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button
                     type="submit"
-                    disabled={!todoText.trim() || submittingTodo}
-                    className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-4 py-2.5 rounded-xl transition duration-150 cursor-pointer flex items-center gap-1 shrink-0 text-xs font-semibold shadow-3xs"
+                    disabled={isReadOnly || !todoText.trim() || submittingTodo}
+                    className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-4 py-2.5 rounded-xl transition duration-150 cursor-pointer flex items-center gap-1 shrink-0 text-xs font-semibold shadow-3xs disabled:cursor-not-allowed"
                   >
                     <IconPlus className="w-4 h-4" /> Add
                   </button>
@@ -1207,26 +1383,28 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                     <input
                       type="text"
                       required
+                      disabled={isReadOnly}
                       value={ideaTitle}
                       onChange={(e) => setIdeaTitle(e.target.value)}
-                      placeholder="Title of your idea..."
+                      placeholder={isReadOnly ? "Read-Only Mode active." : "Title of your idea..."}
                       maxLength={80}
-                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 shadow-3xs"
+                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <textarea
                       required
+                      disabled={isReadOnly}
                       value={ideaDesc}
                       onChange={(e) => setIdeaDesc(e.target.value)}
-                      placeholder="Describe your design or strategy..."
+                      placeholder={isReadOnly ? "Read-Only Mode active." : "Describe your design or strategy..."}
                       maxLength={300}
                       rows={3}
-                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 resize-none shadow-3xs"
+                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 resize-none shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <button
                     type="submit"
-                    disabled={!ideaTitle.trim() || !ideaDesc.trim() || submittingIdea}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-3xs"
+                    disabled={isReadOnly || !ideaTitle.trim() || !ideaDesc.trim() || submittingIdea}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-3xs disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                   >
                     <IconPlus className="w-4 h-4" /> Share Idea
                   </button>
@@ -1286,141 +1464,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
           </div>
         </div>
 
-        {showParticipantsDrawer && (
-          <>
 
-            <div
-              className="fixed inset-0 z-40 bg-slate-900/10 lg:bg-transparent"
-              onClick={() => setShowParticipantsDrawer(false)}
-            />
-
-            <div className="absolute lg:relative top-0 right-0 h-full w-80 z-50 bg-white border-l border-slate-200 flex flex-col shrink-0 animate-slideLeft shadow-lg lg:shadow-none">
-
-              <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 select-none">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">group</span>
-                  Room Members
-                </h3>
-                <button
-                  onClick={() => setShowParticipantsDrawer(false)}
-                  className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 rounded-full hover:bg-slate-100 transition shrink-0"
-                >
-                  <IconX className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-5">
-
-                <div className="space-y-1.5">
-                  <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">Host Creator</span>
-                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200/50">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-650 text-white flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
-                      {roomPod.creatorName.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate leading-none">
-                        {roomPod.creatorName}
-                      </p>
-                      <span className="inline-block text-[8px] font-extrabold bg-indigo-50 text-indigo-750 px-1.5 py-0.5 rounded mt-1.5 select-none border border-indigo-100">
-                        Host
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {isHost && (
-                  <div className="space-y-2">
-                    <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
-                      Waiting Room Requests ({waitingList.length})
-                    </span>
-                    {waitingList.length === 0 ? (
-                      <p className="text-[10px] text-slate-400 italic pl-1.5 font-medium">
-                        No pending join requests
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {waitingList.map((w: any) => (
-                          <div key={w.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-amber-150 bg-amber-50/20 animate-fadeIn">
-                            <div className="flex items-center gap-2">
-                              {w.profileImage ? (
-                                <img
-                                  src={w.profileImage}
-                                  alt={w.fullName}
-                                  className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
-                                />
-                              ) : (
-                                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-extrabold shadow-2xs shrink-0">
-                                  {w.fullName.substring(0, 2).toUpperCase()}
-                                </div>
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-slate-800 truncate leading-none">{w.fullName}</p>
-                                <p className="text-[9px] text-slate-450 truncate mt-1 leading-none">{w.selectedRole || "Learner"}</p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <button
-                                disabled={approvingUserId !== null}
-                                onClick={() => handleApproveUser(w.id, "accept")}
-                                className="flex-1 py-1 rounded-lg bg-indigo-650 hover:bg-indigo-750 text-white text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
-                              >
-                                {approvingUserId === w.id ? "..." : "Accept"}
-                              </button>
-                              <button
-                                disabled={approvingUserId !== null}
-                                onClick={() => handleApproveUser(w.id, "decline")}
-                                className="flex-1 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 text-[9px] font-bold transition shadow-3xs cursor-pointer flex items-center justify-center h-6.5"
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <span className="block text-[8px] text-slate-450 font-extrabold uppercase tracking-wider pl-0.5">
-                    Joined Members ({participants.length})
-                  </span>
-                  <div className="space-y-1.5">
-
-                    <div className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
-                      <div className="w-6.5 h-6.5 rounded bg-slate-900 text-white flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0">
-                        Me
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate leading-none">{user?.fullName}</p>
-                        <p className="text-[9px] text-slate-400 truncate leading-none mt-1">{user?.selectedRole || "Academy Learner"}</p>
-                      </div>
-                    </div>
-
-                    {participants
-                      .filter((p) => p.email.toLowerCase() !== user?.email.toLowerCase())
-                      .map((p) => {
-                        const colorStyle = getParticipantColor(p.email);
-                        return (
-                          <div key={p.email} className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-50">
-                            <div className={`w-6.5 h-6.5 rounded flex items-center justify-center text-[9px] font-extrabold shadow-3xs shrink-0 border ${colorStyle.bg}`}>
-                              {p.fullName.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-805 truncate leading-none">{p.fullName}</p>
-                              <p className="text-[9px] text-slate-400 truncate leading-none mt-1">Joined member</p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </>
-        )}
 
       </div>
       </div>

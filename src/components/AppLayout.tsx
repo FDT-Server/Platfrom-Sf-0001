@@ -15,7 +15,7 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
+      router.push("/");
       router.refresh();
     } catch (err) {
       console.error("Logout failed:", err);
@@ -64,17 +64,20 @@ export default function AppLayout({ mode, children }: AppLayoutProps) {
             </div>
             <div className="space-y-8 w-full mt-10">
               <div className="pt-2 border-t border-white/20 w-full">
-                <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-white">
-                  <a href="#terms" className="hover:text-white/80 transition duration-200">Terms</a>
-                  <a href="#privacy" className="hover:text-white/80 transition duration-200">Privacy Policy</a>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-white">
+                  <a href="/terms" className="hover:text-white/80 transition duration-200">Terms</a>
+                  <a href="/privacy" className="hover:text-white/80 transition duration-200">Privacy</a>
+                  <a href="/refund-policy" className="hover:text-white/80 transition duration-200">Refund Policy</a>
+                  <a href="/shipping-policy" className="hover:text-white/80 transition duration-200">Shipping Policy</a>
+                  <a href="/contact" className="hover:text-white/80 transition duration-200">Contact Us</a>
                   <button onClick={handleLogout} className="hover:text-white/80 text-left transition duration-200 focus:outline-none cursor-pointer">Logout</button>
                 </div>
-                <p className="text-[10px] text-white mt-3 font-mono">© 2026 Studentforge</p>
+                <p className="text-[10px] text-white/70 mt-3 font-mono">© 2026 Studentforge</p>
               </div>
             </div>
           </div>
         </div>
-        <div className="flex-1 bg-white flex flex-col justify-between shadow-2xl relative z-10 overflow-y-auto rounded-[24px] lg:rounded-[28px] p-6 sm:p-10 lg:p-12 h-full">
+        <div className="flex-1 bg-white flex flex-col justify-between shadow-2xl relative z-10 overflow-y-auto scroll-smooth custom-scrollbar rounded-[24px] lg:rounded-[28px] p-6 sm:p-10 lg:p-12 h-full">
           {children}
         </div>
       </div>

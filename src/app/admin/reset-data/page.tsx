@@ -19,7 +19,7 @@ export default async function ResetDataAdminPage() {
       fullName: true,
       email: true,
       profileImage: true,
-    },
+     isPremium: true, credits: true, streak: true,},
   });
 
   const adminEmails = ["webstrixx@gmail.com", "hrstudentforge@gmail.com"];

@@ -6,6 +6,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session")?.value;
+    if (!sessionToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const studyPods = await prisma.studyPod.findMany({
       orderBy: { createdAt: "desc" },
     });

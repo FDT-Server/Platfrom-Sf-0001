@@ -14,13 +14,14 @@ interface CommentListProps {
     name: string;
     image?: string | null;
   };
+  postId?: string;
 }
 
-export default function CommentList({ comments: initialComments, currentUser }: CommentListProps) {
+export default function CommentList({ comments: initialComments, currentUser, postId }: CommentListProps) {
   const [comments, setComments] = useState<PostComment[]>(initialComments || []);
   const [visibleCount, setVisibleCount] = useState(5);
 
-  const handleAddComment = (text: string) => {
+  const handleAddComment = async (text: string) => {
     const newComment: PostComment = {
       id: `c-${Date.now()}`,
       author: {
@@ -37,6 +38,18 @@ export default function CommentList({ comments: initialComments, currentUser }: 
     };
     setComments([newComment, ...comments]);
     toast.success("Comment published!");
+
+    if (postId) {
+      try {
+        await fetch(`/api/posts/${postId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "comment", commentText: text }),
+        });
+      } catch (err) {
+        console.error("Failed to save comment to DB:", err);
+      }
+    }
   };
 
   const handleLikeComment = (commentId: string) => {

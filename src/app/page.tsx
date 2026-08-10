@@ -1,5 +1,5 @@
-import CountdownTimer from "@/components/CountdownTimer";
+import LandingPage from "@/components/LandingPage";
 
 export default function Home() {
-  return <CountdownTimer />;
+  return <LandingPage />;
 }

@@ -89,7 +89,7 @@ export default function FeedCommentDrawer({ post, currentUser, onClose }: FeedCo
             </div>
 
             {/* Comment List */}
-            <CommentList comments={formattedComments} currentUser={currentUserObj} />
+            <CommentList comments={formattedComments} currentUser={currentUserObj} postId={post.id} />
           </div>
 
           {/* Drawer Footer */}

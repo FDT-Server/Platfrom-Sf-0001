@@ -37,7 +37,7 @@ export default async function LearnerDetailsPage({ params }: PageProps) {
       fullName: true,
       email: true,
       profileImage: true,
-    },
+     isPremium: true, credits: true, streak: true,},
   });
 
   if (!adminUser || adminUser.email.trim().toLowerCase() !== "webstrixx@gmail.com") {

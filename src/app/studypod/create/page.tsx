@@ -22,12 +22,13 @@ export default async function CreateStudyPodPage() {
       profileImage: true,
       selectedRole: true,
       isPremium: true,
-    },
+     credits: true, streak: true,},
   });
 
   if (!user) {
     redirect("/login");
   }
+
 
   const createdPodsCount = await prisma.studyPod.count({
     where: { creatorId: user.id },

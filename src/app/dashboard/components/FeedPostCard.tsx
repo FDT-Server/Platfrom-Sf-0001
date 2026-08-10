@@ -9,6 +9,7 @@ import {
   IconShare,
   IconBookmark,
   IconArrowRight,
+  IconLink,
 } from "@tabler/icons-react";
 import { PostCategory } from "./CreatePostCard";
 
@@ -29,7 +30,10 @@ export interface FeedPost {
   category: PostCategory | "Opportunity";
   content: string;
   imageUrl?: string;
+  link?: string;
   likes: number;
+  sharesCount?: number;
+  viewsCount?: number;
   comments: PostComment[];
   liked?: boolean;
   bookmarked?: boolean;
@@ -65,7 +69,6 @@ export default function FeedPostCard({
     : "SF";
 
   const handleCardClick = (e: React.MouseEvent) => {
-
     const target = e.target as HTMLElement;
     if (target.closest("button") || target.closest("a") || target.closest("input")) {
       return;
@@ -73,11 +76,20 @@ export default function FeedPostCard({
     router.push(`/dashboard/post/${post.id}`);
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(`${window.location.origin}/dashboard/post/${post.id}`);
       toast.success("Post link copied to clipboard!");
+      try {
+        await fetch(`/api/posts/${post.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "share" }),
+        });
+      } catch (err) {
+        console.error("Error sharing post:", err);
+      }
     }
   };
 
@@ -98,6 +110,29 @@ export default function FeedPostCard({
     General: "bg-slate-50 text-slate-600 border-slate-200",
   };
 
+  const renderContentWithLinks = (text: string) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-blue-600 hover:underline font-medium"
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -110,10 +145,13 @@ export default function FeedPostCard({
             <img
               src={post.authorImage}
               alt={post.authorName}
-              className="w-10 h-10 rounded-full object-cover border border-slate-100 shrink-0"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(post.authorName)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+              }}
+              className="w-10 h-10 rounded-full object-cover border border-slate-200/80 bg-slate-50 shrink-0 shadow-2xs"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
               {initials}
             </div>
           )}
@@ -138,25 +176,55 @@ export default function FeedPostCard({
 
       {/* Body Content */}
       <p className="text-xs text-slate-700 leading-relaxed font-normal whitespace-pre-wrap">
-        {post.content}
+        {renderContentWithLinks(post.content)}
       </p>
 
-      {/* Image attachment */}
-      {post.imageUrl && (
-        <div className="w-full max-h-80 rounded-xl overflow-hidden border border-slate-200/70 select-none bg-slate-50">
+      {/* Clear, Uncropped Image attachment */}
+      {post.imageUrl && post.imageUrl.trim() !== "" && (
+        <div className="w-full rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-950/5 select-none p-1 flex items-center justify-center">
           <img
             src={post.imageUrl}
             alt="Post media"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-101"
+            className="w-full h-auto max-h-[500px] object-contain rounded-xl shadow-2xs"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = "none";
+            }}
           />
         </div>
       )}
 
-      {/* Stats summary */}
+      {/* Attached Link */}
+      {post.link && post.link.trim() !== "" && (
+        <a 
+          href={post.link} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors group/link"
+        >
+          <div className="w-10 h-10 rounded-lg bg-blue-100/50 text-blue-600 flex items-center justify-center shrink-0 group-hover/link:bg-blue-100 transition-colors">
+            <IconLink className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h5 className="text-xs font-bold text-slate-800 truncate group-hover/link:text-blue-600 transition-colors">External Link</h5>
+            <p className="text-[11px] text-slate-500 truncate">{post.link}</p>
+          </div>
+        </a>
+      )}
+
+      {/* Real Stats summary */}
       <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold px-0.5 border-b border-slate-100 pb-2 select-none">
-        <span>{post.likes} Likes</span>
-        <span className="hover:text-blue-600 transition">
-          {post.comments.length} Comments · Click to view details
+        <div className="flex items-center gap-2">
+          <span>{post.likes} Likes</span>
+          <span>·</span>
+          <span>{post.comments.length} Comments</span>
+          <span>·</span>
+          <span>{post.sharesCount || 0} Shares</span>
+          <span>·</span>
+          <span>{post.viewsCount || 0} Views</span>
+        </div>
+        <span className="hover:text-blue-600 transition text-[10px] font-bold">
+          View post &rarr;
         </span>
       </div>
 

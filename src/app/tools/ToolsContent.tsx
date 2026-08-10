@@ -21,7 +21,9 @@ import {
   IconListDetails,
   IconTarget,
   IconArrowRight,
+  IconLock,
 } from "@tabler/icons-react";
+import { useUserPermissions } from "@/context/UserPermissionsContext";
 
 interface ToolsContentProps {
   user: {
@@ -174,6 +176,7 @@ const categoryColors = {
 };
 
 export default function ToolsContent({ user }: ToolsContentProps) {
+  const { isReadOnly } = useUserPermissions();
   const [activeCategory, setActiveCategory] = useState<string>("All");
 
   const categories = ["All", "Resume", "Coding", "Career", "AI", "Productivity"];
@@ -269,7 +272,17 @@ export default function ToolsContent({ user }: ToolsContentProps) {
 
                 {/* Launch Button */}
                 <div className="mt-6 pt-4 border-t border-dashed border-slate-100">
-                  {tool.launchUrl ? (
+                  {isReadOnly ? (
+                    <button
+                      disabled
+                      className={`w-full text-white rounded-xl py-2.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-not-allowed opacity-60 border-0 ${
+                        tool.launchUrl ? "bg-indigo-600" : "bg-slate-900"
+                      }`}
+                    >
+                      Launch Tool
+                      <IconLock className="w-3.5 h-3.5 shrink-0" />
+                    </button>
+                  ) : tool.launchUrl ? (
                     <Link
                       href={tool.launchUrl}
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 shadow-sm"

@@ -12,7 +12,8 @@ import {
   IconBrandTypescript,
   IconDatabase,
   IconBrandCss3,
-  IconBook
+  IconBook,
+  IconLock
 } from "@tabler/icons-react";
 
 export default async function ResourcesPage() {
@@ -29,7 +30,7 @@ export default async function ResourcesPage() {
       fullName: true,
       email: true,
       profileImage: true,
-    },
+     isPremium: true, credits: true, streak: true,},
   });
 
   if (!user) {
@@ -39,6 +40,8 @@ export default async function ResourcesPage() {
   const dbResources = await prisma.resource.findMany({
     orderBy: { createdAt: "desc" },
   });
+
+  const isReadOnly = false;
 
   const fallbackResources = [
     {

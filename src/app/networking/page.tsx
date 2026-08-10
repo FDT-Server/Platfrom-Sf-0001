@@ -19,7 +19,7 @@ export default async function NetworkingPage() {
       fullName: true,
       selectedRole: true,
       profileImage: true,
-    },
+     isPremium: true, credits: true, streak: true,},
   });
 
   if (!user) {
@@ -28,6 +28,7 @@ export default async function NetworkingPage() {
 
   const allUsers = await prisma.user.findMany({
     orderBy: { fullName: "asc" },
+    take: 50,
     select: {
       id: true,
       fullName: true,

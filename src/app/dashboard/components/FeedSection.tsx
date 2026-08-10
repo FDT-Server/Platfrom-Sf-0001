@@ -19,28 +19,62 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeDrawerPost, setActiveDrawerPost] = useState<FeedPost | null>(null);
 
+  const formatExactDateTime = (dateValue: string | Date) => {
+    if (!dateValue) return "Recently";
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "Recently";
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   const fetchPostsFromApi = async () => {
     try {
-      const res = await fetch("/api/posts");
+      const res = await fetch(`/api/posts?t=${Date.now()}`);
       if (res.ok) {
         const dbPosts = await res.json();
-        if (Array.isArray(dbPosts) && dbPosts.length > 0) {
-          const formatted: FeedPost[] = dbPosts.map((p: any) => ({
-            id: p.id,
-            authorName: p.userName || "Community Developer",
-            authorRole: p.userRole || "Student Developer",
-            authorImage: p.userImage || null,
-            timeAgo: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recently",
-            category: p.category || "General",
-            content: p.content,
-            imageUrl: p.imageUrl || undefined,
-            likes: p.likesCount || 0,
-            comments: [],
-            liked: false,
-            bookmarked: false,
-          }));
-          setPosts(formatted);
-          return;
+        if (Array.isArray(dbPosts)) {
+          setPosts((prevPosts) => {
+            const prevMap = new Map(prevPosts.map((p) => [p.id, p]));
+            return dbPosts.map((p: any) => {
+              const prev = prevMap.get(p.id);
+              const exactTime = formatExactDateTime(p.createdAt);
+              const bUserIds = Array.isArray(p.bookmarkedUserIds) ? p.bookmarkedUserIds : [];
+              const lUserIds = Array.isArray(p.likedUserIds) ? p.likedUserIds : [];
+              const comms = Array.isArray(p.comments) ? p.comments : [];
+
+              let isLiked = prev ? prev.liked : lUserIds.includes(user.id);
+              let isBookmarked = prev ? prev.bookmarked : bUserIds.includes(user.id);
+
+              if (user && user.id) {
+                if (lUserIds.includes(user.id)) isLiked = true;
+                if (bUserIds.includes(user.id)) isBookmarked = true;
+              }
+
+              return {
+                id: p.id,
+                authorName: p.userName || "Community Developer",
+                authorRole: p.userRole || "Student Developer",
+                authorImage: p.userImage && p.userImage.trim() !== "" ? p.userImage : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.userName || "Developer")}&backgroundColor=b6e3f4,c0aede,d1d4f9`,
+                timeAgo: exactTime,
+                category: p.category || "General",
+                content: p.content,
+                imageUrl: p.imageUrl || undefined,
+                link: p.link || undefined,
+                likes: p.likesCount || 0,
+                sharesCount: p.sharesCount || 0,
+                viewsCount: p.viewsCount || 0,
+                comments: comms,
+                liked: isLiked,
+                bookmarked: isBookmarked,
+              };
+            });
+          });
         }
       }
     } catch (err) {
@@ -52,6 +86,10 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
 
   useEffect(() => {
     fetchPostsFromApi();
+    const interval = setInterval(() => {
+      fetchPostsFromApi();
+    }, 4000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -60,7 +98,7 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
     }
   }, [newPostSignal]);
 
-  const handleLikeToggle = (postId: string) => {
+  const handleLikeToggle = async (postId: string) => {
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
@@ -68,25 +106,45 @@ export default function FeedSection({ user, newPostSignal }: FeedSectionProps) {
           return {
             ...p,
             liked: nextLiked,
-            likes: nextLiked ? p.likes + 1 : p.likes - 1,
+            likes: nextLiked ? p.likes + 1 : Math.max(0, p.likes - 1),
           };
         }
         return p;
       })
     );
+
+    try {
+      await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "like" }),
+      });
+    } catch (err) {
+      console.error("Error persisting like:", err);
+    }
   };
 
-  const handleBookmarkToggle = (postId: string) => {
+  const handleBookmarkToggle = async (postId: string) => {
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id === postId) {
           const nextBookmarked = !p.bookmarked;
-          if (nextBookmarked) toast.success("Post saved to bookmarks!");
+          if (nextBookmarked) toast.success("Post saved to profile bookmarks!");
           return { ...p, bookmarked: nextBookmarked };
         }
         return p;
       })
     );
+
+    try {
+      await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "bookmark" }),
+      });
+    } catch (err) {
+      console.error("Error persisting bookmark:", err);
+    }
   };
 
   return (

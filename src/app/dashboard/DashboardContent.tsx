@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import WelcomeCard from "./components/WelcomeCard";
 import QuickStatsCards from "./components/QuickStatsCards";
@@ -28,6 +28,9 @@ interface DashboardContentProps {
     portfolioLink?: string | null;
     about?: string | null;
     shareWithNetworking?: boolean;
+    credits: number;
+    streak: number;
+    isPremium?: boolean;
   };
   events: EventInfo[];
   suggestedUsers: SuggestedUser[];
@@ -40,6 +43,30 @@ export default function DashboardContent({ user, events, suggestedUsers }: Dashb
     imageUrl?: string;
   } | null>(null);
 
+  const [currentCredits, setCurrentCredits] = useState(user.credits || 0);
+  const [currentStreak, setCurrentStreak] = useState(user.streak || 0);
+
+  useEffect(() => {
+    const claimDailyCredits = async () => {
+      try {
+        const res = await fetch("/api/credits/daily", { method: "POST" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.creditsAdded > 0) {
+            toast.success(`Welcome back! You earned +${data.creditsAdded} daily credits! 🔥 Streak: ${data.newStreak}`);
+            setCurrentCredits(prev => prev + data.creditsAdded);
+            setCurrentStreak(data.newStreak);
+          } else if (data.newStreak > currentStreak) {
+            setCurrentStreak(data.newStreak);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to claim daily credits", err);
+      }
+    };
+    claimDailyCredits();
+  }, []);
+
   const handlePostCreated = (post: {
     content: string;
     category: PostCategory;
@@ -49,19 +76,40 @@ export default function DashboardContent({ user, events, suggestedUsers }: Dashb
     toast.success("Post published to your feed!");
   };
 
-  return (
-    <DashboardLayout user={user}>
-      <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start font-sans">
+  const layoutUser = { ...user, credits: currentCredits, streak: currentStreak };
 
-        <main className="w-full flex flex-col gap-6 min-w-0">
-          <WelcomeCard userName={user.fullName} />
-          <QuickStatsCards />
-          <CreatePostCard user={user} onPostCreated={handlePostCreated} />
-          <FeedSection user={user} newPostSignal={createdPost} />
+  return (
+    <DashboardLayout user={layoutUser}>
+      <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 font-sans -mt-1 sm:-mt-2 md:-mt-3">
+        
+        {/* Main Center Content */}
+        <main className="w-full flex flex-col gap-6 min-w-0 relative pb-10 min-h-[calc(100vh-120px)]">
+          {/* Welcome Banner */}
+          <WelcomeCard 
+            userName={layoutUser.fullName} 
+            credits={layoutUser.credits} 
+            streak={layoutUser.streak} 
+            profileImage={layoutUser.profileImage} 
+          />
+
+          {/* Feed takes the maximum space now */}
+          <FeedSection user={layoutUser} newPostSignal={createdPost} />
+
+          {/* Hidden CreatePostCard to listen for global navbar events */}
+          <div className="hidden">
+            <CreatePostCard 
+              user={layoutUser} 
+              onPostCreated={handlePostCreated} 
+            />
+          </div>
         </main>
 
-        <aside className="w-full flex flex-col gap-6 lg:sticky lg:top-6">
-          <SuggestedConnectionsCard suggestedUsers={suggestedUsers} />
+        {/* Right Sidebar */}
+        <aside className="w-full flex flex-col gap-6 lg:sticky lg:top-24 h-max">
+          <SuggestedConnectionsCard
+            suggestedUsers={suggestedUsers}
+            currentUserId={layoutUser.id}
+          />
           <OpportunitiesSection />
         </aside>
 

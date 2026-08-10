@@ -6,6 +6,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session")?.value;
+    if (!sessionToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const posts = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -22,7 +27,7 @@ export async function POST(req: Request) {
     const sessionToken = cookieStore.get("session")?.value;
 
     const body = await req.json();
-    const { content, category, imageUrl, tags, title } = body;
+    const { content, category, imageUrl, link, tags, title } = body;
 
     let userId = "user-guest";
     let userName = "Community Trainee";
@@ -48,6 +53,7 @@ export async function POST(req: Request) {
         content,
         category: category || "General",
         imageUrl: imageUrl || "",
+        link: link || "",
         tags: tags || "",
         userId,
         userName,

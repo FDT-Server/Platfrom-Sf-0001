@@ -87,11 +87,37 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import AutoLogoutProvider from "@/components/AutoLogoutProvider";
+import SessionValidator from "@/components/SessionValidator";
+import { cookies } from "next/headers";
+import prisma from "@/lib/db";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session")?.value;
+  const sessionId = cookieStore.get("sessionId")?.value;
+
+  let isSessionValid = true;
+
+  if (sessionToken) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: sessionToken },
+        select: { currentSessionId: true },
+      });
+
+      if (user && user.currentSessionId && user.currentSessionId !== sessionId) {
+        isSessionValid = false;
+      }
+    } catch (e) {
+      console.error("Failed to check session validity", e);
+    }
+  }
+
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <head>
@@ -117,7 +143,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900">
         <Toaster position="top-center" richColors />
-        {children}
+        <SessionValidator isSessionValid={isSessionValid} />
+        <AutoLogoutProvider>
+          {children}
+        </AutoLogoutProvider>
       </body>
     </html>
   );

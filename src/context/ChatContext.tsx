@@ -86,19 +86,28 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedConnections = localStorage.getItem("sf_connections");
-      const storedRequests = localStorage.getItem("sf_sent_requests");
-
-      if (storedConnections) setConnections(JSON.parse(storedConnections));
-      if (storedRequests) setSentRequests(JSON.parse(storedRequests));
+      const fetchConns = async () => {
+        try {
+          const res = await fetch("/api/connections");
+          if (res.ok) {
+            const data = await res.json();
+            setConnections(data.friendIds || []);
+            setSentRequests(data.pendingIds || []);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      fetchConns();
 
       const lastActive = localStorage.getItem("sf_last_active_chat");
       if (lastActive) {
         setActiveChatUserId(lastActive === "general" ? null : lastActive);
       }
 
-      notificationAudioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav");
-      notificationAudioRef.current.volume = 0.4;
+      // Removed external Mixkit audio source for privacy and security.
+      // To add a sound back, serve a local file like: new Audio('/sounds/notification.wav')
+      notificationAudioRef.current = null;
     }
   }, []);
 
@@ -429,51 +438,41 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     : 0;
 
   // Send connection request
-  const sendConnectRequest = (userId: string) => {
+  const sendConnectRequest = async (userId: string) => {
     if (sentRequests.includes(userId) || connections.includes(userId)) return;
 
-    const updatedRequests = [...sentRequests, userId];
-    setSentRequests(updatedRequests);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sf_sent_requests", JSON.stringify(updatedRequests));
-    }
-
-    const targetedUser = allUsers.find((u) => u.id === userId);
-    toast.success(`Connection request sent to ${targetedUser?.fullName || "Student"}!`);
-
-    // Simulate auto-accept connection request in 4 seconds for UX flow!
-    setTimeout(() => {
-      const currentSent = JSON.parse(localStorage.getItem("sf_sent_requests") || "[]");
-      if (currentSent.includes(userId)) {
-        // Remove from pending requests
-        const filteredRequests = currentSent.filter((id: string) => id !== userId);
-        setSentRequests(filteredRequests);
-        localStorage.setItem("sf_sent_requests", JSON.stringify(filteredRequests));
-
-        // Add to connections
-        const currentConnections = JSON.parse(localStorage.getItem("sf_connections") || "[]");
-        const updatedConnections = [...currentConnections, userId];
-        setConnections(updatedConnections);
-        localStorage.setItem("sf_connections", JSON.stringify(updatedConnections));
-
-        toast.success(`${targetedUser?.fullName || "Student"} accepted your connection request! You can now message them.`);
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send", toUserId: userId })
+      });
+      if (res.ok) {
+        setSentRequests((prev) => [...prev, userId]);
+        const targetedUser = allUsers.find((u) => u.id === userId);
+        toast.success(`Connection request sent to ${targetedUser?.fullName || "Student"}!`);
       }
-    }, 4000);
+    } catch(e) {
+      toast.error("Network error.");
+    }
   };
 
   // Remove connection
-  const removeConnection = (userId: string) => {
-    const updatedConnections = connections.filter((id) => id !== userId);
-    const updatedRequests = sentRequests.filter((id) => id !== userId);
-
-    setConnections(updatedConnections);
-    setSentRequests(updatedRequests);
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sf_connections", JSON.stringify(updatedConnections));
-      localStorage.setItem("sf_sent_requests", JSON.stringify(updatedRequests));
+  const removeConnection = async (userId: string) => {
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove", userId: userId })
+      });
+      if (res.ok) {
+        setConnections((prev) => prev.filter((id) => id !== userId));
+        setSentRequests((prev) => prev.filter((id) => id !== userId));
+        toast.info("Connection removed");
+      }
+    } catch(e) {
+      toast.error("Network error.");
     }
-    toast.info("Connection removed");
   };
 
   return (

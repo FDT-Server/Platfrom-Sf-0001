@@ -20,12 +20,13 @@ export default async function ResumeAnalyzerPage() {
       email: true,
       profileImage: true,
       isPremium: true,
-    },
+     credits: true, streak: true,},
   });
 
   if (!user) {
     redirect("/login");
   }
+
 
   if (user.email.trim().toLowerCase() === "webstrixx@gmail.com") {
     redirect("/admin");

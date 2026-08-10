@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useUserPermissions } from "@/context/UserPermissionsContext";
+import { IconLock } from "@tabler/icons-react";
 
 interface LecturesContentProps {
   user: {
@@ -11,8 +13,24 @@ interface LecturesContentProps {
 }
 
 export default function LecturesContent({ user }: LecturesContentProps) {
-
+  const { isReadOnly } = useUserPermissions();
   const [activeLang, setActiveLang] = useState<Record<string, "en" | "te">>({});
+
+  if (isReadOnly) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="w-full h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mb-4 border border-slate-200">
+            <IconLock className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800">Content Locked</h2>
+          <p className="text-sm text-slate-500 max-w-md mt-2">
+            You are currently in Read-Only mode. Premium content such as video lectures are restricted to administrators.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const toggleLanguage = (cardId: string, lang: "en" | "te") => {
     setActiveLang((prev) => ({

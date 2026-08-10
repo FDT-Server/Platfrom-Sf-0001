@@ -33,7 +33,7 @@ export default function PostHeader({ author, createdAt, visibility }: PostHeader
   };
 
   const handleMessage = () => {
-    router.push(`/networking`);
+    router.push(`/networking?chatWith=${encodeURIComponent(author.id || author.name)}`);
   };
 
   const initials = author.name

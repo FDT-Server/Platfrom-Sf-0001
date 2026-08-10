@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import useRouter from "next/navigation";
 import { useRouter as useNextRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -266,13 +267,14 @@ export default function StudyPodContent({ user, initialPods }: StudyPodContentPr
           </div>
         ) : (
           <div className="bg-white border border-dashed border-slate-200 rounded-3xl p-10 text-center flex flex-col items-center justify-center">
-            <div className="w-[300px] h-[300px] flex items-center justify-center overflow-hidden mb-1">
-              <iframe
-                src="https://lottie.host/embed/f1da6ee0-a2ca-4587-a660-de3e93db559c/QfMgkv2YHd.lottie"
-                style={{ width: "300px", height: "300px", border: "none" }}
-                title="No Study Pods Animation"
-              />
-            </div>
+              <div className="w-full flex justify-center py-6 mb-4">
+                <DotLottieReact
+                  src="/empty-pods.lottie"
+                  loop
+                  autoplay
+                  className="w-full max-w-[280px] h-[200px] select-none pointer-events-none opacity-90"
+                />
+              </div>
             <h3 className="text-sm font-semibold text-slate-700 mt-1">No Study Pods Found</h3>
             <p className="text-xs text-slate-500 max-w-sm mt-1 leading-relaxed">
               There are no study rooms matching your search. Create the first one to start collaborating with your friends!
