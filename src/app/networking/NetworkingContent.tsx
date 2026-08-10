@@ -807,7 +807,6 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                       {error}
                     </div>
                   )}
-                  {activeChatUserId === null && !isAdminEmail(user.email) ? null : (
                     <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
                       <input
                         type="text"
@@ -815,7 +814,7 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                         onChange={(e) => setNewMessageText(e.target.value)}
                         placeholder={
                           activeChatUserId === null
-                            ? "Type an announcement to share with everyone..."
+                            ? "Type a message to share with everyone..."
                             : `Send private message to ${activeUserObj?.fullName}...`
                         }
                         maxLength={500}
@@ -830,7 +829,6 @@ export default function NetworkingContent({ user, allUsers }: NetworkingContentP
                         <IconSend className="w-4 h-4" />
                       </button>
                     </form>
-                  )}
                 </div>
               </div>
             </div>

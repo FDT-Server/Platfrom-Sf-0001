@@ -26,10 +26,7 @@ export default async function PlansPage() {
     redirect("/login");
   }
 
-  // Redirect read-only users away from plans
-  if (user.email !== "jaswanth@gmail.com") {
-    redirect("/dashboard");
-  }
+
 
   const comparisonFeatures = [
     { name: "Curated Resources & Lectures", free: true, premium: true },

@@ -29,10 +29,6 @@ export default async function CreateStudyPodPage() {
     redirect("/login");
   }
 
-  // Redirect read-only users away
-  if (user.email !== "jaswanth@gmail.com") {
-    redirect("/dashboard");
-  }
 
   const createdPodsCount = await prisma.studyPod.count({
     where: { creatorId: user.id },

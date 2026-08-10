@@ -552,22 +552,13 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
                   <span className="material-symbols-outlined text-[14px] text-slate-950 font-bold">workspace_premium</span>
                   <span>Go Premium</span>
                 </div>
-                {user.email !== "jaswanth@gmail.com" ? (
-                  <button
-                    disabled
-                    className="w-full bg-slate-800 text-slate-400 rounded-lg py-1.5 text-[10px] font-bold transition shadow-md cursor-not-allowed text-center select-none block font-sans opacity-75"
-                  >
-                    Upgrade Now
-                  </button>
-                ) : (
                   <Link
                     href="/plans"
                     className="w-full bg-slate-950 hover:bg-slate-900 text-white rounded-lg py-1.5 text-[10px] font-bold transition shadow-md hover:shadow-lg cursor-pointer text-center select-none block font-sans"
                   >
                     Upgrade Now
                   </Link>
-                )}
-              </div>
+                </div>
             )}
 
             <a

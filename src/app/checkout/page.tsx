@@ -32,10 +32,7 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  // Redirect read-only users away
-  if (user.email !== "jaswanth@gmail.com") {
-    redirect("/dashboard");
-  }
+
 
   const { plan } = await searchParams;
   const planString = typeof plan === "string" ? plan : "monthly";

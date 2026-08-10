@@ -18,8 +18,7 @@ interface UserPermissionsProviderProps {
 }
 
 export const UserPermissionsProvider: React.FC<UserPermissionsProviderProps> = ({ children, email }) => {
-  // Only jaswanth@gmail.com has write access to the platform.
-  const isReadOnly = email.trim().toLowerCase() !== "jaswanth@gmail.com";
+  const isReadOnly = false;
 
   return (
     <UserPermissionsContext.Provider value={{ isReadOnly }}>
