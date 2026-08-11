@@ -302,3 +302,14 @@ model CourseProgress {
 
   @@unique([userId, courseId])
 }
+
+model EmailQueue {
+  id        String   @id @default(uuid())
+  to        String
+  subject   String
+  body      String
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  error     String?  @default("")
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+}
