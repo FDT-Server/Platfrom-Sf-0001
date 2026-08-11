@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
+import BackToToolsButton from "@/components/tools/BackToToolsButton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -421,9 +422,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
         {/* Top Control Bar */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
-            <Link href="/tools" className="text-slate-500 hover:text-slate-900 transition flex items-center gap-1 text-xs font-semibold">
-              <IconArrowLeft className="w-4 h-4" /> Back to Tools
-            </Link>
+            <BackToToolsButton label="Back to Tools" />
             <div className="h-4 w-[1px] bg-slate-200" />
             <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
               <IconFileText className="w-5 h-5 text-indigo-600" /> Resume Builder

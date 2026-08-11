@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import BackToToolsButton from "@/components/tools/BackToToolsButton";
 import { toast } from "sonner";
 import {
   IconArrowLeft,
@@ -98,12 +99,9 @@ export default function ProductivityContent({ user }: ProductivityContentProps) 
         
         {/* Header */}
         <div className="pb-6 border-b border-slate-100">
-          <Link
-            href="/tools"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 mb-2 transition"
-          >
-            <IconArrowLeft className="w-3.5 h-3.5" /> Back to Tools Workspace
-          </Link>
+          <div className="mb-2.5">
+            <BackToToolsButton label="Back to Tools Hub" />
+          </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold">
               <IconClock className="w-4 h-4" />

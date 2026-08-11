@@ -8,7 +8,6 @@ import {
   IconFileText,
   IconCode,
   IconHelpCircle,
-  IconBriefcase,
   IconClock,
   IconArrowRight,
   IconFilter,
@@ -120,31 +119,6 @@ const InterviewAnimation = () => (
   </div>
 );
 
-const CoverLetterAnimation = () => (
-  <div className="relative w-full h-full flex items-center justify-center">
-    {/* Writing Sheet Illustration */}
-    <motion.div
-      animate={{ y: [0, -5, 0] }}
-      transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-      className="w-44 h-28 bg-white rounded-2xl shadow-sm border border-amber-200 p-3.5 flex flex-col justify-between overflow-hidden"
-    >
-      <div className="flex items-center gap-2">
-        <IconBriefcase className="w-4 h-4 text-amber-600 shrink-0" />
-        <div className="w-16 h-2 bg-amber-500 rounded-full" />
-      </div>
-
-      <div className="space-y-1.5">
-        <motion.div
-          animate={{ width: ["20%", "95%", "20%"] }}
-          transition={{ duration: 3, repeat: Infinity }}
-          className="h-1.5 bg-amber-400 rounded-full"
-        />
-        <div className="w-full h-1.5 bg-slate-200 rounded-full" />
-        <div className="w-3/4 h-1.5 bg-slate-200 rounded-full" />
-      </div>
-    </motion.div>
-  </div>
-);
 
 const ProductivityAnimation = () => (
   <div className="relative w-full h-full flex items-center justify-center">
@@ -224,19 +198,6 @@ const toolSuites: ToolSuiteCard[] = [
     badgeText: "Prep Guide",
     animationComponent: InterviewAnimation,
     metrics: { label: "Target Domains", value: "5 Tracks" },
-  },
-  {
-    id: "cover-letter-gen",
-    title: "Cover Letter Generator",
-    category: "Career",
-    primaryUrl: "/tools/cover-letter",
-    primaryLabel: "Generate Cover Letter",
-    headerBg: "bg-gradient-to-br from-amber-100/90 via-yellow-50 to-amber-50",
-    headerBorder: "border-amber-200/70",
-    badgeBg: "bg-amber-200/90 text-amber-900 border-amber-300",
-    badgeText: "Utility",
-    animationComponent: CoverLetterAnimation,
-    metrics: { label: "Customization", value: "Role Tailored" },
   },
   {
     id: "productivity-suite",
@@ -354,67 +315,67 @@ export default function ToolsContent({ user }: ToolsContentProps) {
           </div>
         </div>
 
-        {/* Minimal Uncluttered Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        {/* Minimal Uncluttered Cards Grid - 3 Per Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
           {filteredSuites.map((suite) => {
             const AnimComponent = suite.animationComponent;
             return (
               <div
                 key={suite.id}
-                className="group flex flex-col rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300"
+                className="group flex flex-col rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
-                {/* Top Animated Header Banner */}
+                {/* Compact Animated Header Banner */}
                 <div
-                  className={`relative h-48 ${suite.headerBg} border-b ${suite.headerBorder} p-4 flex flex-col justify-between overflow-hidden`}
+                  className={`relative h-36 ${suite.headerBg} border-b ${suite.headerBorder} p-3.5 flex flex-col justify-between overflow-hidden`}
                 >
                   <div className="flex items-center justify-between relative z-10">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-700 bg-white/80 backdrop-blur-xs px-2.5 py-1 rounded-md border border-slate-200/50 shadow-2xs">
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-700 bg-white/80 backdrop-blur-xs px-2 py-0.5 rounded-md border border-slate-200/50 shadow-2xs">
                       {suite.category}
                     </span>
 
                     <span
-                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border shadow-2xs ${suite.badgeBg}`}
+                      className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border shadow-2xs ${suite.badgeBg}`}
                     >
                       {suite.badgeText}
                     </span>
                   </div>
 
                   {/* Micro-Animation Graphic Container */}
-                  <div className="relative z-10 h-32 flex items-center justify-center overflow-hidden">
+                  <div className="relative z-10 h-24 flex items-center justify-center overflow-hidden scale-90">
                     <AnimComponent />
                   </div>
                 </div>
 
-                {/* Minimal Content Body Below Banner */}
-                <div className="p-6 flex-1 flex flex-col justify-between bg-white">
+                {/* Compact Content Body Below Banner */}
+                <div className="p-4.5 flex-1 flex flex-col justify-between bg-white">
                   <div>
-                    <h3 className="text-lg font-extrabold text-slate-900 leading-tight">
+                    <h3 className="text-base font-extrabold text-slate-900 leading-tight">
                       {suite.title}
                     </h3>
 
                     {/* Metric Row */}
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 text-xs">
-                      <span className="text-slate-500 font-semibold">{suite.metrics.label}</span>
-                      <span className="font-extrabold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-[11px]">
+                    <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100 text-xs">
+                      <span className="text-slate-500 font-semibold text-[11px]">{suite.metrics.label}</span>
+                      <span className="font-extrabold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[10px]">
                         {suite.metrics.value}
                       </span>
                     </div>
                   </div>
 
                   {/* Clean Action Buttons */}
-                  <div className="mt-6 flex flex-col gap-2">
+                  <div className="mt-4 flex flex-col gap-1.5">
                     <Link
                       href={suite.primaryUrl}
-                      className="w-full bg-slate-900 hover:bg-black text-white rounded-2xl py-3 px-4 text-xs font-bold transition duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md cursor-pointer"
+                      className="w-full bg-slate-900 hover:bg-black text-white rounded-xl py-2.5 px-3.5 text-xs font-bold transition duration-200 flex items-center justify-center gap-1.5 shadow-2xs group-hover:shadow-xs cursor-pointer"
                     >
                       <span>{suite.primaryLabel}</span>
-                      <IconArrowRight className="w-4 h-4 shrink-0 text-white/80 group-hover:translate-x-1 transition-transform duration-200" />
+                      <IconArrowRight className="w-3.5 h-3.5 shrink-0 text-white/80 group-hover:translate-x-1 transition-transform duration-200" />
                     </Link>
 
                     {suite.secondaryUrl && (
                       <Link
                         href={suite.secondaryUrl}
-                        className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl py-2.5 px-4 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                        className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl py-2 px-3.5 text-xs font-bold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer text-center"
                       >
                         <IconFileCheck className="w-3.5 h-3.5 text-slate-600" />
                         <span>{suite.secondaryLabel}</span>

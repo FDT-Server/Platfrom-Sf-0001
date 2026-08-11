@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import BackToToolsButton from "@/components/tools/BackToToolsButton";
 import UploadZone, { UploadedFileInfo } from "@/components/tools/resume-analyzer/UploadZone";
 import ResumePreview from "@/components/tools/resume-analyzer/ResumePreview";
 import AnalysisDashboard from "@/components/tools/resume-analyzer/AnalysisDashboard";
@@ -86,13 +87,7 @@ export default function ResumeAnalyzerContent({ user }: ResumeAnalyzerContentPro
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3.5">
-            <Link
-              href="/tools"
-              className="h-10 w-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 shrink-0"
-              title="Back to Tools"
-            >
-              <IconArrowLeft className="w-5 h-5" />
-            </Link>
+            <BackToToolsButton label="Back to Tools" />
 
             <div>
               <div className="flex items-center gap-2">
