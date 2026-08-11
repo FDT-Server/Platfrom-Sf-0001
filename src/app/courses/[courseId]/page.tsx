@@ -51,12 +51,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
         skillsGain: course.skillsGain || "",
         outcomes: course.outcomes || "",
         price: course.price ?? 0,
-        createdAt: course.createdAt.toISOString(),
         weeks: course.weeks.map((w) => ({
           ...w,
-          videoLink: w.videoLink || "",
           topics: (w.topics as any[]) || [],
-          createdAt: w.createdAt.toISOString(),
         })),
       }}
       enrollment={enrollment ? {
