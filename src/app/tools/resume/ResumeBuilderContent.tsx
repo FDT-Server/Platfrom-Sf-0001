@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
+import BackToToolsButton from "@/components/tools/BackToToolsButton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +22,7 @@ import {
   IconTarget,
   IconUsers,
   IconClipboardCheck,
+  IconFileCheck,
 } from "@tabler/icons-react";
 import { IconPlus } from "@tabler/icons-react";
 import { ResumeData } from "./types";
@@ -55,7 +57,14 @@ interface ResumeBuilderContentProps {
 }
 
 export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps) {
-  const [data, setData] = useState<ResumeData>(initialResumeData);
+  const [data, setData] = useState<ResumeData>(() => ({
+    ...initialResumeData,
+    personalDetails: {
+      ...initialResumeData.personalDetails,
+      name: user.fullName || "",
+      email: user.email || "",
+    },
+  }));
   const [activeSection, setActiveSection] = useState<string>("personal");
   const [isMobile, setIsMobile] = useState(false);
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
@@ -99,7 +108,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
       const padding = window.innerWidth < 768 ? 24 : 64;
       const availableWidth = containerWidth - padding;
       const newScale = Math.min(1.0, availableWidth / 794);
-      setScale(newScale);
+      setScale((prev) => (Math.abs(prev - newScale) > 0.005 ? newScale : prev));
     });
 
     resizeObserver.observe(previewParentRef.current);
@@ -108,7 +117,8 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
 
   useEffect(() => {
     if (printAreaRef.current) {
-      setPreviewHeight(printAreaRef.current.scrollHeight || 1123);
+      const newH = printAreaRef.current.scrollHeight || 1123;
+      setPreviewHeight((prev) => (Math.abs(prev - newH) > 2 ? newH : prev));
     }
   }, [data, scale, mobileTab]);
 
@@ -118,8 +128,41 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
         const res = await fetch("/api/tools/resume/draft");
         if (res.ok) {
           const draft = await res.json();
-          if (draft && draft.personalDetails && draft.personalDetails.name) {
-            setData(draft);
+          if (draft && typeof draft === "object") {
+            const merged: ResumeData = {
+              ...initialResumeData,
+              ...draft,
+              personalDetails: {
+                ...initialResumeData.personalDetails,
+                ...(draft.personalDetails || {}),
+              },
+              experience: draft.experience || initialResumeData.experience || [],
+              education: draft.education || initialResumeData.education || [],
+              projects: draft.projects || initialResumeData.projects || [],
+              skills: draft.skills || initialResumeData.skills || [],
+              certifications: draft.certifications || initialResumeData.certifications || [],
+              languages: draft.languages || initialResumeData.languages || [],
+              achievements: draft.achievements || initialResumeData.achievements || [],
+              interests: draft.interests || initialResumeData.interests || [],
+              references: draft.references || initialResumeData.references || [],
+              customSections: draft.customSections || initialResumeData.customSections || [],
+            };
+            if (!merged.personalDetails.name || merged.personalDetails.name === "John Doe") {
+              merged.personalDetails.name = user.fullName || "";
+            }
+            if (!merged.personalDetails.email || merged.personalDetails.email === "john.doe@example.com") {
+              merged.personalDetails.email = user.email || "";
+            }
+            if (merged.personalDetails.phone === "+1 (555) 019-2834") {
+              merged.personalDetails.phone = "+91 98765 43210";
+            }
+            if (merged.personalDetails.address === "San Francisco, CA") {
+              merged.personalDetails.address = "Bengaluru, India";
+            }
+            if (merged.experience && merged.experience[0] && merged.experience[0].location === "San Francisco, CA") {
+              merged.experience[0].location = "Bengaluru, India";
+            }
+            setData(merged);
           }
         }
       } catch(e) {
@@ -154,8 +197,16 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset your resume to default template data?")) {
-      setData(initialResumeData);
-      saveToDb(initialResumeData);
+      const resetData = {
+        ...initialResumeData,
+        personalDetails: {
+          ...initialResumeData.personalDetails,
+          name: user.fullName || "",
+          email: user.email || "",
+        },
+      };
+      setData(resetData);
+      saveToDb(resetData);
       toast.success("Resume reset to default template.");
     }
   };
@@ -178,17 +229,17 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
   };
 
   const completionMap: Record<string, boolean> = {
-    personal: !!data.personalDetails.name && !!data.personalDetails.email,
-    summary: !!data.summary && data.summary.trim().length > 0,
-    experience: data.experience.length > 0 && !!data.experience[0].company && !!data.experience[0].role,
-    education: data.education.length > 0 && !!data.education[0].school && !!data.education[0].degree,
-    projects: data.projects.length > 0 && !!data.projects[0].name,
-    skills: data.skills.length > 0 && !!data.skills[0].name,
-    certifications: data.certifications.length > 0 && !!data.certifications[0].title,
-    languages: data.languages.length > 0 && !!data.languages[0].name,
-    achievements: (data.achievements || []).length > 0 && !!(data.achievements || [])[0].trim(),
-    interests: (data.interests || []).length > 0 && !!(data.interests || [])[0].trim(),
-    references: (data.references || []).length > 0 && !!(data.references || [])[0].name,
+    personal: !!(data.personalDetails?.name) && !!(data.personalDetails?.email),
+    summary: !!data.summary && (data.summary || "").trim().length > 0,
+    experience: (data.experience || []).length > 0 && !!data.experience?.[0]?.company && !!data.experience?.[0]?.role,
+    education: (data.education || []).length > 0 && !!data.education?.[0]?.school && !!data.education?.[0]?.degree,
+    projects: (data.projects || []).length > 0 && !!data.projects?.[0]?.name,
+    skills: (data.skills || []).length > 0 && !!data.skills?.[0]?.name,
+    certifications: (data.certifications || []).length > 0 && !!data.certifications?.[0]?.title,
+    languages: (data.languages || []).length > 0 && !!data.languages?.[0]?.name,
+    achievements: (data.achievements || []).length > 0 && !!(data.achievements || [])[0]?.trim(),
+    interests: (data.interests || []).length > 0 && !!(data.interests || [])[0]?.trim(),
+    references: (data.references || []).length > 0 && !!(data.references || [])[0]?.name,
   };
 
   const sections = [
@@ -238,7 +289,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
   };
 
   const addCustomSection = () => {
-    const newIdx = data.customSections.length;
+    const newIdx = (data.customSections || []).length;
     const newSec = {
       title: "New Custom Section",
       items: [
@@ -330,8 +381,8 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
-            width: 100% !important;
-            height: auto !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
             overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -341,26 +392,20 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
             visibility: hidden !important;
           }
 
-          div, main, section {
-            overflow: visible !important;
-            max-height: none !important;
-          }
-
           #resume-print-portal,
           #resume-print-portal * {
             visibility: visible !important;
-            display: block !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
 
           #resume-print-portal {
-            position: fixed !important;
+            display: block !important;
+            position: absolute !important;
             left: 0 !important;
             top: 0 !important;
             width: 210mm !important;
             min-height: 297mm !important;
-            height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
             background: #ffffff !important;
@@ -368,22 +413,6 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
             overflow: visible !important;
             box-shadow: none !important;
             border: none !important;
-          }
-
-          #resume-print-portal .flex-col.md\:flex-row {
-            flex-direction: row !important;
-          }
-          #resume-print-portal .md\:w-\[35\%\] {
-            width: 35% !important;
-          }
-          #resume-print-portal .md\:pr-6 {
-            padding-right: 1.5rem !important;
-          }
-          #resume-print-portal .md\:border-r {
-            border-right-width: 1px !important;
-          }
-          #resume-print-portal .md\:border-b-0 {
-            border-bottom-width: 0px !important;
           }
         }
       `}</style>
@@ -393,13 +422,20 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
         {/* Top Control Bar */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
-            <Link href="/tools" className="text-slate-500 hover:text-slate-900 transition flex items-center gap-1 text-xs font-semibold">
-              <IconArrowLeft className="w-4 h-4" /> Back to Tools
-            </Link>
+            <BackToToolsButton label="Back to Tools" />
             <div className="h-4 w-[1px] bg-slate-200" />
             <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-              <IconFileText className="w-5 h-5 text-indigo-600" /> AI Resume Builder
+              <IconFileText className="w-5 h-5 text-indigo-600" /> Resume Builder
             </h3>
+
+            <Link
+              href="/tools/resume-analyzer"
+              className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <IconFileCheck className="w-3.5 h-3.5 text-indigo-600" />
+              <span>ATS Analyzer & Checker</span>
+            </Link>
+
             <div className="h-4 w-[1px] bg-slate-200 hidden sm:block" />
 
             {/* Progress tracker widget */}
@@ -615,7 +651,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
           <div
             ref={previewParentRef}
             className={cn(
-              "bg-slate-100 border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-inner select-none relative group/preview transition-all duration-200",
+              "bg-slate-100 border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-inner select-text relative group/preview transition-all duration-200",
               // On desktop:
               "xl:flex-1 xl:h-full xl:w-auto",
               // On mobile/tablet (<1280px):
@@ -675,7 +711,7 @@ export default function ResumeBuilderContent({ user }: ResumeBuilderContentProps
                 <div
                   id="print-preview-container"
                   ref={printAreaRef}
-                  className="bg-white shrink-0"
+                  className="bg-white shrink-0 select-text cursor-text"
                   style={{
                     width: "794px",
                     transform: `scale(${scale})`,

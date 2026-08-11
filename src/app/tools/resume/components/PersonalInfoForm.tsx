@@ -21,20 +21,12 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     mode: "onChange",
   });
 
-  const values = watch();
-
   useEffect(() => {
-
-    if (JSON.stringify(values) !== JSON.stringify(data.personalDetails)) {
-      onChange({ personalDetails: values });
-    }
-  }, [values, onChange, data.personalDetails]);
-
-  useEffect(() => {
-    if (JSON.stringify(data.personalDetails) !== JSON.stringify(values)) {
-      reset(data.personalDetails);
-    }
-  }, [data.personalDetails, reset]);
+    const subscription = watch((val) => {
+      onChange({ personalDetails: val as any });
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col gap-6">
@@ -86,7 +78,7 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
             type="text"
             {...register("phone")}
             className="border border-slate-200 hover:border-slate-350 focus:border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none transition bg-white w-full font-medium"
-            placeholder="+1 (555) 019-2834"
+            placeholder="+91 98765 43210"
           />
         </div>
 
@@ -96,7 +88,7 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
             type="text"
             {...register("address")}
             className="border border-slate-200 hover:border-slate-350 focus:border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none transition bg-white w-full font-medium"
-            placeholder="San Francisco, CA"
+            placeholder="Bengaluru, India"
           />
         </div>
 

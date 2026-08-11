@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import BackToToolsButton from "@/components/tools/BackToToolsButton";
 import UploadZone, { UploadedFileInfo } from "@/components/tools/resume-analyzer/UploadZone";
 import ResumePreview from "@/components/tools/resume-analyzer/ResumePreview";
 import AnalysisDashboard from "@/components/tools/resume-analyzer/AnalysisDashboard";
@@ -15,6 +16,7 @@ import {
   IconShieldCheck,
   IconBulb,
   IconCpu,
+  IconFileText,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
@@ -85,13 +87,7 @@ export default function ResumeAnalyzerContent({ user }: ResumeAnalyzerContentPro
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3.5">
-            <Link
-              href="/tools"
-              className="h-10 w-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 shrink-0"
-              title="Back to Tools"
-            >
-              <IconArrowLeft className="w-5 h-5" />
-            </Link>
+            <BackToToolsButton label="Back to Tools" />
 
             <div>
               <div className="flex items-center gap-2">
@@ -110,7 +106,15 @@ export default function ResumeAnalyzerContent({ user }: ResumeAnalyzerContentPro
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <Link
+              href="/tools/resume"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-xl border border-indigo-200 transition cursor-pointer"
+            >
+              <IconFileText className="w-4 h-4 text-indigo-600" />
+              <span>Open Resume Builder</span>
+            </Link>
+
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
               <IconCpu className="w-4 h-4 text-indigo-600" />
               Engine: Gemini / Rule-Based Parser
             </span>
