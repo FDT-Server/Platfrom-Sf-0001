@@ -22,7 +22,7 @@ export default function CertificationsContent({ user, certificates }: Certificat
     <DashboardLayout user={user}>
       <div className="w-full flex flex-col gap-8 animate-fadeIn p-4 md:p-8">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-850">My Certifications</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-850">My Portfolio</h1>
           <p className="text-sm text-slate-500 max-w-2xl">
             View and manage all the certifications you have earned through the Student Forge platform. These certificates verify your completion of official courses and can be shared on your resume or LinkedIn.
           </p>
@@ -37,9 +37,14 @@ export default function CertificationsContent({ user, certificates }: Certificat
             <p className="text-sm text-slate-500 max-w-sm mb-8">
               You haven't earned any certificates. Enroll in our platform courses and complete all the modules to automatically earn your first certificate!
             </p>
-            <a href="/courses" className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-xs text-sm">
-              Explore Courses
-            </a>
+            <div className="flex gap-4">
+              <a href="/courses" className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-xs text-sm">
+                Explore Courses
+              </a>
+              <a href="/certifications" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl transition shadow-xs text-sm">
+                Explore Certifications
+              </a>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
