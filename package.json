@@ -21,6 +21,7 @@
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
+    "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.43.0",
     "google-auth-library": "^11.0.0",

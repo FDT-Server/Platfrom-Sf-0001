@@ -10,6 +10,7 @@ import {
   IconBookmark,
   IconArrowRight,
   IconLink,
+  IconDots,
 } from "@tabler/icons-react";
 import { PostCategory } from "./CreatePostCard";
 
@@ -58,6 +59,7 @@ export default function FeedPostCard({
   onOpenCommentsDrawer,
 }: FeedPostCardProps) {
   const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
 
   const initials = post.authorName
     ? post.authorName
@@ -165,13 +167,41 @@ export default function FeedPostCard({
           </div>
         </div>
 
-        <span
-          className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-            categoryBadgeStyles[post.category] || categoryBadgeStyles.General
-          }`}
-        >
-          {post.category}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+              categoryBadgeStyles[post.category] || categoryBadgeStyles.General
+            }`}
+          >
+            {post.category}
+          </span>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+              title="Manage Post"
+            >
+              <IconDots className="w-5 h-5" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-10">
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                  Edit Post
+                </button>
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                  Archive Post
+                </button>
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+                  Delete Post
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Body Content */}
