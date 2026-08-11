@@ -74,6 +74,36 @@ export async function GET(
 
     if (!isHost && !approvedList.includes(user.id)) {
 
+      if (!user.isPremium) {
+        const allPods = await prisma.studyPod.findMany();
+        let totalPodsCount = 0;
+        
+        for (const pod of allPods) {
+          if (pod.creatorId === user.id) {
+            totalPodsCount++;
+            continue;
+          }
+          let podApproved: string[] = [];
+          try {
+            podApproved = typeof pod.approvedUserIds === "string" ? JSON.parse(pod.approvedUserIds) : (pod.approvedUserIds || []);
+          } catch {}
+          if (podApproved.includes(user.id)) {
+            totalPodsCount++;
+          }
+        }
+
+        if (totalPodsCount >= 1) {
+          return NextResponse.json({
+            authenticated: true,
+            status: "limit_reached",
+            studyPod: {
+              id: studyPod.id,
+              name: studyPod.name,
+            },
+          });
+        }
+      }
+
       const isAlreadyWaiting = waitingList.some((w) => w.id === user.id);
       if (!isAlreadyWaiting) {
         waitingList.push({
@@ -126,7 +156,7 @@ export async function GET(
 
     const users = await prisma.user.findMany({
       where: { id: { in: allUserIdsToFetch } },
-      select: { id: true, profileImage: true, fullName: true, email: true, selectedRole: true },
+      select: { id: true, profileImage: true, fullName: true, email: true, selectedRole: true, isPremium: true },
     });
 
     const userProfileMap = new Map(users.map((u) => [u.id, u.profileImage]));
@@ -180,7 +210,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { type, content, title, description } = await req.json();
+    const { type, content, title, description, priority, startDate, dueDate, assignedTo, links, status } = await req.json();
 
     if (type === "message") {
       if (!content || !content.trim()) {
@@ -206,6 +236,12 @@ export async function POST(
         data: {
           studyPodId: roomId,
           title: title.trim(),
+          description: description || "",
+          priority: priority || "MEDIUM",
+          startDate: startDate ? new Date(startDate) : null,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          assignedTo: assignedTo || [],
+          links: links || [],
           creatorName: user.fullName,
         },
       });
@@ -249,15 +285,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { todoId, completed } = await req.json();
+    const { todoId, completed, status, description, priority, startDate, dueDate, assignedTo, links } = await req.json();
 
     if (!todoId) {
       return NextResponse.json({ error: "Todo ID is required" }, { status: 400 });
     }
 
+    const updateData: any = {};
+    if (completed !== undefined) updateData.completed = completed;
+    if (status !== undefined) updateData.status = status;
+    if (description !== undefined) updateData.description = description;
+    if (priority !== undefined) updateData.priority = priority;
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
+    if (links !== undefined) updateData.links = links;
+
     await prisma.studyPodTodo.update({
       where: { id: todoId },
-      data: { completed },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true });

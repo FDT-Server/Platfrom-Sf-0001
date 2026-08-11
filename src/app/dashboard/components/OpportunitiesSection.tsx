@@ -21,63 +21,8 @@ export interface OpportunityItem {
   imageUrl?: string | null;
 }
 
-const fallbackOpportunities: OpportunityItem[] = [
-  {
-    id: "opp-1",
-    title: "Front-End Developer Intern",
-    company: "Atlassian",
-    location: "Bengaluru, India",
-    compensation: "₹45,000 / mo",
-    type: "Internship",
-    category: "Engineering",
-    link: "https://www.atlassian.com/company/careers",
-    logoBg: "bg-blue-600 text-white",
-    logoLetter: "A",
-    imageUrl: "https://unavatar.io/atlassian.com",
-  },
-  {
-    id: "opp-2",
-    title: "Full-Stack Software Engineer",
-    company: "Stripe",
-    location: "Remote (India)",
-    compensation: "₹18 - ₹22 LPA",
-    type: "Full-time",
-    category: "Engineering",
-    link: "https://stripe.com/jobs",
-    logoBg: "bg-indigo-600 text-white",
-    logoLetter: "S",
-    imageUrl: "https://unavatar.io/stripe.com",
-  },
-  {
-    id: "opp-3",
-    title: "AI & ML Research Intern",
-    company: "Google DeepMind",
-    location: "Bengaluru, India",
-    compensation: "₹60,000 / mo",
-    type: "Internship",
-    category: "Artificial Intelligence",
-    link: "https://deepmind.google/careers/",
-    logoBg: "bg-emerald-600 text-white",
-    logoLetter: "G",
-    imageUrl: "https://unavatar.io/google.com",
-  },
-  {
-    id: "opp-4",
-    title: "UI/UX Product Design Intern",
-    company: "Figma",
-    location: "Remote",
-    compensation: "₹40,000 / mo",
-    type: "Internship",
-    category: "Design",
-    link: "https://www.figma.com/careers/",
-    logoBg: "bg-purple-600 text-white",
-    logoLetter: "F",
-    imageUrl: "https://unavatar.io/figma.com",
-  },
-];
-
 export default function OpportunitiesSection() {
-  const [opportunities, setOpportunities] = useState<OpportunityItem[]>(fallbackOpportunities);
+  const [opportunities, setOpportunities] = useState<OpportunityItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [failedLogos, setFailedLogos] = useState<Record<string, boolean>>({});
 

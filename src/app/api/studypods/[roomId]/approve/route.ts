@@ -74,7 +74,25 @@ export async function POST(
     const updatedWaitingList = waitingList.filter((w) => w.id !== targetUserId);
 
     if (action === "accept") {
+      const currentParticipantIds = [studyPod.creatorId, ...approvedList];
+
       if (!approvedList.includes(targetUserId)) {
+        const allUsersToCheck = [...currentParticipantIds, targetUserId];
+        const usersInfo = await prisma.user.findMany({
+          where: { id: { in: allUsersToCheck } },
+          select: { id: true, isPremium: true },
+        });
+
+        const proposedGroupHasFreeMember = usersInfo.some((u) => !u.isPremium);
+        const proposedGroupLimit = proposedGroupHasFreeMember ? 4 : 8;
+
+        if (currentParticipantIds.length >= proposedGroupLimit) {
+          return NextResponse.json(
+            { error: `Cannot approve member. Groups with free users are limited to 4 members. Premium-only groups can have up to 8.` },
+            { status: 400 }
+          );
+        }
+
         approvedList.push(targetUserId);
       }
     }

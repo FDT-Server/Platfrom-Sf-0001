@@ -60,15 +60,25 @@ export async function POST(
       approvedList = [];
     }
 
-    // Enforce max 4 members (1 host + 3 approved participants)
-    if (approvedList.length >= 3) {
-      return NextResponse.json(
-        { error: "Study pod is full (max 4 members)" },
-        { status: 400 }
-      );
-    }
+    const currentParticipantIds = [studyPod.creatorId, ...approvedList];
 
     if (!approvedList.includes(targetUserId)) {
+      const allUsersToCheck = [...currentParticipantIds, targetUserId];
+      const usersInfo = await prisma.user.findMany({
+        where: { id: { in: allUsersToCheck } },
+        select: { id: true, isPremium: true },
+      });
+
+      const proposedGroupHasFreeMember = usersInfo.some((u) => !u.isPremium);
+      const proposedGroupLimit = proposedGroupHasFreeMember ? 4 : 8;
+
+      if (currentParticipantIds.length >= proposedGroupLimit) {
+        return NextResponse.json(
+          { error: `Cannot invite member. Groups with free users are limited to 4 members. Premium-only groups can have up to 8.` },
+          { status: 400 }
+        );
+      }
+
       approvedList.push(targetUserId);
     }
 

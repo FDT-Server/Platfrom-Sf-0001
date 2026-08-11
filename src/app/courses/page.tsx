@@ -41,38 +41,5 @@ export default async function CoursesPage() {
     },
   });
 
-  const fallbackCourses: CourseCard[] = [
-    {
-      id: "course-1",
-      title: "Advanced React & Next.js App Router Architecture",
-      description: "Master React Server Components, Suspense boundaries, streaming data pipelines, Server Actions, and optimal routing patterns for highly scalable enterprise web applications.",
-      imageUrl: "",
-      price: 0,
-      instructor: "Dan Abramov & Lee Robinson",
-      duration: "18 Hours",
-    },
-    {
-      id: "course-2",
-      title: "Prisma & PostgreSQL Schema Design & Query Optimization",
-      description: "Learn Postgres indexing strategies, database pooling, edge connectivity, zero-downtime migrations, and how to write high-performance queries with Prisma Client.",
-      imageUrl: "",
-      price: 0,
-      instructor: "Nikolas Burk",
-      duration: "12 Hours",
-    },
-  ];
-
-  const courses: CourseCard[] = dbCourses.length > 0
-    ? dbCourses.map((c) => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        imageUrl: c.imageUrl || "",
-        price: c.price ?? 0,
-        instructor: c.instructor || "Platform Instructor",
-        duration: c.duration || "Self-paced",
-      }))
-    : fallbackCourses;
-
-  return <CoursesListContent user={user} courses={courses} />;
+  return <CoursesListContent user={user} courses={dbCourses as any} />;
 }

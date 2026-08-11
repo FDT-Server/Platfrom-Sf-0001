@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/db";
 import { hashPassword } from "@/lib/crypto";
 import { sanitizeInput, isValidEmail } from "@/lib/security/sanitizer";
-import nodemailer from "nodemailer";
+import { queueEmail } from "@/lib/emailService";
 
 export async function POST(req: Request) {
   try {
@@ -91,35 +91,19 @@ export async function POST(req: Request) {
       sameSite: "lax",
     });
 
-    // Send welcome email asynchronously
+    // Send welcome email asynchronously via Queue
     try {
-      if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.SMTP_EMAIL,
-            pass: process.env.SMTP_PASSWORD,
-          },
-        });
-
-        const mailOptions = {
-          from: `"Studentforge Platform" <${process.env.SMTP_EMAIL}>`,
-          to: trimmedEmail,
-          subject: `Welcome to Studentforge Platform, ${fullName}!`,
-          text: `Hello ${fullName},\n\nWelcome to Studentforge!\n\nRegistered Email: ${trimmedEmail}\n\n— The Studentforge Team`,
-          html: `<div style="font-family:sans-serif;padding:20px;color:#1e293b;">
-            <h2>Welcome to Studentforge, ${fullName}!</h2>
-            <p>Your account has been created successfully.</p>
-            <p>Registered Email: <strong>${trimmedEmail}</strong></p>
-          </div>`,
-        };
-
-        transporter.sendMail(mailOptions).catch((err) => {
-          console.error("Failed to send welcome email in background:", err);
-        });
-      }
+      await queueEmail({
+        to: trimmedEmail,
+        subject: `Welcome to Studentforge Platform, ${fullName}!`,
+        html: `<div style="font-family:sans-serif;padding:20px;color:#1e293b;">
+          <h2>Welcome to Studentforge, ${fullName}!</h2>
+          <p>Your account has been created successfully.</p>
+          <p>Registered Email: <strong>${trimmedEmail}</strong></p>
+        </div>`,
+      });
     } catch (mailErr) {
-      console.error("Welcome email transporter error:", mailErr);
+      console.error("Welcome email queue error:", mailErr);
     }
 
     return NextResponse.json({

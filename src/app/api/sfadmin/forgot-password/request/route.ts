@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import nodemailer from "nodemailer";
+import { queueEmail } from "@/lib/emailService";
 import { hashPassword } from "@/lib/crypto";
 
 export async function POST(req: Request) {
@@ -50,26 +50,9 @@ export async function POST(req: Request) {
       },
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
-
-    const mailOptions = {
-      from: `"Studentforge Platform" <${process.env.SMTP_EMAIL}>`,
-      replyTo: process.env.SMTP_EMAIL,
+    await queueEmail({
       to: normalizedEmail,
       subject: `Studentforge Platform - Admin Password Reset OTP for ${user.fullName}`,
-      priority: "high" as const,
-      headers: {
-        "X-Mailer": "Studentforge Mailer",
-        "X-Priority": "1",
-        "Importance": "High",
-      },
-      text: `Hello ${user.fullName},\n\nWe received a request to reset the password for your Studentforge Platform Admin account.\n\nYour OTP Code: ${otpCode}\n\nThis code is valid for 10 minutes. Do not share this code with anyone.\n\nIf you did not request a password reset, please ignore this email.\n\n— The Studentforge Team`,
       html: `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin Password Reset - Studentforge Platform</title></head>
@@ -140,9 +123,7 @@ export async function POST(req: Request) {
   </table>
 </body>
 </html>`,
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {

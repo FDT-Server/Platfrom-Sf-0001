@@ -72,12 +72,19 @@ model StudyPodMessage {
 }
 
 model StudyPodTodo {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   studyPodId  String
   title       String
-  completed   Boolean  @default(false)
+  description String?   @default("")
+  status      String    @default("TODO")
+  priority    String    @default("MEDIUM")
+  startDate   DateTime?
+  dueDate     DateTime?
+  assignedTo  Json?     @default("[]")
+  links       Json?     @default("[]")
+  completed   Boolean   @default(false)
   creatorName String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 model StudyPodIdea {
@@ -159,6 +166,7 @@ model CourseWeek {
   title       String
   description String
   videoLink   String   @default("")
+  topics      Json     @default("[]")
   createdAt   DateTime @default(now())
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
@@ -279,4 +287,29 @@ model RegistrationOtp {
   email     String   @id
   otpCode   String
   otpExpiry DateTime
+}
+
+model CourseProgress {
+  id              String   @id @default(uuid())
+  userId          String
+  courseId        String
+  completedWeeks  Json     @default("[]")
+  completedTopics Json     @default("[]")
+  isCompleted     Boolean  @default(false)
+  certificateId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model EmailQueue {
+  id        String   @id @default(uuid())
+  to        String
+  subject   String
+  body      String
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  error     String?  @default("")
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
 }
