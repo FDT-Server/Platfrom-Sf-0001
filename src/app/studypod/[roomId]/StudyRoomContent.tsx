@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import AppLayout from "@/components/AppLayout";
 import {
@@ -48,6 +49,13 @@ interface Message {
 interface Todo {
   id: string;
   title: string;
+  description?: string | null;
+  status?: string;
+  priority?: string;
+  startDate?: string | null;
+  dueDate?: string | null;
+  assignedTo?: string[];
+  links?: { title: string; url: string }[];
   completed: boolean;
   creatorName: string;
   createdAt: string;
@@ -87,7 +95,7 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  const [lobbyStatus, setLobbyStatus] = useState<"loading" | "waiting" | "approved">("loading");
+  const [lobbyStatus, setLobbyStatus] = useState<"loading" | "waiting" | "approved" | "limit_reached">("loading");
   const [roomPod, setRoomPod] = useState<StudyPod>(studyPod);
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
 
@@ -179,9 +187,11 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const [messages, setMessages] = useState<Message[]>([]);
   const [participants, setParticipants] = useState<any[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Todo | null>(null);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [activeTab, setActiveTab] = useState<"tasks" | "ideas">("tasks");
   const [mobileActiveTab, setMobileActiveTab] = useState<"chat" | "tasks" | "ideas" | "info">("chat");
+  const isPremiumRoom = participants.length > 0 && participants.every((p) => p.isPremium);
 
   const [panel1Width, setPanel1Width] = useState(260);
   const [panel3Width, setPanel3Width] = useState(360);
@@ -456,6 +466,12 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isReadOnly) return;
+    
+    if (!isPremiumRoom && todos.length >= 3) {
+      alert("Free rooms are limited to 3 tasks. Please upgrade to Premium to unlock unlimited tasks!");
+      return;
+    }
+
     if (!todoText.trim() || submittingTodo) return;
 
     setSubmittingTodo(true);
@@ -477,29 +493,29 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
     }
   };
 
-  const handleToggleTodo = async (todoId: string, currentCompleted: boolean) => {
+  const handleUpdateTodo = async (todoId: string, updates: Partial<Todo>) => {
     try {
-      const targetCompleted = !currentCompleted;
+      const originalTodo = todos.find((t) => t.id === todoId);
+      if (!originalTodo) return;
+
       setTodos((prev) =>
-        prev.map((t) => (t.id === todoId ? { ...t, completed: targetCompleted } : t))
+        prev.map((t) => (t.id === todoId ? { ...t, ...updates } : t))
       );
 
       const res = await fetch(`/api/studypods/${roomId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ todoId, completed: targetCompleted }),
+        body: JSON.stringify({ todoId, ...updates }),
       });
       if (!res.ok) {
-
         setTodos((prev) =>
-          prev.map((t) => (t.id === todoId ? { ...t, completed: currentCompleted } : t))
+          prev.map((t) => (t.id === todoId ? originalTodo : t))
         );
       }
     } catch (err) {
-      console.error("Failed to toggle todo:", err);
+      console.error("Failed to update todo:", err);
     }
   };
-
   const handleDeleteTodo = async (todoId: string) => {
     try {
       setTodos((prev) => prev.filter((t) => t.id !== todoId));
@@ -719,6 +735,29 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
   }
 
   const waitingUserCount = waitingList.length;
+
+  if (lobbyStatus === "limit_reached" && !isHost) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="w-full min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-6 text-center animate-fadeIn">
+          <div className="max-w-md space-y-2 select-none">
+            <h2 className="text-lg font-bold text-slate-800 tracking-tight leading-snug">
+              Limit Reached
+            </h2>
+            <p className="text-xs text-slate-500 leading-relaxed px-4">
+              Free users can only participate in 1 Study Pod (either created or joined). You have reached your limit. Upgrade to Premium to join unlimited Study Pods.
+            </p>
+          </div>
+          <Link
+            href="/plans"
+            className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition hover:bg-slate-800 shadow-md inline-block"
+          >
+            Upgrade to Premium
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (lobbyStatus === "waiting" && !isHost) {
     return (
@@ -1305,16 +1344,22 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   <input
                     type="text"
                     required
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || (!isPremiumRoom && todos.length >= 3)}
                     value={todoText}
                     onChange={(e) => setTodoText(e.target.value)}
-                    placeholder={isReadOnly ? "Read-Only Mode active." : "Create a shared task..."}
+                    placeholder={
+                      isReadOnly 
+                        ? "Read-Only Mode active." 
+                        : (!isPremiumRoom && todos.length >= 3) 
+                          ? "Task limit reached for Free Room (max 3)"
+                          : "Create a shared task..."
+                    }
                     maxLength={100}
                     className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl text-slate-800 text-xs bg-white transition shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button
                     type="submit"
-                    disabled={isReadOnly || !todoText.trim() || submittingTodo}
+                    disabled={isReadOnly || !todoText.trim() || submittingTodo || (!isPremiumRoom && todos.length >= 3)}
                     className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-4 py-2.5 rounded-xl transition duration-150 cursor-pointer flex items-center gap-1 shrink-0 text-xs font-semibold shadow-3xs disabled:cursor-not-allowed"
                   >
                     <IconPlus className="w-4 h-4" /> Add
@@ -1327,39 +1372,94 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
                   </span>
                   {todos.length > 0 ? (
                     <div className="space-y-2">
-                      {todos.map((todo) => (
+                      {todos.map((todo) => {
+                        const isDone = todo.status === "DONE" || todo.completed;
+                        const statusColors: any = {
+                          TODO: "bg-slate-100 text-slate-600",
+                          IN_PROGRESS: "bg-blue-100 text-blue-700",
+                          REVIEW: "bg-purple-100 text-purple-700",
+                          DONE: "bg-emerald-100 text-emerald-700",
+                        };
+                        const priorityColors: any = {
+                          LOW: "text-slate-500",
+                          MEDIUM: "text-amber-500",
+                          HIGH: "text-red-500",
+                        };
+
+                        return (
                         <div
                           key={todo.id}
-                          className={`flex items-start gap-3 p-3.5 border rounded-2xl transition hover:scale-[1.01] duration-150 shadow-3xs animate-fadeIn ${
-                            todo.completed
-                              ? "bg-slate-50/70 border-slate-200/50 opacity-65"
+                          onClick={() => setSelectedTask(todo)}
+                          className={`flex flex-col gap-2 p-3.5 border rounded-2xl transition hover:scale-[1.01] duration-150 shadow-3xs cursor-pointer animate-fadeIn ${
+                            isDone
+                              ? "bg-slate-50/70 border-slate-200/50 opacity-75"
                               : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-2xs"
                           }`}
                         >
-                          <input
-                            type="checkbox"
-                            checked={todo.completed}
-                            onChange={() => handleToggleTodo(todo.id, todo.completed)}
-                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-0.5 shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-medium break-words leading-snug ${
-                              todo.completed ? "text-slate-450 line-through" : "text-slate-850"
-                            }`}>
-                              {todo.title}
-                            </p>
-                            <span className="block text-[8px] text-slate-400 mt-1 select-none">
-                              By: {todo.creatorName}
-                            </span>
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isDone}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleUpdateTodo(todo.id, { completed: !isDone, status: !isDone ? "DONE" : "TODO" });
+                              }}
+                              className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-0.5 shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${statusColors[todo.status || "TODO"]}`}>
+                                  {todo.status?.replace("_", " ") || "TODO"}
+                                </span>
+                                {todo.priority && (
+                                  <span className={`text-[9px] font-bold ${priorityColors[todo.priority]}`}>
+                                    {todo.priority}
+                                  </span>
+                                )}
+                              </div>
+                              <p className={`text-xs font-medium break-words leading-snug ${
+                                isDone ? "text-slate-450 line-through" : "text-slate-850"
+                              }`}>
+                                {todo.title}
+                              </p>
+                              {todo.dueDate && (
+                                <span className="block text-[9px] text-red-500 mt-1">
+                                  Due: {new Date(todo.dueDate).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTodo(todo.id);
+                              }}
+                              className="text-slate-400 hover:text-red-650 p-1 rounded-lg hover:bg-slate-50 transition cursor-pointer shrink-0"
+                            >
+                              <IconTrash className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleDeleteTodo(todo.id)}
-                            className="text-slate-400 hover:text-red-650 p-1 rounded-lg hover:bg-slate-50 transition cursor-pointer shrink-0"
-                          >
-                            <IconTrash className="w-3.5 h-3.5" />
-                          </button>
+                          
+                          {(todo.assignedTo?.length || todo.links?.length) ? (
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                              <div className="flex -space-x-1">
+                                {todo.assignedTo?.map((userId, idx) => {
+                                  const u = participants.find(p => p.id === userId);
+                                  return u ? (
+                                    <div key={idx} title={u.fullName} className="w-5 h-5 rounded-full bg-indigo-100 border border-white flex items-center justify-center text-[8px] font-bold text-indigo-800 overflow-hidden">
+                                      {u.profileImage ? <img src={u.profileImage} alt="" className="w-full h-full object-cover"/> : u.fullName.charAt(0)}
+                                    </div>
+                                  ) : null;
+                                })}
+                              </div>
+                              {todo.links && todo.links.length > 0 && (
+                                <div className="flex items-center gap-1 text-[9px] text-slate-500">
+                                  <IconPaperclip className="w-3 h-3" /> {todo.links.length}
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
                         </div>
-                      ))}
+                      )})}
                     </div>
                   ) : (
                     <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center select-none">
@@ -1374,90 +1474,102 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
             {activeTab === "ideas" && (
               <div className="space-y-4">
-
-                <form onSubmit={handleAddIdea} className="bg-white border border-slate-200/80 rounded-2xl p-4.5 space-y-3.5 shadow-3xs">
-                  <span className="text-[10px] text-slate-455 font-bold uppercase tracking-wider block leading-none pl-0.5 select-none">
-                    Post an idea card
-                  </span>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      required
-                      disabled={isReadOnly}
-                      value={ideaTitle}
-                      onChange={(e) => setIdeaTitle(e.target.value)}
-                      placeholder={isReadOnly ? "Read-Only Mode active." : "Title of your idea..."}
-                      maxLength={80}
-                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <textarea
-                      required
-                      disabled={isReadOnly}
-                      value={ideaDesc}
-                      onChange={(e) => setIdeaDesc(e.target.value)}
-                      placeholder={isReadOnly ? "Read-Only Mode active." : "Describe your design or strategy..."}
-                      maxLength={300}
-                      rows={3}
-                      className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 resize-none shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
+                {!isPremiumRoom ? (
+                  <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center select-none shadow-sm flex flex-col items-center justify-center py-10 mt-2">
+                    <span className="material-symbols-outlined text-[32px] text-amber-500 mb-3 opacity-90">
+                      workspace_premium
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-800">Premium Feature</h3>
+                    <p className="text-xs text-slate-500 mt-1.5 max-w-[200px] leading-relaxed">
+                      All members in the Study Pod must be Premium users to unlock the Ideas Board.
+                    </p>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={isReadOnly || !ideaTitle.trim() || !ideaDesc.trim() || submittingIdea}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-3xs disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
-                  >
-                    <IconPlus className="w-4 h-4" /> Share Idea
-                  </button>
-                </form>
+                ) : (
+                  <>
+                    <form onSubmit={handleAddIdea} className="bg-white border border-slate-200/80 rounded-2xl p-4.5 space-y-3.5 shadow-3xs">
+                      <span className="text-[10px] text-slate-455 font-bold uppercase tracking-wider block leading-none pl-0.5 select-none">
+                        Post an idea card
+                      </span>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          required
+                          disabled={isReadOnly}
+                          value={ideaTitle}
+                          onChange={(e) => setIdeaTitle(e.target.value)}
+                          placeholder={isReadOnly ? "Read-Only Mode active." : "Title of your idea..."}
+                          maxLength={80}
+                          className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <textarea
+                          required
+                          disabled={isReadOnly}
+                          value={ideaDesc}
+                          onChange={(e) => setIdeaDesc(e.target.value)}
+                          placeholder={isReadOnly ? "Read-Only Mode active." : "Describe your design or strategy..."}
+                          maxLength={300}
+                          rows={3}
+                          className="w-full border border-slate-200 hover:border-slate-350 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-xs transition text-slate-800 resize-none shadow-3xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isReadOnly || !ideaTitle.trim() || !ideaDesc.trim() || submittingIdea}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1 shadow-3xs disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+                      >
+                        <IconPlus className="w-4 h-4" /> Share Idea
+                      </button>
+                    </form>
 
-                <div className="space-y-2.5">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block pl-0.5 select-none">
-                    Room ideas stack ({ideas.length})
-                  </span>
-                  {ideas.length > 0 ? (
-                    <div className="space-y-3">
-                      {ideas.map((idea) => (
-                        <div
-                          key={idea.id}
-                          className="bg-gradient-to-br from-amber-50/80 to-orange-50/30 border border-amber-200/70 hover:border-amber-300 rounded-2xl p-4.5 shadow-3xs hover:shadow-2xs transition hover:scale-[1.01] duration-150 space-y-2.5 relative overflow-hidden animate-fadeIn"
-                        >
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="text-xs font-bold text-amber-950 leading-snug">
-                              {idea.title}
-                            </h4>
-                            <button
-                              onClick={() => handleDeleteIdea(idea.id)}
-                              className="text-amber-700 hover:text-red-655 p-1.5 rounded-lg hover:bg-amber-100/40 transition cursor-pointer shrink-0"
+                    <div className="space-y-2.5">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block pl-0.5 select-none">
+                        Room ideas stack ({ideas.length})
+                      </span>
+                      {ideas.length > 0 ? (
+                        <div className="space-y-3">
+                          {ideas.map((idea) => (
+                            <div
+                              key={idea.id}
+                              className="bg-gradient-to-br from-amber-50/80 to-orange-50/30 border border-amber-200/70 hover:border-amber-300 rounded-2xl p-4.5 shadow-3xs hover:shadow-2xs transition hover:scale-[1.01] duration-150 space-y-2.5 relative overflow-hidden animate-fadeIn"
                             >
-                              <IconTrash className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                              <div className="flex justify-between items-start gap-2">
+                                <h4 className="text-xs font-bold text-amber-950 leading-snug">
+                                  {idea.title}
+                                </h4>
+                                <button
+                                  onClick={() => handleDeleteIdea(idea.id)}
+                                  className="text-amber-700 hover:text-red-655 p-1.5 rounded-lg hover:bg-amber-100/40 transition cursor-pointer shrink-0"
+                                >
+                                  <IconTrash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
 
-                          <p className="text-xs text-amber-900/90 leading-relaxed break-words whitespace-pre-wrap">
-                            {idea.description}
-                          </p>
+                              <p className="text-xs text-amber-900/90 leading-relaxed break-words whitespace-pre-wrap">
+                                {idea.description}
+                              </p>
 
-                          <div className="pt-2 border-t border-amber-200/40 flex justify-between items-center text-[8px] text-amber-800/80 select-none">
-                            <span>Author: {idea.creatorName}</span>
-                            <span>
-                              {new Date(idea.createdAt).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </span>
-                          </div>
+                              <div className="pt-2 border-t border-amber-200/40 flex justify-between items-center text-[8px] text-amber-800/80 select-none">
+                                <span>Author: {idea.creatorName}</span>
+                                <span>
+                                  {new Date(idea.createdAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      ) : (
+                        <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center select-none">
+                          <p className="text-[11px] text-slate-550">
+                            No ideas shared yet. Post your first card to start brainstorming!
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="border border-dashed border-slate-200 bg-white/50 rounded-2xl p-6 text-center select-none">
-                      <p className="text-[11px] text-slate-550">
-                        No ideas shared yet. Post your first card to start brainstorming!
-                      </p>
-                    </div>
-                  )}
-                </div>
-
+                  </>
+                )}
               </div>
             )}
 
@@ -1468,6 +1580,121 @@ export default function StudyRoomContent({ user, studyPod, roomId }: StudyRoomCo
 
       </div>
       </div>
+      
+      {/* Edit Task Modal */}
+      {selectedTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fadeIn p-4">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 text-lg">Edit Task</h3>
+              <button onClick={() => setSelectedTask(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition">
+                <IconX className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                <textarea 
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none"
+                  rows={3}
+                  defaultValue={selectedTask.description || ""}
+                  placeholder="Add a more detailed description..."
+                  onBlur={(e) => handleUpdateTodo(selectedTask.id, { description: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
+                  <select 
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none bg-white"
+                    defaultValue={selectedTask.status || "TODO"}
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
+                      handleUpdateTodo(selectedTask.id, { status: newStatus, completed: newStatus === "DONE" });
+                      setSelectedTask(prev => prev ? {...prev, status: newStatus, completed: newStatus === "DONE"} : null);
+                    }}
+                  >
+                    <option value="TODO">Todo</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="REVIEW">Review</option>
+                    <option value="DONE">Done</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
+                  <select 
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none bg-white"
+                    defaultValue={selectedTask.priority || "MEDIUM"}
+                    onChange={(e) => {
+                      handleUpdateTodo(selectedTask.id, { priority: e.target.value });
+                      setSelectedTask(prev => prev ? {...prev, priority: e.target.value} : null);
+                    }}
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Start Date</label>
+                  <input 
+                    type="date"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none"
+                    defaultValue={selectedTask.startDate ? new Date(selectedTask.startDate).toISOString().split('T')[0] : ""}
+                    onChange={(e) => {
+                      handleUpdateTodo(selectedTask.id, { startDate: e.target.value || null });
+                      setSelectedTask(prev => prev ? {...prev, startDate: e.target.value || null} : null);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Due Date</label>
+                  <input 
+                    type="date"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none"
+                    defaultValue={selectedTask.dueDate ? new Date(selectedTask.dueDate).toISOString().split('T')[0] : ""}
+                    onChange={(e) => {
+                      handleUpdateTodo(selectedTask.id, { dueDate: e.target.value || null });
+                      setSelectedTask(prev => prev ? {...prev, dueDate: e.target.value || null} : null);
+                    }}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assignees</label>
+                <div className="flex flex-wrap gap-2">
+                  {participants.map(p => {
+                    const isAssigned = selectedTask.assignedTo?.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          const current = selectedTask.assignedTo || [];
+                          const next = isAssigned ? current.filter(id => id !== p.id) : [...current, p.id];
+                          handleUpdateTodo(selectedTask.id, { assignedTo: next });
+                          setSelectedTask(prev => prev ? {...prev, assignedTo: next} : null);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition ${isAssigned ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                      >
+                        {p.profileImage ? <img src={p.profileImage} alt="" className="w-4 h-4 rounded-full"/> : <IconUserCircle className="w-4 h-4"/>}
+                        {p.fullName.split(' ')[0]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

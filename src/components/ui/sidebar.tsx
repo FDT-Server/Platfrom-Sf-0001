@@ -98,7 +98,7 @@ export const DesktopSidebar = ({
           className
         )}
         animate={{
-          width: animate ? (open ? "300px" : "85px") : "300px",
+          width: animate ? (open ? "225px" : "85px") : "225px",
         }}
         transition={{
           duration: 0.32,
@@ -133,7 +133,7 @@ export const MobileSidebar = ({
           <div className="h-4 w-[1px] bg-white/20"></div>
           <img
             src="https://ik.imagekit.io/dypkhqxip/temp_logo.png"
-            className="h-7 w-auto object-contain"
+            className="h-8 w-auto object-contain"
             alt="Studentforge Logo"
           />
         </div>

@@ -25,7 +25,7 @@ export const Logo = () => (
     <div className="h-4 w-[1px] bg-white/20"></div>
     <img
       src="https://ik.imagekit.io/dypkhqxip/sflogo?updatedAt=1774952380858"
-      className="h-8 w-auto object-contain"
+      className="h-9 w-auto object-contain"
       alt="Studentforge Logo"
     />
   </a>
@@ -427,11 +427,11 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
             ),
           },
           {
-            label: "Video Lectures",
-            href: "/lectures",
+            label: "Certifications",
+            href: "/certifications",
             icon: (
               <span className="material-symbols-outlined shrink-0 text-[18px]">
-                books_movies_and_music
+                workspace_premium
               </span>
             ),
           },
@@ -446,15 +446,7 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
           },
         ]
       },
-      {
-        label: "Certificates",
-        href: "/certificates",
-        icon: (
-          <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-            workspace_premium
-          </span>
-        ),
-      },
+
       {
         label: "Opportunities",
         href: "/opportunities",
@@ -511,17 +503,11 @@ function DashboardLayoutContent({ children, user }: DashboardLayoutProps) {
   }
 
   links.push({
-    label: "Profile",
-    href: "/profile",
-    icon: user.profileImage ? (
-      <img
-        src={user.profileImage}
-        alt="Profile"
-        className="h-5 w-5 rounded-full object-cover border border-blue-200/50 shrink-0"
-      />
-    ) : (
+    label: "Portfolio",
+    href: "/portfolio",
+    icon: (
       <span className="material-symbols-outlined shrink-0 text-[20px] text-blue-100 group-hover/sidebar:text-white transition-colors duration-150 select-none">
-        recent_patient
+        account_box
       </span>
     ),
   });

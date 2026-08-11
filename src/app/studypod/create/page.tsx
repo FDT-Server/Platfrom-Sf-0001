@@ -30,9 +30,25 @@ export default async function CreateStudyPodPage() {
   }
 
 
-  const createdPodsCount = await prisma.studyPod.count({
-    where: { creatorId: user.id },
-  });
+  const allPods = await prisma.studyPod.findMany();
+  
+  let totalPodsCount = 0;
+  
+  for (const pod of allPods) {
+    if (pod.creatorId === user.id) {
+      totalPodsCount++;
+      continue;
+    }
+    
+    let approved: string[] = [];
+    try {
+      approved = typeof pod.approvedUserIds === "string" ? JSON.parse(pod.approvedUserIds) : (pod.approvedUserIds || []);
+    } catch {}
+    
+    if (approved.includes(user.id)) {
+      totalPodsCount++;
+    }
+  }
 
-  return <CreatePodContent user={{ ...user, createdPodsCount }} />;
+  return <CreatePodContent user={{ ...user, createdPodsCount: totalPodsCount }} />;
 }

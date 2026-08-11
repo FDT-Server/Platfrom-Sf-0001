@@ -6,7 +6,7 @@ import CourseDetailContent from "./CourseDetailContent";
 
 export const dynamic = "force-dynamic";
 
-export default async function CourseDetailPage({ params }: { params: { courseId: string } }) {
+export default async function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session")?.value;
 
@@ -34,7 +34,11 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
     where: { courseId_userId: { courseId, userId: sessionToken } },
   });
 
-  const isApproved = enrollment?.status === "APPROVED";
+  const progress = await prisma.courseProgress.findUnique({
+    where: { userId_courseId: { userId: sessionToken, courseId } }
+  });
+
+  const isApproved = course.price === 0 ? true : enrollment?.status === "APPROVED";
 
   return (
     <CourseDetailContent
@@ -43,7 +47,6 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
         ...course,
         duration: course.duration || "",
         instructor: course.instructor || "",
-        link: course.link || "",
         imageUrl: course.imageUrl || "",
         skillsGain: course.skillsGain || "",
         outcomes: course.outcomes || "",
@@ -52,6 +55,7 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
         weeks: course.weeks.map((w) => ({
           ...w,
           videoLink: w.videoLink || "",
+          topics: (w.topics as any[]) || [],
           createdAt: w.createdAt.toISOString(),
         })),
       }}
@@ -61,6 +65,12 @@ export default async function CourseDetailPage({ params }: { params: { courseId:
         utrNo: enrollment.utrNo,
       } : null}
       isApproved={isApproved}
+      courseProgress={progress ? {
+        completedWeeks: progress.completedWeeks as string[],
+        completedTopics: progress.completedTopics as string[],
+        isCompleted: progress.isCompleted,
+        certificateId: progress.certificateId
+      } : { completedWeeks: [], completedTopics: [], isCompleted: false, certificateId: null }}
     />
   );
 }
