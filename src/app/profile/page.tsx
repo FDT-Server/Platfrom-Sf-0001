@@ -38,6 +38,15 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
+  // Automatically upgrade user to premium
+  if (!user.isPremium) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isPremium: true },
+    });
+    user.isPremium = true;
+  }
+
   const [postsCount, coursesCount, networkSize] = await Promise.all([
     prisma.post.count({ where: { userId: user.id } }),
     prisma.courseEnrollment.count({
