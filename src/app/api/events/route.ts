@@ -19,7 +19,7 @@ export async function GET() {
     const events: any[] = [];
 
     // The events are in the main grid container. We find all .group elements inside it.
-    $('.grid.grid-cols-1 > .group').each((i, el) => {
+    $('.grid.grid-cols-1 > .group').each((i: any, el: any) => {
       const element = $(el);
       
       const imageUrl = element.find('img').attr('src') || '';
