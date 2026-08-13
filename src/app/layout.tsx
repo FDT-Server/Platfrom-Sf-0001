@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import Script from "next/script";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -142,6 +143,7 @@ export default async function RootLayout({
         <meta httpEquiv="x-ua-compatible" content="IE=edge" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-slate-900">
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <Toaster position="top-center" richColors />
         <SessionValidator isSessionValid={isSessionValid} />
         <AutoLogoutProvider>
