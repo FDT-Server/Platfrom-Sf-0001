@@ -33,21 +33,21 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value:
-              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+              "camera=(), microphone=(), geolocation=(), payment=*, interest-cohort=()",
           },
           {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://ik.imagekit.io https://unpkg.com https://cdn.jsdelivr.net https://lottie.host https://checkout.razorpay.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://ik.imagekit.io https://unpkg.com https://cdn.jsdelivr.net https://lottie.host https://accounts.google.com https://checkout.razorpay.com https://cdn.razorpay.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
               "img-src 'self' data: blob: https://ik.imagekit.io https://images.unsplash.com https://lh3.googleusercontent.com https://lottie.host https://ui-avatars.com https://api.dicebear.com https://i.pravatar.cc https://unavatar.io https://avatar.iran.liara.run",
               "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
-              "connect-src 'self' https://ik.imagekit.io https://lottie.host https://unpkg.com https://cdn.jsdelivr.net https://ui-avatars.com https://api.dicebear.com https://checkout.razorpay.com",
-              "frame-src 'self' https://lottie.host https://api.razorpay.com",
+              "connect-src 'self' https://ik.imagekit.io https://lottie.host https://unpkg.com https://cdn.jsdelivr.net https://ui-avatars.com https://api.dicebear.com https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com",
+              "frame-src 'self' https://lottie.host https://api.razorpay.com https://checkout.razorpay.com https://accounts.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://accounts.google.com https://api.razorpay.com",
               "upgrade-insecure-requests",
             ].join("; "),
           },
