@@ -10,31 +10,6 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendOtpViaSms(phone: string, otp: string): Promise<{ ok: boolean; error?: string }> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    // DEV fallback — log OTP to console
-    console.log(`\n🔐 [DEV OTP] Phone: +91${phone} → OTP: ${otp}\n`);
-    return { ok: true };
-  }
-
-  try {
-    const client = twilio(accountSid, authToken);
-    await client.messages.create({
-      body: `Your SmartFit OTP is: ${otp}. Valid for 10 minutes. Do not share with anyone.`,
-      from: fromNumber,
-      to: `+91${phone}`,
-    });
-    return { ok: true };
-  } catch (err: any) {
-    console.error("Twilio SMS error:", err.message);
-    return { ok: false, error: err.message };
-  }
-}
-
 export async function POST(req: Request) {
   try {
     const { phone } = await req.json();
@@ -65,33 +40,49 @@ export async function POST(req: Request) {
       }
     }
 
-    const otp = generateOtp();
-    const expiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const verifySid = process.env.TWILIO_VERIFY_SID;
 
-    // Save OTP to DB
-    await prisma.mobileOtp.upsert({
-      where: { phone: cleanPhone },
-      update: { otpCode: otp, otpExpiry: expiry, verified: false },
-      create: { phone: cleanPhone, otpCode: otp, otpExpiry: expiry, verified: false },
-    });
+    // DEV mode — no credentials set
+    if (!accountSid || !authToken || !verifySid) {
+      const otp = generateOtp();
+      const expiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+      await prisma.mobileOtp.upsert({
+        where: { phone: cleanPhone },
+        update: { otpCode: otp, otpExpiry: expiry, verified: false },
+        create: { phone: cleanPhone, otpCode: otp, otpExpiry: expiry, verified: false },
+      });
+      console.log(`\n🔐 [DEV OTP] Phone: +91${cleanPhone} → OTP: ${otp}\n`);
+      return NextResponse.json({ success: true, dev: true, message: "OTP logged to server console (dev mode)" });
+    }
 
-    const result = await sendOtpViaSms(cleanPhone, otp);
-
-    if (!result.ok) {
+    // Use Twilio Verify API — handles OTP natively, no DLT needed
+    const client = twilio(accountSid, authToken);
+    try {
+      await client.verify.v2.services(verifySid).verifications.create({
+        to: `+91${cleanPhone}`,
+        channel: "sms",
+      });
+    } catch (err: any) {
+      console.error("Twilio Verify error:", err.message);
       return NextResponse.json(
-        { error: "Failed to send OTP. Please try again." },
+        { error: "Failed to send OTP. " + (err.message || "Please try again.") },
         { status: 500 }
       );
     }
 
-    const isDev = !process.env.TWILIO_ACCOUNT_SID;
+    // Store a placeholder in DB so verify step works
+    const expiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+    await prisma.mobileOtp.upsert({
+      where: { phone: cleanPhone },
+      update: { otpCode: "TWILIO_VERIFY", otpExpiry: expiry, verified: false },
+      create: { phone: cleanPhone, otpCode: "TWILIO_VERIFY", otpExpiry: expiry, verified: false },
+    });
 
     return NextResponse.json({
       success: true,
-      dev: isDev,
-      message: isDev
-        ? "OTP logged to server console (dev mode)"
-        : `OTP sent to +91 ${cleanPhone}`,
+      message: `OTP sent to +91 ${cleanPhone}`,
     });
   } catch (err: any) {
     console.error("Send Mobile OTP error:", err);

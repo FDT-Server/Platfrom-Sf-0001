@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import twilio from "twilio";
 
 export const dynamic = "force-dynamic";
 
@@ -34,23 +35,38 @@ export async function POST(req: Request) {
       );
     }
 
-    if (record.otpCode !== otp.trim()) {
-      return NextResponse.json(
-        { error: "Incorrect OTP. Please try again." },
-        { status: 400 }
-      );
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const verifySid = process.env.TWILIO_VERIFY_SID;
+
+    // DEV mode — verify against DB stored OTP
+    if (!accountSid || !authToken || !verifySid) {
+      if (record.otpCode !== otp.trim()) {
+        return NextResponse.json({ error: "Incorrect OTP. Please try again." }, { status: 400 });
+      }
+      await prisma.mobileOtp.update({ where: { phone: cleanPhone }, data: { verified: true } });
+      return NextResponse.json({ success: true, message: "Mobile number verified successfully." });
     }
 
-    // Mark OTP as verified
-    await prisma.mobileOtp.update({
-      where: { phone: cleanPhone },
-      data: { verified: true },
-    });
+    // Twilio Verify mode
+    const client = twilio(accountSid, authToken);
+    try {
+      const check = await client.verify.v2.services(verifySid).verificationChecks.create({
+        to: `+91${cleanPhone}`,
+        code: otp.trim(),
+      });
 
-    return NextResponse.json({
-      success: true,
-      message: "Mobile number verified successfully.",
-    });
+      if (check.status !== "approved") {
+        return NextResponse.json({ error: "Incorrect OTP. Please try again." }, { status: 400 });
+      }
+    } catch (err: any) {
+      console.error("Twilio Verify check error:", err.message);
+      return NextResponse.json({ error: "OTP verification failed. Please try again." }, { status: 400 });
+    }
+
+    await prisma.mobileOtp.update({ where: { phone: cleanPhone }, data: { verified: true } });
+
+    return NextResponse.json({ success: true, message: "Mobile number verified successfully." });
   } catch (err: any) {
     console.error("Verify Mobile OTP error:", err);
     return NextResponse.json(
