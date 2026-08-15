@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const cleanPhone = phone.replace(/\s/g, "").replace(/^(\+91|91)/, "");
 
-    const record = await (prisma as any).mobileOtp.findUnique({
+    const record = await prisma.mobileOtp.findUnique({
       where: { phone: cleanPhone },
     });
 
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     }
 
     // Mark OTP as verified
-    await (prisma as any).mobileOtp.update({
+    await prisma.mobileOtp.update({
       where: { phone: cleanPhone },
       data: { verified: true },
     });

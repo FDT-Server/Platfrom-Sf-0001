@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     const cleanPhone = phone.replace(/\s/g, "").replace(/^(\+91|91)/, "");
 
     // Spam protection — 60 second cooldown
-    const existing = await (prisma as any).mobileOtp.findUnique({
+    const existing = await prisma.mobileOtp.findUnique({
       where: { phone: cleanPhone },
     });
 
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     const expiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
     // Save OTP to DB
-    await (prisma as any).mobileOtp.upsert({
+    await prisma.mobileOtp.upsert({
       where: { phone: cleanPhone },
       update: { otpCode: otp, otpExpiry: expiry, verified: false },
       create: { phone: cleanPhone, otpCode: otp, otpExpiry: expiry, verified: false },
