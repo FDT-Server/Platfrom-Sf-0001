@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import twilio from "twilio";
 
 export const dynamic = "force-dynamic";
 
@@ -10,28 +11,26 @@ function generateOtp(): string {
 }
 
 async function sendOtpViaSms(phone: string, otp: string): Promise<{ ok: boolean; error?: string }> {
-  const apiKey = process.env.TWOFACTOR_API_KEY;
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
-  if (!apiKey) {
+  if (!accountSid || !authToken || !fromNumber) {
     // DEV fallback — log OTP to console
     console.log(`\n🔐 [DEV OTP] Phone: +91${phone} → OTP: ${otp}\n`);
     return { ok: true };
   }
 
   try {
-    // 2factor.in — free Indian OTP SMS, no recharge needed
-    const url = `https://2factor.in/API/V1/${apiKey}/SMS/${phone}/${otp}/OTP1`;
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (data.Status === "Success") {
-      return { ok: true };
-    }
-
-    console.error("2factor.in error:", data.Details);
-    return { ok: false, error: data.Details };
+    const client = twilio(accountSid, authToken);
+    await client.messages.create({
+      body: `Your SmartFit OTP is: ${otp}. Valid for 10 minutes. Do not share with anyone.`,
+      from: fromNumber,
+      to: `+91${phone}`,
+    });
+    return { ok: true };
   } catch (err: any) {
-    console.error("SMS fetch error:", err);
+    console.error("Twilio SMS error:", err.message);
     return { ok: false, error: err.message };
   }
 }
@@ -85,7 +84,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const isDev = !process.env.TWOFACTOR_API_KEY;
+    const isDev = !process.env.TWILIO_ACCOUNT_SID;
 
     return NextResponse.json({
       success: true,
