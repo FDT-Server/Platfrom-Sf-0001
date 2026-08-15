@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
@@ -26,6 +26,18 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
   const [verifiedSuccess, setVerifiedSuccess] = useState(false);
   const [error, setError] = useState("");
   const [paymentMode, setPaymentMode] = useState<"razorpay" | "utr">("razorpay");
+
+  // Mobile OTP state
+  const [phone, setPhone] = useState("");
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [otpSent, setOtpSent] = useState(false);
+  const [mobileVerified, setMobileVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const isMonthly = plan.toLowerCase() === "monthly";
   const cost = isMonthly ? "₹49" : "₹499";
@@ -75,6 +87,88 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
 
       appendFreshScript();
     });
+  };
+
+  // --- Mobile OTP Handlers ---
+  const startResendTimer = () => {
+    setResendTimer(60);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) { clearInterval(timerRef.current!); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleSendOtp = async () => {
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone.trim())) {
+      setOtpError("Enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+    setSendingOtp(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/otp/send-mobile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOtpSent(true);
+        setOtpDigits(["", "", "", "", "", ""]);
+        startResendTimer();
+        toast.success(data.dev ? `[DEV] OTP sent to console` : `OTP sent to +91 ${phone}`);
+      } else {
+        setOtpError(data.error || "Failed to send OTP.");
+      }
+    } catch {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleOtpDigitChange = (index: number, value: string) => {
+    if (!/^\d?$/.test(value)) return;
+    const next = [...otpDigits];
+    next[index] = value;
+    setOtpDigits(next);
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const otp = otpDigits.join("");
+    if (otp.length !== 6) { setOtpError("Enter all 6 digits."); return; }
+    setVerifyingOtp(true);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/otp/verify-mobile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim(), otp }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMobileVerified(true);
+        if (timerRef.current) clearInterval(timerRef.current);
+        toast.success("Mobile number verified! ✅");
+      } else {
+        setOtpError(data.error || "Invalid OTP.");
+      }
+    } catch {
+      setOtpError("Network error. Please try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
   };
 
   // Handle Live/Test Razorpay Checkout Popup
@@ -348,7 +442,109 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
 
               {/* Mode A: Razorpay Modal */}
               {paymentMode === "razorpay" && (
-                <div className="space-y-4 pt-2">
+                <div className="space-y-5 pt-2">
+
+                  {/* ── Contact Details: Mobile OTP ── */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                    <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-indigo-600 text-[18px]">phone_iphone</span>
+                      <span className="text-xs font-bold text-slate-800">Contact Details — Mobile Verification</span>
+                      {mobileVerified && (
+                        <span className="ml-auto flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                          Verified
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-4 space-y-3">
+                      {mobileVerified ? (
+                        <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                          <span className="material-symbols-outlined text-emerald-600 text-[22px]">verified</span>
+                          <div>
+                            <p className="text-xs font-bold text-emerald-700">+91 {phone} — Verified</p>
+                            <p className="text-[10px] text-emerald-600 mt-0.5">Your mobile number has been confirmed.</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Phone input row */}
+                          <div className="flex gap-2">
+                            <div className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 shrink-0">
+                              🇮🇳 +91
+                            </div>
+                            <input
+                              type="tel"
+                              maxLength={10}
+                              value={phone}
+                              onChange={(e) => { setPhone(e.target.value.replace(/\D/g, "")); setOtpError(""); }}
+                              placeholder="10-digit mobile number"
+                              className="flex-1 border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition bg-white text-slate-800"
+                              disabled={otpSent && !mobileVerified}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSendOtp}
+                              disabled={sendingOtp || (resendTimer > 0 && otpSent) || phone.length !== 10}
+                              className="shrink-0 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[11px] font-bold px-3 py-2.5 rounded-lg transition cursor-pointer"
+                            >
+                              {sendingOtp ? (
+                                <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
+                              ) : resendTimer > 0 && otpSent ? (
+                                `${resendTimer}s`
+                              ) : otpSent ? (
+                                "Resend"
+                              ) : (
+                                "Send OTP"
+                              )}
+                            </button>
+                          </div>
+
+                          {/* OTP digit boxes */}
+                          {otpSent && (
+                            <div className="space-y-3">
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                Enter the 6-digit OTP sent to <strong>+91 {phone}</strong>
+                              </p>
+                              <div className="flex gap-2 justify-center">
+                                {otpDigits.map((d, i) => (
+                                  <input
+                                    key={i}
+                                    ref={(el) => { otpRefs.current[i] = el; }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={1}
+                                    value={d}
+                                    onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                                    className="w-10 h-11 text-center border border-slate-300 rounded-xl text-base font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition bg-white text-slate-900"
+                                  />
+                                ))}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleVerifyOtp}
+                                disabled={verifyingOtp || otpDigits.join("").length !== 6}
+                                className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
+                              >
+                                {verifyingOtp ? (
+                                  <><span className="material-symbols-outlined animate-spin text-[16px]">sync</span> Verifying...</>
+                                ) : (
+                                  <><span className="material-symbols-outlined text-[16px]">verified_user</span> Verify OTP</>
+                                )}
+                              </button>
+                            </div>
+                          )}
+
+                          {otpError && (
+                            <p className="text-[11px] text-red-600 font-semibold bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{otpError}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Info box */}
                   <div className="p-4 border border-indigo-100 rounded-2xl bg-indigo-50/50 space-y-2 text-xs text-slate-700">
                     <p className="font-bold text-slate-900 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-indigo-600 text-[18px]">lock</span>
@@ -359,11 +555,19 @@ export default function CheckoutContent({ user, plan }: CheckoutContentProps) {
                     </p>
                   </div>
 
+                  {/* Pay button — locked until mobile verified */}
+                  {!mobileVerified && (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-700 font-semibold">
+                      <span className="material-symbols-outlined text-[16px]">lock</span>
+                      Verify your mobile number above to unlock payment.
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={handleRazorpayPayment}
-                    disabled={loadingRazorpay}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-extrabold py-3.5 px-6 rounded-xl text-sm shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-2"
+                    disabled={loadingRazorpay || !mobileVerified}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white font-extrabold py-3.5 px-6 rounded-xl text-sm shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-2"
                   >
                     {loadingRazorpay ? (
                       <>

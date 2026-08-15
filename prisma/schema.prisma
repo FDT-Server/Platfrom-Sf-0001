@@ -291,6 +291,13 @@ model RegistrationOtp {
   otpExpiry DateTime
 }
 
+model MobileOtp {
+  phone     String   @id
+  otpCode   String
+  otpExpiry DateTime
+  verified  Boolean  @default(false)
+}
+
 model CourseProgress {
   id              String   @id @default(uuid())
   userId          String
